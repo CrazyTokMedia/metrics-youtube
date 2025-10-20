@@ -1,0 +1,458 @@
+/**
+ * YouTube Treatment Comparison Helper - Styles
+ */
+
+/* Toggle Button in YouTube Studio Header */
+.treatment-helper-toggle {
+  position: fixed;
+  top: 10px;
+  right: 20px;
+  z-index: 10000;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.treatment-helper-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Main Panel */
+#yt-treatment-helper {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  width: 420px;
+  max-height: 85vh;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+/* Header */
+.helper-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.helper-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.helper-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.helper-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Body */
+.helper-body {
+  padding: 20px;
+  max-height: calc(85vh - 64px);
+  overflow-y: auto;
+}
+
+/* Input Section */
+.input-section {
+  margin-bottom: 20px;
+}
+
+.input-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.date-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+/* Results Section */
+.results-section {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Info Badge */
+.period-info {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.info-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.info-badge strong {
+  color: #667eea;
+}
+
+/* Period Blocks */
+.period-block {
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.period-block h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pre-period h4 {
+  color: #ef4444;
+}
+
+.post-period h4 {
+  color: #10b981;
+}
+
+/* Date Items */
+.date-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.date-item label {
+  min-width: 50px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.date-display {
+  flex: 1;
+  padding: 8px 10px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  color: #1f2937;
+}
+
+.copy-btn {
+  padding: 6px 12px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.copy-btn:hover {
+  background: #5568d3;
+}
+
+.copy-btn.copied {
+  background: #10b981;
+}
+
+/* Period Days */
+.period-days {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: white;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Instructions */
+.instructions {
+  margin-top: 20px;
+  padding: 16px;
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+}
+
+.instructions p {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.instructions ol {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.instructions li {
+  margin-bottom: 4px;
+}
+
+/* Scrollbar Styling */
+.helper-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.helper-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.helper-body::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 10px;
+}
+
+.helper-body::-webkit-scrollbar-thumb:hover {
+  background: #5568d3;
+}
+
+/* ============================================================
+   PHASE 2: AUTO-EXTRACTION STYLES
+   ============================================================ */
+
+/* Auto-Extract Section */
+.auto-extract-section {
+  margin: 20px 0;
+  padding: 16px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 10px;
+  border: 2px solid #0ea5e9;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  font-size: 15px;
+  padding: 14px;
+}
+
+.primary-btn:hover {
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+}
+
+.primary-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Extraction Status */
+.extraction-status {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.extraction-status.success {
+  background: #ecfdf5;
+  border-left-color: #10b981;
+  color: #065f46;
+  animation: none;
+}
+
+.extraction-status.error {
+  background: #fee2e2;
+  border-left-color: #ef4444;
+  color: #991b1b;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Metrics Results */
+.metrics-results {
+  margin: 20px 0;
+  padding: 16px;
+  background: white;
+  border: 2px solid #10b981;
+  border-radius: 10px;
+  animation: slideIn 0.3s ease;
+}
+
+.metrics-results h4 {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #059669;
+  text-align: center;
+}
+
+/* Metrics Comparison */
+.metrics-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.metrics-column {
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.metrics-column h5 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid;
+}
+
+.metrics-column:first-child h5 {
+  color: #ef4444;
+  border-bottom-color: #ef4444;
+}
+
+.metrics-column:last-child h5 {
+  color: #10b981;
+  border-bottom-color: #10b981;
+}
+
+/* Metric Item */
+.metric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.metric-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+}
+
+.metric-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.metric-value {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  color: #1f2937;
+}
+
+/* Copy Metrics Button */
+#copy-metrics-btn {
+  background: #10b981;
+  margin-top: 8px;
+}
+
+#copy-metrics-btn:hover {
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+#copy-metrics-btn.copied {
+  background: #059669;
+}

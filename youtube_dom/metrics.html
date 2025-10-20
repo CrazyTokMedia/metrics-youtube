@@ -1,0 +1,1545 @@
+<tp-yt-paper-dialog id="dialog" restore-focus-on-close="" class="inline style-scope ytcp-dialog style-scope ytcp-dialog" aria-label="Metrics" style-target="host" role="dialog" tabindex="-1" style="outline: none; min-width: 320px; max-width: 320px; margin-top: 0px; margin-bottom: 0px; position: fixed; box-sizing: border-box; left: 16px; top: 75.5926px; max-height: 449px; z-index: 2204;" with-backdrop=""><!--css-build:shady--><!--css_build_scope:tp-yt-paper-dialog--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_paper_dialog.tp.yt.paper.dialog.css.js--><div class="header style-scope ytcp-dialog"><div class="header-content style-scope ytcp-dialog"><h1 id="header" slot="primary-header" class="style-scope yta-explore-column-picker-dialog">Metrics</h1><ytcp-icon-button id="close-button" slot="secondary-header" icon="yt-sys-icons:close" tooltip-label="Close" class="style-scope yta-explore-column-picker-dialog" tabindex="0" modern="" aria-disabled="false" aria-label="Close" role="button"><!--css-build:shady--><!--css_build_scope:ytcp-icon-button--><dom-if restamp="" class="style-scope ytcp-icon-button"></dom-if><tp-yt-iron-icon class="remove-defaults style-scope ytcp-icon-button"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M12.7,12l6.6,6.6l-0.7,0.7L12,12.7l-6.6,6.6l-0.7-0.7l6.6-6.6L4.6,5.4l0.7-0.7l6.6,6.6l6.6-6.6l0.7,0.7L12.7,12z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><dom-if restamp="" class="style-scope ytcp-icon-button"></dom-if><ytcp-tooltip offset="6" suppress-aria-announcement="true" class="style-scope ytcp-icon-button" style="display: none;"></ytcp-tooltip><dom-if restamp="" class="style-scope ytcp-icon-button"></dom-if></ytcp-icon-button></div><tp-yt-paper-progress indeterminate="" class="style-scope ytcp-dialog" hidden="" role="progressbar" value="0" aria-valuemin="0" aria-valuemax="100" aria-disabled="false"><!--css-build:shady--><!--css_build_scope:tp-yt-paper-progress--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_paper_progress.tp.yt.paper.progress.css.js--><div id="progressContainer" class="style-scope tp-yt-paper-progress">
+  <div id="secondaryProgress" class="style-scope tp-yt-paper-progress" hidden="" style="transform: scaleX(0);"></div>
+  <div id="primaryProgress" class="style-scope tp-yt-paper-progress indeterminate" style="transform: scaleX(0);"></div>
+</div>
+</tp-yt-paper-progress></div><div class="content style-scope ytcp-dialog"><div id="content" slot="content" no-padding="" class="style-scope yta-explore-column-picker-dialog"><ytcp-search-bar id="search-bar" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-search-bar--><ps-dom-if class="style-scope ytcp-search-bar"><template is="dom-if"></template></ps-dom-if><input id="search-input" class="search-input style-scope ytcp-search-bar" role="searchbox" type="text" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-label="Search metrics" placeholder="Search metrics"><ps-dom-if class="style-scope ytcp-search-bar"><template is="dom-if"></template></ps-dom-if></ytcp-search-bar><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><form class="style-scope yta-explore-column-picker-dialog"><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Overview</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="m13.06 9 5.47 5.47c.293.293.293.767 0 1.06-.293.293-.767.293-1.06 0L12 10.06l-5.47 5.47c-.293.293-.767.293-1.06 0-.293-.293-.293-.767 0-1.06L10.94 9l.53-.53.53-.53.53.53.53.53Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0"><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="EXTERNAL_VIEWS" checked=""><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="true" aria-disabled="false" aria-label="Views" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><div id="checkmark" class="standard style-scope ytcp-checkbox-lit"></div>
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Views
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="ENGAGED_VIEWS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Engaged views" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Engaged views
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="EXTERNAL_WATCH_TIME" checked=""><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="true" aria-disabled="false" aria-label="Watch time (hours)" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><div id="checkmark" class="standard style-scope ytcp-checkbox-lit"></div>
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Watch time (hours)
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="SUBSCRIBERS_NET_CHANGE" checked=""><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="true" aria-disabled="false" aria-label="Subscribers" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><div id="checkmark" class="standard style-scope ytcp-checkbox-lit"></div>
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Subscribers
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="AVERAGE_WATCH_TIME"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Average view duration" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$--> <paper-ripple id="ink" class="circle style-scope ytcp-checkbox-lit" center="true">
+    </paper-ripple>
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Average view duration
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="AVERAGE_WATCH_PERCENTAGE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Average percentage viewed" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$--> <paper-ripple id="ink" class="circle style-scope ytcp-checkbox-lit" center="true">
+    </paper-ripple>
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Average percentage viewed
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="VIDEO_COUNT_NEW"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Videos added" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Videos added
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Videos added is not available with the current breakdown." compact="" aria-describedby="goog_1398164614"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164614" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Videos added is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="VIDEO_COUNT_FIRST_PUBLISHED"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Videos published" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Videos published
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Videos published is not available with the current breakdown." compact="" aria-describedby="goog_1398164615"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164615" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Videos published is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Reach</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="m13.06 9 5.47 5.47c.293.293.293.767 0 1.06-.293.293-.767.293-1.06 0L12 10.06l-5.47 5.47c-.293.293-.767.293-1.06 0-.293-.293-.293-.767 0-1.06L10.94 9l.53-.53.53-.53.53.53.53.53Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0"><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="VIDEO_THUMBNAIL_IMPRESSIONS" checked=""><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="true" aria-disabled="false" aria-label="Impressions" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><div id="checkmark" class="standard style-scope ytcp-checkbox-lit"></div>
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Impressions
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="VIDEO_THUMBNAIL_IMPRESSIONS_VTR" checked=""><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="true" aria-disabled="false" aria-label="Impressions click-through rate" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><div id="checkmark" class="standard style-scope ytcp-checkbox-lit"></div>
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Impressions click-through rate
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="SHORTS_FEED_IMPRESSIONS_VTR"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Stayed to watch" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Stayed to watch
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="ESTIMATED_UNIQUE_VIEWERS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Unique viewers" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Unique viewers
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="AVERAGE_VIEWS_PER_VIEWER"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Average views per viewer" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Average views per viewer
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="RECENT_VIEWERS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="New viewers" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->New viewers
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="RETURNING_VIEWERS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Returning viewers" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Returning viewers
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="OCCASIONAL_VIEWERS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Casual viewers" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Casual viewers
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="FREQUENT_VIEWERS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Regular viewers" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Regular viewers
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Interactions</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="HYPES"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Hypes" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Hypes
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="HYPE_POINTS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Hype points" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Hype points
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="SUBSCRIBERS_GAINED"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Subscribers gained" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Subscribers gained
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="SUBSCRIBERS_LOST"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Subscribers lost" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Subscribers lost
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="RATINGS_LIKES"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Likes" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Likes
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="RATINGS_DISLIKES"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Dislikes" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Dislikes
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="LIKES_PER_LIKES_PLUS_DISLIKES_PERCENT"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Likes (vs. dislikes)" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Likes (vs. dislikes)
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="SHARINGS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Shares" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Shares
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="COMMENTS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Comments added" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Comments added
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Shopping</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="TOTAL_SALES"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Total sales" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Total sales
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="ORDERS_COUNT"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Orders" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Orders
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="APPROVED_REVENUE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Approved commissions" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Approved commissions
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PENDING_REVENUE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Pending commissions" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Pending commissions
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="RETURNED_REVENUE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Returned products" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Returned products
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Premium</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="EXTERNAL_YOUTUBE_RED_VIEWS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="YouTube Premium views" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->YouTube Premium views
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="EXTERNAL_YOUTUBE_RED_WATCH_TIME"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="YouTube Premium watch time (hours)" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->YouTube Premium watch time (hours)
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Playlists</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_WATCH_TIME_HOURS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Playlist watch time (hours)" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Playlist watch time (hours)
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_VIEWS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Views from playlist" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Views from playlist
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_AVERAGE_WATCH_TIME"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Playlist average view duration" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Playlist average view duration
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Playlist average view duration is not available with the current breakdown." compact="" aria-describedby="goog_1398164616"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164616" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Playlist average view duration is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_AVERAGE_WATCH_PERCENTAGE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Playlist average percentage viewed" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Playlist average percentage viewed
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Playlist average percentage viewed is not available with the current breakdown." compact="" aria-describedby="goog_1398164617"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164617" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Playlist average percentage viewed is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_STARTS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Playlist starts" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Playlist starts
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Playlist starts is not available with the current breakdown." compact="" aria-describedby="goog_1398164618"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164618" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Playlist starts is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_EXITS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Playlist exits" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Playlist exits
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Playlist exits is not available with the current breakdown." compact="" aria-describedby="goog_1398164619"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164619" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Playlist exits is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_EXIT_RATE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Playlist exit rate" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Playlist exit rate
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Playlist exit rate is not available with the current breakdown." compact="" aria-describedby="goog_1398164620"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164620" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Playlist exit rate is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_AVERAGE_START_DURATION"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Average time in playlist" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Average time in playlist
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Average time in playlist is not available with the current breakdown." compact="" aria-describedby="goog_1398164621"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164621" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Average time in playlist is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_AVERAGE_VIEWS_PER_START"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Views per playlist start" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Views per playlist start
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="PLAYLIST_SAVES_NET_CHANGE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Playlist saves" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Playlist saves
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Playlist saves is not available with the current breakdown." compact="" aria-describedby="goog_1398164622"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164622" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Playlist saves is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Live</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="LIVE_HOURS_STREAMED"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Hours streamed" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Hours streamed
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="VIDEO_REMINDER_SET_NET"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Reminders set" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Reminders set
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="LIVE_TOTAL_CHAT_MESSAGES"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Chat messages" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Chat messages
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="LIVE_TOTAL_REACTIONS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Reactions" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Reactions
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Posts</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="POST_IMPRESSIONS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Post impressions" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Post impressions
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Post impressions is not available with the current breakdown." compact="" aria-describedby="goog_1398164623"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164623" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Post impressions is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="POST_LIKES"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Post likes" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Post likes
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Post likes is not available with the current breakdown." compact="" aria-describedby="goog_1398164624"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164624" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Post likes is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="POST_LIKES_PER_IMPRESSIONS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Post like rate" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Post like rate
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Post like rate is not available with the current breakdown." compact="" aria-describedby="goog_1398164625"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164625" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Post like rate is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="POST_VOTES"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Post responses" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Post responses
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Post responses is not available with the current breakdown." compact="" aria-describedby="goog_1398164626"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164626" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Post responses is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="POST_VOTES_PER_IMPRESSIONS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Post response rate" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Post response rate
+      <ytcp-icon-tooltip slot="help-tooltip" class="style-scope yta-explore-column-picker-dialog"><!--css-build:shady--><!--css_build_scope:ytcp-icon-tooltip--><dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+
+  <tp-yt-iron-icon id="icon" style-target="icon" class="style-scope ytcp-icon-tooltip" tabindex="0" aria-label="Post response rate is not available with the current breakdown." compact="" aria-describedby="goog_1398164627"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g class="style-scope tp-yt-iron-icon"><path d="M13,17h-2v-6h2V17z M13,7h-2v2h2V7z M12,3c-4.96,0-9,4.04-9,9s4.04,9,9,9c4.96,0,9-4.04,9-9S16.96,3,12,3 M12,2 c5.52,0,10,4.48,10,10s-4.48,10-10,10C6.48,22,2,17.52,2,12S6.48,2,12,2L12,2z" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon>
+<dom-if restamp="" class="style-scope ytcp-icon-tooltip"></dom-if>
+<ytcp-paper-tooltip for="icon" type="explanatory" class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-->
+<ytcp-paper-tooltip-placeholder aria-live="polite" role="tooltip" class="style-scope ytcp-paper-tooltip" disable-upgrade="" tabindex="-1" id="goog_1398164627" modern="">
+  <div id="slot-wrapper" class="style-scope ytcp-paper-tooltip"></div>
+  <div id="tooltip-placeholder-fake-slot" class="style-scope ytcp-paper-tooltip">
+  <ytcp-paper-tooltip-body class="style-scope ytcp-icon-tooltip" modern=""><!--css-build:shady--><!--css_build_scope:ytcp-paper-tooltip-body-->
+  <p class="style-scope ytcp-paper-tooltip-body"><yt-formatted-string class="style-scope ytcp-paper-tooltip-body">Post response rate is not available with the current breakdown.</yt-formatted-string></p>
+<ps-dom-repeat as="p" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+<ps-dom-repeat as="message" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+
+
+    
+          
+  
+<ps-dom-repeat as="link" class="style-scope ytcp-paper-tooltip-body"><template is="dom-repeat"></template></ps-dom-repeat>
+</ytcp-paper-tooltip-body>
+</div>
+  <dom-if class="style-scope ytcp-paper-tooltip"></dom-if>
+</ytcp-paper-tooltip-placeholder>
+</ytcp-paper-tooltip>
+</ytcp-icon-tooltip>
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="POST_SUBSCRIBERS_NET_CHANGE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Post subscribers" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Post subscribers
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Remix</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="SHORTS_REMIX_COUNT"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Remix count" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Remix count
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="SHORTS_REMIX_VIEWS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Remix views" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Remix views
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Clips</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="CLIP_VIEWS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Community clip views" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Community clip views
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="CLIP_VIDEO_WATCHTIME"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Watch time from community clips (hours)" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Watch time from community clips (hours)
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Cards</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="INFO_CARD_CLICKS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Card clicks" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Card clicks
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="INFO_CARD_IMPRESSIONS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Cards shown" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Cards shown
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="INFO_CARD_CLICK_RATE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Clicks per card shown" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Clicks per card shown
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="INFO_CARD_TEASER_CLICKS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Card teaser clicks" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Card teaser clicks
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="INFO_CARD_TEASER_IMPRESSIONS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Card teasers shown" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Card teasers shown
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="INFO_CARD_TEASER_CLICK_RATE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Teaser clicks per card teaser shown" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Teaser clicks per card teaser shown
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><div class="picker-header multi-selection-picker-header style-scope yta-explore-column-picker-dialog" tabindex="0"><h2 class="picker-text style-scope yta-explore-column-picker-dialog">Endscreens</h2><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><tp-yt-iron-icon class="style-scope yta-explore-column-picker-dialog"><svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" aria-hidden="true" style="pointer-events: none; display: block; width: 100%; height: 100%;"><g fill="currentColor" height="24" viewBox="0 0 24 24" width="24" class="style-scope tp-yt-iron-icon"><path clip-rule="evenodd" d="M5.47 8.47c.293-.293.767-.293 1.06 0L12 13.94l5.47-5.47c.293-.293.767-.293 1.06 0 .293.293.293.767 0 1.06l-6 6-.53.53-.53-.53-6-6c-.293-.293-.293-.767 0-1.06Z" fill-rule="evenodd" class="style-scope tp-yt-iron-icon"></path></g></svg><!--css-build:shady--><!--css_build_scope:tp-yt-iron-icon--><!--css_build_styles:video.youtube.src.web.polymer.shared.ui.styles.yt_base_styles.yt.base.styles.css.js,third_party.javascript.youtube_components.tp_yt_iron_icon.tp.yt.iron.icon.css.js-->
+</tp-yt-iron-icon><ps-dom-if restamp="" class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if><div class="picker-group style-scope yta-explore-column-picker-dialog" tabindex="0" hide-group=""><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="ENDSCREEN_ELEMENT_CLICKS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="End screen element clicks" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->End screen element clicks
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="ENDSCREEN_ELEMENT_IMPRESSIONS"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="End screen elements shown" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->End screen elements shown
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><div class="options-group style-scope yta-explore-column-picker-dialog"><div class="multi-selection-option-row style-scope yta-explore-column-picker-dialog"><ytcp-checkbox-lit class="picker-text style-scope yta-explore-column-picker-dialog" id="ENDSCREEN_ELEMENT_CLICK_RATE"><!---->
+    <div id="root-container" class="style-scope ytcp-checkbox-lit">
+      <div id="checkbox-line-height-aligner-container" class="style-scope ytcp-checkbox-lit">
+        <div id="checkbox-line-height-aligner" class="style-scope ytcp-checkbox-lit">
+          <div id="checkbox-container" class="style-scope ytcp-checkbox-lit">
+            <div id="checkbox" role="checkbox" tabindex="0" aria-checked="false" aria-disabled="false" aria-label="Clicks per end screen element shown" class="style-scope ytcp-checkbox-lit">
+              <!--?lit$138123070$--><!--?-->
+            </div>
+            <!--?lit$138123070$-->
+          </div>
+        </div>
+      </div>
+      <!--?lit$138123070$--><div class="label style-scope ytcp-checkbox-lit">
+      <!--?lit$138123070$-->Clicks per end screen element shown
+      
+    </div>
+      
+    </div>
+  </ytcp-checkbox-lit></div></div><ps-dom-repeat as="optionModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></div><ps-dom-repeat as="groupModel" class="style-scope yta-explore-column-picker-dialog"><template is="dom-repeat"></template></ps-dom-repeat></form><ps-dom-if class="style-scope yta-explore-column-picker-dialog"><template is="dom-if"></template></ps-dom-if></div></div><div class="footer style-scope ytcp-dialog"><div slot="primary-footer" class="style-scope yta-explore-column-picker-dialog"><ytcp-button id="deselect-all-button" class="style-scope yta-explore-column-picker-dialog" tabindex="-1" type="tonal" button-style="default" icon-alignment="start" aria-disabled="false"><!--css-build:shady--><!--css_build_scope:ytcp-button--><ytcp-button-shape><button class="ytcpButtonShapeImplHost ytcpButtonShapeImpl--tonal ytcpButtonShapeImpl--mono ytcpButtonShapeImpl--size-m ytcpButtonShapeImpl--enable-backdrop-filter-experiment" title="" aria-label="Deselect all" aria-disabled="false" style=""><div class="ytcpButtonShapeImpl__button-text-content">Deselect all</div><yt-touch-feedback-shape aria-hidden="true" class="yt-spec-touch-feedback-shape yt-spec-touch-feedback-shape--touch-response"><div class="yt-spec-touch-feedback-shape__stroke"></div><div class="yt-spec-touch-feedback-shape__fill"></div></yt-touch-feedback-shape></button></ytcp-button-shape></ytcp-button></div><div slot="secondary-footer" class="style-scope yta-explore-column-picker-dialog"><ytcp-button id="apply-button" type="filled" class="style-scope yta-explore-column-picker-dialog" tabindex="-1" button-style="default" icon-alignment="start" aria-disabled="false"><!--css-build:shady--><!--css_build_scope:ytcp-button--><ytcp-button-shape><button class="ytcpButtonShapeImplHost ytcpButtonShapeImpl--filled ytcpButtonShapeImpl--mono ytcpButtonShapeImpl--size-m ytcpButtonShapeImpl--enable-backdrop-filter-experiment" title="" aria-label="Apply" aria-disabled="false" style=""><div class="ytcpButtonShapeImpl__button-text-content">Apply</div><yt-touch-feedback-shape aria-hidden="true" class="yt-spec-touch-feedback-shape yt-spec-touch-feedback-shape--touch-response-inverse"><div class="yt-spec-touch-feedback-shape__stroke"></div><div class="yt-spec-touch-feedback-shape__fill"></div></yt-touch-feedback-shape></button></ytcp-button-shape></ytcp-button></div></div>
+</tp-yt-paper-dialog>
