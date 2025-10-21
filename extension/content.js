@@ -85,13 +85,33 @@ async function setCustomDateRange(startDate, endDate) {
 
   if (!startInput || !endInput) throw new Error('Input elements not found');
 
+  // Detect date format based on browser locale
+  const useDDMMYYYY = () => {
+    const locale = navigator.language || 'en-US';
+    // Countries that use DD/MM/YYYY: India, UK, Australia, most of Europe, etc.
+    const ddmmCountries = ['en-IN', 'en-GB', 'en-AU', 'en-NZ', 'en-ZA', 'hi-IN',
+                           'de', 'fr', 'es', 'it', 'pt', 'nl', 'pl', 'ru'];
+    return ddmmCountries.some(country => locale.startsWith(country.split('-')[0]));
+  };
+
   const formatDateForInput = (dateStr) => {
     const [year, month, day] = dateStr.split('-');
+    // Use DD/MM/YYYY for India and most non-US countries
+    if (useDDMMYYYY()) {
+      return `${day}/${month}/${year}`;
+    }
+    // Use MM/DD/YYYY for US
     return `${month}/${day}/${year}`;
   };
 
   const formattedStart = formatDateForInput(startDate);
   const formattedEnd = formatDateForInput(endDate);
+
+  // Log format being used for debugging
+  const locale = navigator.language || 'en-US';
+  const format = useDDMMYYYY() ? 'DD/MM/YYYY' : 'MM/DD/YYYY';
+  console.log(`Using date format: ${format} (detected locale: ${locale})`);
+  console.log(`Setting dates: ${formattedStart} to ${formattedEnd}`);
 
   startInput.value = formattedStart;
   startInput.dispatchEvent(new Event('input', { bubbles: true }));
