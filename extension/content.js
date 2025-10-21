@@ -255,6 +255,82 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
   }
 }
 
+// Make panel draggable by header
+function makePanelDraggable(panel) {
+  const header = panel.querySelector('.helper-header');
+  let isDragging = false;
+  let currentX;
+  let currentY;
+  let initialX;
+  let initialY;
+
+  // Add cursor style to indicate draggability
+  header.style.cursor = 'move';
+
+  header.addEventListener('mousedown', dragStart);
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('mouseup', dragEnd);
+
+  function dragStart(e) {
+    // Don't drag if clicking on close button
+    if (e.target.classList.contains('helper-close-btn')) {
+      return;
+    }
+
+    // Get current position
+    const rect = panel.getBoundingClientRect();
+    initialX = e.clientX - rect.left;
+    initialY = e.clientY - rect.top;
+
+    isDragging = true;
+    header.style.cursor = 'grabbing';
+  }
+
+  function drag(e) {
+    if (isDragging) {
+      e.preventDefault();
+
+      currentX = e.clientX - initialX;
+      currentY = e.clientY - initialY;
+
+      // Keep panel within viewport
+      const maxX = window.innerWidth - panel.offsetWidth;
+      const maxY = window.innerHeight - panel.offsetHeight;
+
+      currentX = Math.max(0, Math.min(currentX, maxX));
+      currentY = Math.max(0, Math.min(currentY, maxY));
+
+      panel.style.left = currentX + 'px';
+      panel.style.top = currentY + 'px';
+      panel.style.right = 'auto';
+    }
+  }
+
+  function dragEnd() {
+    if (isDragging) {
+      isDragging = false;
+      header.style.cursor = 'move';
+
+      // Save position to storage
+      chrome.storage.local.set({
+        panelPosition: {
+          left: panel.style.left,
+          top: panel.style.top
+        }
+      });
+    }
+  }
+
+  // Restore saved position
+  chrome.storage.local.get(['panelPosition'], (result) => {
+    if (result.panelPosition) {
+      panel.style.left = result.panelPosition.left;
+      panel.style.top = result.panelPosition.top;
+      panel.style.right = 'auto';
+    }
+  });
+}
+
 // UI: Create floating panel
 function createHelperPanel() {
   // Check if panel already exists
@@ -266,7 +342,10 @@ function createHelperPanel() {
   panel.id = 'yt-treatment-helper';
   panel.innerHTML = `
     <div class="helper-header">
-      <h3>Treatment Date Comparison</h3>
+      <div class="header-content">
+        <span class="drag-handle">⋮⋮</span>
+        <h3>Treatment Date Comparison</h3>
+      </div>
       <button id="helper-close" class="helper-close-btn">×</button>
     </div>
     <div class="helper-body">
@@ -387,6 +466,9 @@ function createHelperPanel() {
   `;
 
   document.body.appendChild(panel);
+
+  // Make panel draggable
+  makePanelDraggable(panel);
 
   // Event Listeners
   document.getElementById('helper-close').addEventListener('click', () => {
