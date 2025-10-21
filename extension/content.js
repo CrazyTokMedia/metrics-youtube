@@ -716,9 +716,18 @@ function createHelperPanel() {
   // Make panel draggable
   makePanelDraggable(panel);
 
+  // Check saved visibility state
+  safeStorage.get(['panelVisible']).then((result) => {
+    if (result.panelVisible === false) {
+      panel.style.display = 'none';
+    }
+  });
+
   // Event Listeners
-  document.getElementById('helper-close').addEventListener('click', () => {
+  document.getElementById('helper-close').addEventListener('click', async () => {
     panel.style.display = 'none';
+    // Save state
+    await safeStorage.set({ panelVisible: false });
   });
 
   document.getElementById('calculate-btn').addEventListener('click', () => {
@@ -926,10 +935,13 @@ function addToggleButton() {
       toggleBtn.textContent = 'Treatment Comparison';
       toggleBtn.title = 'Open Treatment Date Comparison Helper';
 
-      toggleBtn.addEventListener('click', () => {
+      toggleBtn.addEventListener('click', async () => {
         const panel = document.getElementById('yt-treatment-helper');
         if (panel) {
-          panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+          const isVisible = panel.style.display !== 'none';
+          panel.style.display = isVisible ? 'none' : 'block';
+          // Save state
+          await safeStorage.set({ panelVisible: !isVisible });
         } else {
           createHelperPanel();
         }
@@ -961,3 +973,18 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+
+// Listen for messages from popup to toggle panel visibility
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'togglePanel') {
+    const panel = document.getElementById('yt-treatment-helper');
+    if (panel) {
+      panel.style.display = message.visible ? 'block' : 'none';
+    } else if (message.visible) {
+      // Create panel if it doesn't exist and we want to show it
+      createHelperPanel();
+    }
+    sendResponse({ success: true });
+  }
+  return true; // Keep message channel open for async response
+});

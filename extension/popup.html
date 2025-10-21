@@ -69,10 +69,45 @@
       color: #9ca3af;
       text-align: center;
     }
+
+    .toggle-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .toggle-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .toggle-btn:active {
+      transform: translateY(0);
+    }
+
+    .toggle-btn.hide {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .toggle-btn.hide:hover {
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
   </style>
 </head>
 <body>
   <h2>Treatment Comparison Helper</h2>
+
+  <button id="toggle-panel-btn" class="toggle-btn">
+    <span id="toggle-text">Show Panel</span>
+  </button>
 
   <div class="status">
     <p class="status-text">Extension is active on YouTube Studio pages</p>
@@ -89,7 +124,9 @@
   </ul>
 
   <div class="footer">
-    Version 1.0.0 - Phase 1: Manual Helper
+    Version 1.0.0 - Production Ready
   </div>
+
+  <script src="popup.js"></script>
 </body>
 </html>
