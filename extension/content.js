@@ -74,8 +74,12 @@ function calculateDateRanges(treatmentDate) {
   const treatment = new Date(treatmentDate);
   const today = new Date();
 
-  // Calculate days since treatment
-  const daysSince = Math.floor((today - treatment) / (1000 * 60 * 60 * 24));
+  // YouTube Analytics only has data up to YESTERDAY (not today)
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // Calculate days since treatment (up to yesterday)
+  const daysSince = Math.floor((yesterday - treatment) / (1000 * 60 * 60 * 24));
 
   // PRE period: Same number of days BEFORE treatment
   const preStart = new Date(treatment);
@@ -83,9 +87,9 @@ function calculateDateRanges(treatmentDate) {
   const preEnd = new Date(treatment);
   preEnd.setDate(preEnd.getDate() - 1); // Day before treatment
 
-  // POST period: Treatment day to today
+  // POST period: Treatment day to YESTERDAY (not today - YouTube doesn't have today's data yet)
   const postStart = new Date(treatment);
-  const postEnd = new Date(today);
+  const postEnd = new Date(yesterday);
 
   return {
     daysSince: daysSince,
@@ -220,6 +224,23 @@ async function setCustomDateRange(startDate, endDate) {
   console.log(`✅ Date range applied successfully!`);
   console.log(`   Requested: ${formattedStart} - ${formattedEnd}`);
   console.log(`   Sidebar shows: "${currentDateText}"`);
+
+  // Verify the dates were actually applied
+  const requestedDates = `${formattedStart} - ${formattedEnd}`;
+  const normalizeDate = (str) => str.replace(/\s+/g, ' ').toLowerCase();
+
+  if (!normalizeDate(currentDateText).includes(normalizeDate(formattedStart.split('/')[0])) &&
+      !normalizeDate(currentDateText).includes(normalizeDate(formattedEnd.split('/')[0]))) {
+    console.warn(`⚠️ WARNING: Dates may not have been applied!`);
+    console.warn(`   This could mean YouTube rejected the dates.`);
+    console.warn(`   Common causes:`);
+    console.warn(`   - Dates are in the future or today (YouTube only has data up to yesterday)`);
+    console.warn(`   - Date format mismatch`);
+    console.warn(`   - YouTube UI validation failed`);
+    throw new Error(`Date validation failed. Sidebar still shows old dates. Requested: ${requestedDates}`);
+  }
+
+  console.log(`   ✓ Dates verified in sidebar!`);
   console.log(`   Waiting for table to refresh...`);
 }
 
@@ -663,15 +684,21 @@ function createHelperPanel() {
       return;
     }
 
-    // Check if using future dates
+    // Check if using future dates (or today)
     const treatmentDate = document.getElementById('treatment-date').value;
     const treatment = new Date(treatmentDate);
     const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
     today.setHours(0, 0, 0, 0);
+    yesterday.setHours(0, 0, 0, 0);
     treatment.setHours(0, 0, 0, 0);
 
-    if (treatment > today) {
-      alert('⚠️ Warning: Treatment date is in the FUTURE!\n\nYouTube Analytics only has data for past dates.\nPlease use a past date for accurate results.\n\nExample: If today is 21-Oct-2025, use a date like 15-Oct-2025 or earlier.');
+    if (treatment >= today) {
+      const todayStr = formatDate(today);
+      const yesterdayStr = formatDate(yesterday);
+      alert(`⚠️ Warning: Treatment date cannot be TODAY or in the FUTURE!\n\nYouTube Analytics only has data up to YESTERDAY.\n\nToday: ${todayStr}\nLatest available data: ${yesterdayStr}\n\nPlease use ${yesterdayStr} or an earlier date.`);
       return;
     }
 
