@@ -171,25 +171,56 @@ async function setCustomDateRange(startDate, endDate) {
   console.log(`Using date format: ${format} (detected locale: ${locale})`);
   console.log(`Setting dates: ${formattedStart} to ${formattedEnd}`);
 
+  // Clear existing values first
+  startInput.value = '';
+  startInput.focus();
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  // Set start date
   startInput.value = formattedStart;
   startInput.dispatchEvent(new Event('input', { bubbles: true }));
   startInput.dispatchEvent(new Event('change', { bubbles: true }));
+  startInput.dispatchEvent(new Event('blur', { bubbles: true }));
 
-  await new Promise(resolve => setTimeout(resolve, 200));
+  console.log(`Start input value after setting: "${startInput.value}"`);
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  // Clear and set end date
+  endInput.value = '';
+  endInput.focus();
+  await new Promise(resolve => setTimeout(resolve, 100));
 
   endInput.value = formattedEnd;
   endInput.dispatchEvent(new Event('input', { bubbles: true }));
   endInput.dispatchEvent(new Event('change', { bubbles: true }));
+  endInput.dispatchEvent(new Event('blur', { bubbles: true }));
+
+  console.log(`End input value after setting: "${endInput.value}"`);
 
   await new Promise(resolve => setTimeout(resolve, 300));
 
   const applyButton = dateDialog.querySelector('#apply-button');
   if (!applyButton) throw new Error('Apply button not found');
 
+  console.log('Clicking Apply button...');
   applyButton.click();
   await new Promise(resolve => setTimeout(resolve, 3000));
 
-  console.log(`Date range set: ${formattedStart} - ${formattedEnd}`);
+  // Verify the date was actually applied by checking the sidebar
+  const verifyTrigger = sidebar.querySelectorAll('ytcp-dropdown-trigger');
+  let currentDateText = '';
+  for (const trigger of verifyTrigger) {
+    const text = trigger.textContent;
+    if (text.includes('–') || text.includes('Since') || text.includes('days')) {
+      currentDateText = text.trim();
+      break;
+    }
+  }
+
+  console.log(`✅ Date range applied successfully!`);
+  console.log(`   Requested: ${formattedStart} - ${formattedEnd}`);
+  console.log(`   Sidebar shows: "${currentDateText}"`);
+  console.log(`   Waiting for table to refresh...`);
 }
 
 // Helper: Select Metrics
@@ -629,6 +660,18 @@ function createHelperPanel() {
 
     if (!preStart || !postStart) {
       alert('Please calculate date ranges first by clicking "Calculate Periods"');
+      return;
+    }
+
+    // Check if using future dates
+    const treatmentDate = document.getElementById('treatment-date').value;
+    const treatment = new Date(treatmentDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    treatment.setHours(0, 0, 0, 0);
+
+    if (treatment > today) {
+      alert('⚠️ Warning: Treatment date is in the FUTURE!\n\nYouTube Analytics only has data for past dates.\nPlease use a past date for accurate results.\n\nExample: If today is 21-Oct-2025, use a date like 15-Oct-2025 or earlier.');
       return;
     }
 
