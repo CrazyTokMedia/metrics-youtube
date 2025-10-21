@@ -175,40 +175,82 @@ async function setCustomDateRange(startDate, endDate) {
   console.log(`Using date format: ${format} (detected locale: ${locale})`);
   console.log(`Setting dates: ${formattedStart} to ${formattedEnd}`);
 
-  // Clear existing values first
-  startInput.value = '';
-  startInput.focus();
-  await new Promise(resolve => setTimeout(resolve, 100));
+  // Function to properly set date input value by simulating typing
+  const setDateInput = async (input, value, label) => {
+    console.log(`Setting ${label} input...`);
+
+    // Click and focus the input
+    input.click();
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    input.focus();
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    // Select all existing text
+    input.select();
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Simulate backspace to clear (more realistic than direct clear)
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }));
+    input.value = '';
+    input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Backspace', bubbles: true }));
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    // Type each character with keyboard events
+    for (let i = 0; i < value.length; i++) {
+      const char = value[i];
+
+      // Keydown
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
+
+      // Update value
+      input.value = value.substring(0, i + 1);
+
+      // Input event
+      input.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+
+      // Keyup
+      input.dispatchEvent(new KeyboardEvent('keyup', { key: char, bubbles: true }));
+
+      // Small delay between characters to simulate human typing
+      await new Promise(resolve => setTimeout(resolve, 30));
+    }
+
+    // Wait a bit for any validation
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Dispatch change event
+    input.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Blur to finalize
+    input.blur();
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    console.log(`${label} input value after setting: "${input.value}"`);
+  };
 
   // Set start date
-  startInput.value = formattedStart;
-  startInput.dispatchEvent(new Event('input', { bubbles: true }));
-  startInput.dispatchEvent(new Event('change', { bubbles: true }));
-  startInput.dispatchEvent(new Event('blur', { bubbles: true }));
+  await setDateInput(startInput, formattedStart, 'Start');
 
-  console.log(`Start input value after setting: "${startInput.value}"`);
-  await new Promise(resolve => setTimeout(resolve, 300));
+  // Wait before moving to end date
+  await new Promise(resolve => setTimeout(resolve, 500));
 
-  // Clear and set end date
-  endInput.value = '';
-  endInput.focus();
-  await new Promise(resolve => setTimeout(resolve, 100));
+  // Set end date
+  await setDateInput(endInput, formattedEnd, 'End');
 
-  endInput.value = formattedEnd;
-  endInput.dispatchEvent(new Event('input', { bubbles: true }));
-  endInput.dispatchEvent(new Event('change', { bubbles: true }));
-  endInput.dispatchEvent(new Event('blur', { bubbles: true }));
-
-  console.log(`End input value after setting: "${endInput.value}"`);
-
-  await new Promise(resolve => setTimeout(resolve, 300));
+  // Wait for any validation to complete
+  await new Promise(resolve => setTimeout(resolve, 500));
 
   const applyButton = dateDialog.querySelector('#apply-button');
   if (!applyButton) throw new Error('Apply button not found');
 
   console.log('Clicking Apply button...');
   applyButton.click();
-  await new Promise(resolve => setTimeout(resolve, 3000));
+
+  // Increased wait time for YouTube to process the date change
+  await new Promise(resolve => setTimeout(resolve, 4000));
 
   // Verify the date was actually applied by checking the sidebar
   const verifyTrigger = sidebar.querySelectorAll('ytcp-dropdown-trigger');
@@ -229,18 +271,30 @@ async function setCustomDateRange(startDate, endDate) {
   const requestedDates = `${formattedStart} - ${formattedEnd}`;
   const normalizeDate = (str) => str.replace(/\s+/g, ' ').toLowerCase();
 
-  if (!normalizeDate(currentDateText).includes(normalizeDate(formattedStart.split('/')[0])) &&
-      !normalizeDate(currentDateText).includes(normalizeDate(formattedEnd.split('/')[0]))) {
-    console.warn(`⚠️ WARNING: Dates may not have been applied!`);
-    console.warn(`   This could mean YouTube rejected the dates.`);
-    console.warn(`   Common causes:`);
-    console.warn(`   - Dates are in the future or today (YouTube only has data up to yesterday)`);
-    console.warn(`   - Date format mismatch`);
-    console.warn(`   - YouTube UI validation failed`);
-    throw new Error(`Date validation failed. Sidebar still shows old dates. Requested: ${requestedDates}`);
+  // Extract day numbers from formatted dates (e.g., "12" from "12/10/2025")
+  const startDay = formattedStart.split('/')[0];
+  const endDay = formattedEnd.split('/')[0];
+
+  // Check if both start and end dates are in the sidebar text
+  const sidebarNormalized = normalizeDate(currentDateText);
+  const hasStartDate = sidebarNormalized.includes(startDay);
+  const hasEndDate = sidebarNormalized.includes(endDay);
+
+  console.log(`   Checking dates: start day "${startDay}" found: ${hasStartDate}, end day "${endDay}" found: ${hasEndDate}`);
+
+  if (!hasStartDate || !hasEndDate) {
+    console.error(`⚠️ ERROR: Dates were NOT applied correctly!`);
+    console.error(`   Requested: ${formattedStart} - ${formattedEnd} (days: ${startDay} to ${endDay})`);
+    console.error(`   Sidebar shows: "${currentDateText}"`);
+    console.error(`   Missing: ${!hasStartDate ? 'START date' : ''} ${!hasEndDate ? 'END date' : ''}`);
+    console.error(`   Common causes:`);
+    console.error(`   - Dates are in the future or today (YouTube only has data up to yesterday)`);
+    console.error(`   - YouTube's date picker validation rejected the input`);
+    console.error(`   - Date format mismatch`);
+    throw new Error(`Date validation failed. ${!hasStartDate ? 'START' : 'END'} date was not applied. Requested: ${requestedDates}`);
   }
 
-  console.log(`   ✓ Dates verified in sidebar!`);
+  console.log(`   ✅ Both dates verified in sidebar!`);
   console.log(`   Waiting for table to refresh...`);
 }
 
