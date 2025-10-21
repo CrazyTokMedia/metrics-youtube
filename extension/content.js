@@ -184,44 +184,37 @@ async function setCustomDateRange(startDate, endDate) {
 
     // Click and focus the input
     input.click();
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     input.focus();
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Select all existing text
     input.select();
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 50));
 
-    // Simulate backspace to clear (more realistic than direct clear)
+    // Simulate backspace to clear
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }));
     input.value = '';
     input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Backspace', bubbles: true }));
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Type each character with keyboard events
     for (let i = 0; i < value.length; i++) {
       const char = value[i];
 
-      // Keydown
       input.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
-
-      // Update value
       input.value = value.substring(0, i + 1);
-
-      // Input event
       input.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-
-      // Keyup
       input.dispatchEvent(new KeyboardEvent('keyup', { key: char, bubbles: true }));
 
-      // Small delay between characters to simulate human typing
-      await new Promise(resolve => setTimeout(resolve, 30));
+      // Small delay between characters (test showed this works)
+      await new Promise(resolve => setTimeout(resolve, 20));
     }
 
-    // Wait a bit for any validation
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait for validation
+    await new Promise(resolve => setTimeout(resolve, 150));
 
     // Dispatch change event
     input.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
@@ -229,19 +222,23 @@ async function setCustomDateRange(startDate, endDate) {
 
     // Blur to finalize
     input.blur();
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 150));
 
     console.log(`${label} input value after setting: "${input.value}"`);
   };
 
-  // Set start date
-  await setDateInput(startInput, formattedStart, 'Start');
+  // CRITICAL: Set END date FIRST, then START date
+  // Test results showed this order prevents validation rejection
+  // When START > cached END, YouTube rejects the change
 
-  // Wait before moving to end date
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  // Set end date
+  // Set end date first
   await setDateInput(endInput, formattedEnd, 'End');
+
+  // Wait before setting start date
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  // Set start date second
+  await setDateInput(startInput, formattedStart, 'Start');
 
   // Wait for any validation to complete
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -252,8 +249,8 @@ async function setCustomDateRange(startDate, endDate) {
   console.log('Clicking Apply button...');
   applyButton.click();
 
-  // Increased wait time for YouTube to process the date change
-  await new Promise(resolve => setTimeout(resolve, 4000));
+  // Wait for YouTube to process the date change
+  await new Promise(resolve => setTimeout(resolve, 3000));
 
   // Verify the date was actually applied by checking the sidebar
   const verifyTrigger = sidebar.querySelectorAll('ytcp-dropdown-trigger');
@@ -300,13 +297,8 @@ async function setCustomDateRange(startDate, endDate) {
   console.log(`   ✅ Both dates verified in sidebar!`);
   console.log(`   Waiting for table to refresh...`);
 
-  // Close the dialog to clear its state for next use
-  // Press ESC to ensure dialog is fully closed and doesn't cache values
-  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
-  document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  console.log('   Dialog closed');
+  // Note: Dialog auto-closes after Apply, no need to manually close
+  // ESC key was breaking the UI by closing the advanced metrics tab
 }
 
 // Helper: Select Metrics
@@ -427,8 +419,8 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
     if (statusCallback) statusCallback('📥 Extracting PRE metrics...');
     const preMetrics = await extractValues();
 
-    // Wait before setting POST period to ensure dialog state is fully reset
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Brief wait before setting POST period
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     if (statusCallback) statusCallback('📅 Setting POST period...');
     await setCustomDateRange(postStart, postEnd);
