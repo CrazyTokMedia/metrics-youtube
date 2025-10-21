@@ -147,8 +147,10 @@ async function setCustomDateRange(startDate, endDate) {
 
   if (!startInput || !endInput) throw new Error('Input elements not found');
 
-  // Log pre-filled values to debug caching issues
-  console.log(`   Dialog opened - pre-filled values: start="${startInput.value}", end="${endInput.value}"`);
+  // Get cached values from dialog
+  const cachedStart = startInput.value;
+  const cachedEnd = endInput.value;
+  console.log(`   Dialog opened - pre-filled values: start="${cachedStart}", end="${cachedEnd}"`);
 
   // Detect date format based on browser locale
   const useDDMMYYYY = () => {
@@ -227,18 +229,62 @@ async function setCustomDateRange(startDate, endDate) {
     console.log(`${label} input value after setting: "${input.value}"`);
   };
 
-  // CRITICAL: Set END date FIRST, then START date
-  // Test results showed this order prevents validation rejection
-  // When START > cached END, YouTube rejects the change
+  // SMART ORDERING: Decide which date to set first based on cached vs target values
+  // This prevents YouTube's validation from rejecting changes
 
-  // Set end date first
-  await setDateInput(endInput, formattedEnd, 'End');
+  // Helper to parse date string to comparable number (day of month)
+  const parseDay = (dateStr) => {
+    if (!dateStr) return 0;
+    // Extract day number from DD/MM/YYYY or MM/DD/YYYY format
+    const parts = dateStr.split('/');
+    if (parts.length >= 2) {
+      // For DD/MM/YYYY, day is first; for MM/DD/YYYY, day is second
+      return useDDMMYYYY() ? parseInt(parts[0]) : parseInt(parts[1]);
+    }
+    // If format is "16 Oct 2025", extract the number
+    const match = dateStr.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+  };
 
-  // Wait before setting start date
-  await new Promise(resolve => setTimeout(resolve, 300));
+  const cachedStartDay = parseDay(cachedStart);
+  const cachedEndDay = parseDay(cachedEnd);
+  const targetStartDay = parseDay(formattedStart);
+  const targetEndDay = parseDay(formattedEnd);
 
-  // Set start date second
-  await setDateInput(startInput, formattedStart, 'Start');
+  console.log(`   Cached: START=${cachedStartDay}, END=${cachedEndDay}`);
+  console.log(`   Target: START=${targetStartDay}, END=${targetEndDay}`);
+
+  // Decide order based on relationship between cached and target values
+  let setEndFirst = true; // Default to END first
+
+  if (cachedStartDay > 0 && cachedEndDay > 0) {
+    // If target START > cached END: Set END first (expanding upward)
+    // If target END < cached START: Set START first (contracting downward)
+    if (targetEndDay < cachedStartDay) {
+      setEndFirst = false; // Set START first when moving down
+      console.log(`   Strategy: START first (moving down: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
+    } else if (targetStartDay > cachedEndDay) {
+      setEndFirst = true; // Set END first when moving up
+      console.log(`   Strategy: END first (moving up: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
+    } else {
+      // Ranges overlap, either order should work
+      console.log(`   Strategy: END first (default - ranges overlap)`);
+    }
+  } else {
+    console.log(`   Strategy: END first (default - no cached values)`);
+  }
+
+  if (setEndFirst) {
+    // Set end date first, then start date
+    await setDateInput(endInput, formattedEnd, 'End');
+    await new Promise(resolve => setTimeout(resolve, 300));
+    await setDateInput(startInput, formattedStart, 'Start');
+  } else {
+    // Set start date first, then end date
+    await setDateInput(startInput, formattedStart, 'Start');
+    await new Promise(resolve => setTimeout(resolve, 300));
+    await setDateInput(endInput, formattedEnd, 'End');
+  }
 
   // Wait for any validation to complete
   await new Promise(resolve => setTimeout(resolve, 500));
