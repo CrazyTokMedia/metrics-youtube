@@ -3,6 +3,64 @@
  * Phase 1: Manual Helper - Calculate date ranges and display them
  */
 
+// Check if extension context is still valid
+function isExtensionContextValid() {
+  try {
+    return chrome.runtime && chrome.runtime.id;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Safe chrome.storage wrapper with error handling
+const safeStorage = {
+  get: async (keys) => {
+    if (!isExtensionContextValid()) {
+      console.warn('Extension context invalidated. Please reload the page.');
+      return {};
+    }
+
+    return new Promise((resolve) => {
+      try {
+        chrome.storage.local.get(keys, (result) => {
+          if (chrome.runtime.lastError) {
+            console.warn('Storage get error:', chrome.runtime.lastError);
+            resolve({});
+          } else {
+            resolve(result);
+          }
+        });
+      } catch (e) {
+        console.warn('Storage get exception:', e);
+        resolve({});
+      }
+    });
+  },
+
+  set: async (data) => {
+    if (!isExtensionContextValid()) {
+      console.warn('Extension context invalidated. Cannot save data.');
+      return false;
+    }
+
+    return new Promise((resolve) => {
+      try {
+        chrome.storage.local.set(data, () => {
+          if (chrome.runtime.lastError) {
+            console.warn('Storage set error:', chrome.runtime.lastError);
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        });
+      } catch (e) {
+        console.warn('Storage set exception:', e);
+        resolve(false);
+      }
+    });
+  }
+};
+
 // Utility: Format date as YYYY-MM-DD
 function formatDate(date) {
   const year = date.getFullYear();
@@ -342,7 +400,7 @@ function makePanelDraggable(panel) {
       header.style.cursor = 'move';
 
       // Save position to storage
-      chrome.storage.local.set({
+      safeStorage.set({
         panelPosition: {
           left: panel.style.left,
           top: panel.style.top
@@ -352,7 +410,7 @@ function makePanelDraggable(panel) {
   }
 
   // Restore saved position
-  chrome.storage.local.get(['panelPosition'], (result) => {
+  safeStorage.get(['panelPosition']).then((result) => {
     if (result.panelPosition) {
       panel.style.left = result.panelPosition.left;
       panel.style.top = result.panelPosition.top;
@@ -529,7 +587,7 @@ function createHelperPanel() {
     document.getElementById('results-section').style.display = 'block';
 
     // Save to storage for future use
-    chrome.storage.local.set({
+    safeStorage.set({
       lastTreatmentDate: treatmentDate,
       lastCalculatedRanges: ranges
     });
@@ -611,14 +669,22 @@ function createHelperPanel() {
       statusEl.className = 'extraction-status success';
 
       // Save to storage
-      chrome.storage.local.set({
+      safeStorage.set({
         lastExtractedMetrics: result
       });
 
     } catch (error) {
       console.error('Extraction failed:', error);
-      statusEl.textContent = `❌ Error: ${error.message}`;
-      statusEl.className = 'extraction-status error';
+
+      // Check if it's an extension context error
+      if (!isExtensionContextValid()) {
+        statusEl.innerHTML = `❌ Extension reloaded. Please <strong>refresh this page</strong> (F5) to continue.`;
+        statusEl.className = 'extraction-status error';
+        alert('The extension was reloaded.\n\nPlease refresh this page (press F5) and try again.');
+      } else {
+        statusEl.textContent = `❌ Error: ${error.message}`;
+        statusEl.className = 'extraction-status error';
+      }
     } finally {
       autoExtractBtn.disabled = false;
     }
@@ -662,7 +728,7 @@ Consumption: ${postConsumption}`;
   });
 
   // Load last used treatment date if available
-  chrome.storage.local.get(['lastTreatmentDate'], (result) => {
+  safeStorage.get(['lastTreatmentDate']).then((result) => {
     if (result.lastTreatmentDate) {
       document.getElementById('treatment-date').value = result.lastTreatmentDate;
     }
