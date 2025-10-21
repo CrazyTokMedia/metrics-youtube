@@ -147,6 +147,9 @@ async function setCustomDateRange(startDate, endDate) {
 
   if (!startInput || !endInput) throw new Error('Input elements not found');
 
+  // Log pre-filled values to debug caching issues
+  console.log(`   Dialog opened - pre-filled values: start="${startInput.value}", end="${endInput.value}"`);
+
   // Detect date format based on browser locale
   const useDDMMYYYY = () => {
     const locale = navigator.language || 'en-US';
@@ -296,6 +299,14 @@ async function setCustomDateRange(startDate, endDate) {
 
   console.log(`   ✅ Both dates verified in sidebar!`);
   console.log(`   Waiting for table to refresh...`);
+
+  // Close the dialog to clear its state for next use
+  // Press ESC to ensure dialog is fully closed and doesn't cache values
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+  document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  console.log('   Dialog closed');
 }
 
 // Helper: Select Metrics
@@ -415,6 +426,9 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
 
     if (statusCallback) statusCallback('📥 Extracting PRE metrics...');
     const preMetrics = await extractValues();
+
+    // Wait before setting POST period to ensure dialog state is fully reset
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     if (statusCallback) statusCallback('📅 Setting POST period...');
     await setCustomDateRange(postStart, postEnd);
