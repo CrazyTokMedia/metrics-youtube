@@ -272,8 +272,17 @@ function makePanelDraggable(panel) {
   document.addEventListener('mouseup', dragEnd);
 
   function dragStart(e) {
-    // Don't drag if clicking on close button
-    if (e.target.classList.contains('helper-close-btn')) {
+    // Don't drag if clicking on close button or other interactive elements
+    if (e.target.classList.contains('helper-close-btn') ||
+        e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'BUTTON' ||
+        e.target.tagName === 'SELECT' ||
+        e.target.tagName === 'TEXTAREA') {
+      return;
+    }
+
+    // Only drag if clicking on header or drag handle
+    if (!header.contains(e.target)) {
       return;
     }
 
@@ -284,6 +293,7 @@ function makePanelDraggable(panel) {
 
     isDragging = true;
     header.style.cursor = 'grabbing';
+    e.preventDefault(); // Prevent text selection while dragging
   }
 
   function drag(e) {
