@@ -297,17 +297,26 @@ async function setCustomDateRange(startDate, endDate) {
   console.log(`Using date format: ${format} (detected locale: ${locale})`);
   console.log(`Setting dates: ${formattedStart} to ${formattedEnd}`);
 
-  // Function to set date input value directly and fast
+  // Function to set date input value fast with proper events
   const setDateInput = async (input, value, label) => {
-    // Focus the input
+    // Focus and click the input
     input.focus();
+    input.click();
 
-    // Set value directly
+    // Clear existing value
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    // Set new value
     input.value = value;
 
-    // Trigger events to notify YouTube of the change
+    // Trigger input and change events with proper bubbling
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Trigger keyboard events to simulate user interaction
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
 
     // Blur to finalize
     input.blur();
@@ -384,6 +393,9 @@ async function setCustomDateRange(startDate, endDate) {
 
   // Wait for date dialog to close
   await waitForElementRemoval('.date-input-dialog-contents', 5000);
+
+  // Brief wait for sidebar to update with new dates
+  await new Promise(resolve => setTimeout(resolve, 500));
 
   // Verify the date was actually applied by checking the sidebar
   const verifyTrigger = sidebar.querySelectorAll('ytcp-dropdown-trigger');
