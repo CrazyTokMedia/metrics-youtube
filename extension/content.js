@@ -12,6 +12,120 @@ function isExtensionContextValid() {
   }
 }
 
+// Helper: Wait for element to appear in DOM
+function waitForElement(selector, timeout = 10000) {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+
+    // Check if element already exists
+    const existing = document.querySelector(selector);
+    if (existing) {
+      resolve(existing);
+      return;
+    }
+
+    // Set up MutationObserver to watch for element
+    const observer = new MutationObserver((mutations, obs) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        obs.disconnect();
+        resolve(element);
+      } else if (Date.now() - startTime > timeout) {
+        obs.disconnect();
+        reject(new Error(`Timeout waiting for element: ${selector}`));
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Also poll as backup (some changes might not trigger mutations)
+    const pollInterval = setInterval(() => {
+      const element = document.querySelector(selector);
+      if (element) {
+        clearInterval(pollInterval);
+        observer.disconnect();
+        resolve(element);
+      } else if (Date.now() - startTime > timeout) {
+        clearInterval(pollInterval);
+        observer.disconnect();
+        reject(new Error(`Timeout waiting for element: ${selector}`));
+      }
+    }, 100);
+  });
+}
+
+// Helper: Wait for element to disappear from DOM
+function waitForElementRemoval(selector, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+
+    // Check if element already gone
+    const existing = document.querySelector(selector);
+    if (!existing) {
+      resolve();
+      return;
+    }
+
+    // Set up MutationObserver to watch for removal
+    const observer = new MutationObserver((mutations, obs) => {
+      const element = document.querySelector(selector);
+      if (!element) {
+        obs.disconnect();
+        resolve();
+      } else if (Date.now() - startTime > timeout) {
+        obs.disconnect();
+        reject(new Error(`Timeout waiting for element removal: ${selector}`));
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Also poll as backup
+    const pollInterval = setInterval(() => {
+      const element = document.querySelector(selector);
+      if (!element) {
+        clearInterval(pollInterval);
+        observer.disconnect();
+        resolve();
+      } else if (Date.now() - startTime > timeout) {
+        clearInterval(pollInterval);
+        observer.disconnect();
+        reject(new Error(`Timeout waiting for element removal: ${selector}`));
+      }
+    }, 100);
+  });
+}
+
+// Helper: Wait for URL to match pattern
+function waitForUrlChange(urlPattern, timeout = 10000) {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+
+    // Check if URL already matches
+    if (window.location.href.includes(urlPattern)) {
+      resolve();
+      return;
+    }
+
+    // Poll for URL change
+    const pollInterval = setInterval(() => {
+      if (window.location.href.includes(urlPattern)) {
+        clearInterval(pollInterval);
+        resolve();
+      } else if (Date.now() - startTime > timeout) {
+        clearInterval(pollInterval);
+        reject(new Error(`Timeout waiting for URL pattern: ${urlPattern}`));
+      }
+    }, 100);
+  });
+}
+
 // Safe chrome.storage wrapper with error handling
 const safeStorage = {
   get: async (keys) => {
@@ -299,7 +413,7 @@ async function setCustomDateRange(startDate, endDate) {
   }
 
   // Wait for any validation to complete
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 300));
 
   const applyButton = dateDialog.querySelector('#apply-button');
   if (!applyButton) throw new Error('Apply button not found');
@@ -307,8 +421,11 @@ async function setCustomDateRange(startDate, endDate) {
   console.log('Clicking Apply button...');
   applyButton.click();
 
-  // Wait for YouTube to process the date change
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  // Wait for date dialog to close
+  await waitForElementRemoval('.date-input-dialog-contents', 5000);
+
+  // Wait for sidebar to update (table will refresh automatically)
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
   // Verify the date was actually applied by checking the sidebar
   const verifyTrigger = sidebar.querySelectorAll('ytcp-dropdown-trigger');
@@ -404,7 +521,9 @@ async function selectMetrics() {
   if (!applyButton) throw new Error('Apply button not found');
 
   applyButton.click();
-  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  // Wait for dialog to close
+  await waitForElementRemoval('.metric-dialog-contents', 5000);
 
   console.log('Metrics selected');
 }
@@ -479,23 +598,11 @@ async function navigateToAdvancedMode() {
 
   advancedButton.click();
 
-  // Wait for navigation
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  // Wait for URL to change to Advanced mode
+  await waitForUrlChange('/explore?', 10000);
 
-  // Wait for page to load
-  let attempts = 0;
-  const maxAttempts = 10;
-  while (attempts < maxAttempts) {
-    if (window.location.href.includes('/explore?')) {
-      break;
-    }
-    await new Promise(resolve => setTimeout(resolve, 500));
-    attempts++;
-  }
-
-  if (!window.location.href.includes('/explore?')) {
-    throw new Error('Failed to navigate to Advanced mode');
-  }
+  // Wait for the metrics table to appear (confirms page is loaded)
+  await waitForElement('yta-table', 5000);
 
   console.log('Navigated to Advanced Mode');
 }
@@ -521,7 +628,9 @@ async function navigateToAudienceRetention() {
   }
 
   reportDropdown.click();
-  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Wait for dropdown menu to appear
+  await waitForElement('tp-yt-paper-item', 3000);
 
   // Find and click Audience retention option
   const menuItems = Array.from(document.querySelectorAll('tp-yt-paper-item'));
@@ -540,17 +649,9 @@ async function navigateToAudienceRetention() {
   }
 
   retentionOption.click();
-  await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for chart to load
 
-  // Wait for chart to appear
-  let attempts = 0;
-  const maxAttempts = 10;
-  while (attempts < maxAttempts) {
-    const svg = document.querySelector('yta-line-chart-base svg');
-    if (svg) break;
-    await new Promise(resolve => setTimeout(resolve, 500));
-    attempts++;
-  }
+  // Wait for retention chart to load
+  await waitForElement('yta-line-chart-base svg', 10000);
 
   console.log('Navigated to Audience Retention');
 }
@@ -576,7 +677,9 @@ async function navigateBackToMetrics() {
   }
 
   reportDropdown.click();
-  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Wait for dropdown menu to appear
+  await waitForElement('tp-yt-paper-item', 3000);
 
   // Find and click Top content option (default metrics view)
   const menuItems = Array.from(document.querySelectorAll('tp-yt-paper-item'));
@@ -595,7 +698,9 @@ async function navigateBackToMetrics() {
   }
 
   topContentOption.click();
-  await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for table to load
+
+  // Wait for metrics table to load
+  await waitForElement('yta-table', 5000);
 
   console.log('Navigated back to metrics table');
 }
@@ -774,12 +879,10 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
 
         if (statusCallback) statusCallback('📊 Extracting PRE retention...');
         await setCustomDateRange(preStart, preEnd);
-        await new Promise(resolve => setTimeout(resolve, 1000));
         preRetention = await extractRetentionMetric();
 
         if (statusCallback) statusCallback('📊 Extracting POST retention...');
         await setCustomDateRange(postStart, postEnd);
-        await new Promise(resolve => setTimeout(resolve, 1000));
         postRetention = await extractRetentionMetric();
 
         if (statusCallback) statusCallback('📊 Returning to metrics table...');
@@ -1145,9 +1248,6 @@ function createHelperPanel() {
         autoExtractBtn.disabled = true;
 
         await navigateToAdvancedMode();
-
-        // Brief wait after navigation
-        await new Promise(resolve => setTimeout(resolve, 1000));
       }
       // Show status, disable button
       statusEl.style.display = 'block';
