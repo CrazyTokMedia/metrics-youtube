@@ -682,3 +682,50 @@ input:focus-visible {
 #copy-metrics-btn.copied {
   animation: copyPulse 0.3s ease;
 }
+
+/* ============================================================
+   RETENTION EXTRACTION STYLES
+   ============================================================ */
+
+/* Extraction Options */
+.extraction-options {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: white;
+  border-radius: 6px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.checkbox-label span {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Retention Metric Items */
+.retention-metric {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+}
+
+.retention-metric .metric-label {
+  color: #92400e;
+}
+
+.retention-metric .metric-value {
+  color: #78350f;
+}

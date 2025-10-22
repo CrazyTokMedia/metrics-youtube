@@ -457,8 +457,284 @@ async function extractValues() {
   return metrics;
 }
 
+// Helper: Navigate to Advanced Mode
+async function navigateToAdvancedMode() {
+  console.log('Navigating to Advanced Mode...');
+
+  // Find the Advanced mode button
+  const advancedButton = document.querySelector('#advanced-analytics button');
+
+  if (!advancedButton) {
+    throw new Error('Advanced mode button not found. Please navigate to a video analytics page first.');
+  }
+
+  advancedButton.click();
+
+  // Wait for navigation
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  // Wait for page to load
+  let attempts = 0;
+  const maxAttempts = 10;
+  while (attempts < maxAttempts) {
+    if (window.location.href.includes('/explore?')) {
+      break;
+    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+    attempts++;
+  }
+
+  if (!window.location.href.includes('/explore?')) {
+    throw new Error('Failed to navigate to Advanced mode');
+  }
+
+  console.log('Navigated to Advanced Mode');
+}
+
+// Helper: Navigate to Audience Retention report
+async function navigateToAudienceRetention() {
+  console.log('Navigating to Audience Retention...');
+
+  // Find and click Report dropdown
+  const reportTriggers = Array.from(document.querySelectorAll('ytcp-dropdown-trigger'));
+  let reportDropdown = null;
+
+  for (const trigger of reportTriggers) {
+    const labelText = trigger.querySelector('.label-text');
+    if (labelText && labelText.textContent.trim() === 'Report') {
+      reportDropdown = trigger;
+      break;
+    }
+  }
+
+  if (!reportDropdown) {
+    throw new Error('Report dropdown not found');
+  }
+
+  reportDropdown.click();
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Find and click Audience retention option
+  const menuItems = Array.from(document.querySelectorAll('tp-yt-paper-item'));
+  let retentionOption = null;
+
+  for (const item of menuItems) {
+    const text = item.textContent;
+    if (text.includes('Audience retention')) {
+      retentionOption = item;
+      break;
+    }
+  }
+
+  if (!retentionOption) {
+    throw new Error('Audience retention option not found');
+  }
+
+  retentionOption.click();
+  await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for chart to load
+
+  // Wait for chart to appear
+  let attempts = 0;
+  const maxAttempts = 10;
+  while (attempts < maxAttempts) {
+    const svg = document.querySelector('yta-line-chart-base svg');
+    if (svg) break;
+    await new Promise(resolve => setTimeout(resolve, 500));
+    attempts++;
+  }
+
+  console.log('Navigated to Audience Retention');
+}
+
+// Helper: Navigate back to metrics table report
+async function navigateBackToMetrics() {
+  console.log('Navigating back to metrics table...');
+
+  // Find and click Report dropdown
+  const reportTriggers = Array.from(document.querySelectorAll('ytcp-dropdown-trigger'));
+  let reportDropdown = null;
+
+  for (const trigger of reportTriggers) {
+    const labelText = trigger.querySelector('.label-text');
+    if (labelText && labelText.textContent.trim() === 'Report') {
+      reportDropdown = trigger;
+      break;
+    }
+  }
+
+  if (!reportDropdown) {
+    throw new Error('Report dropdown not found');
+  }
+
+  reportDropdown.click();
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Find and click Top content option (default metrics view)
+  const menuItems = Array.from(document.querySelectorAll('tp-yt-paper-item'));
+  let topContentOption = null;
+
+  for (const item of menuItems) {
+    const text = item.textContent;
+    if (text.includes('Top content')) {
+      topContentOption = item;
+      break;
+    }
+  }
+
+  if (!topContentOption) {
+    throw new Error('Top content option not found');
+  }
+
+  topContentOption.click();
+  await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for table to load
+
+  console.log('Navigated back to metrics table');
+}
+
+// Helper: Extract Retention Metric (30s/3s)
+async function extractRetentionMetric() {
+  console.log('Extracting retention metric...');
+
+  // Find the audience retention chart
+  const chartContainers = Array.from(document.querySelectorAll('yta-line-chart-base'));
+  let svg = null;
+
+  for (const container of chartContainers) {
+    const parent = container.closest('yta-explore-chart-with-player');
+    if (parent) {
+      svg = container.querySelector('svg');
+      if (svg) break;
+    }
+  }
+
+  if (!svg) {
+    svg = document.querySelector('yta-line-chart-base svg');
+  }
+
+  if (!svg) {
+    throw new Error('Retention chart not found');
+  }
+
+  // Extract path data
+  const pathElement = svg.querySelector('path.line-series');
+  if (!pathElement) {
+    throw new Error('Retention path not found');
+  }
+
+  const pathData = pathElement.getAttribute('d');
+  const points = [];
+  const commands = pathData.replace('M', 'L').split('L').filter(cmd => cmd.trim());
+
+  commands.forEach(cmd => {
+    const [x, y] = cmd.split(',').map(Number);
+    if (!isNaN(x) && !isNaN(y)) {
+      points.push({ x, y });
+    }
+  });
+
+  // Extract Y-axis scale (retention percentage)
+  const yAxisTicks = Array.from(svg.querySelectorAll('.y2.axis .tick text tspan'));
+  const yAxisValues = yAxisTicks.map(tick => {
+    const text = tick.textContent.trim();
+    return parseFloat(text.replace('%', ''));
+  }).filter(val => !isNaN(val));
+
+  const maxY = Math.max(...yAxisValues);
+  const minY = Math.min(...yAxisValues);
+
+  const yAxisTickElements = Array.from(svg.querySelectorAll('.y2.axis .tick'));
+  const yPixels = yAxisTickElements.map(tick => {
+    const transform = tick.getAttribute('transform');
+    const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
+    return match ? parseFloat(match[2]) : null;
+  }).filter(val => val !== null);
+
+  const minYPixel = Math.min(...yPixels);
+  const maxYPixel = Math.max(...yPixels);
+  const chartHeight = maxYPixel - minYPixel;
+
+  // Validate Y-axis
+  if (maxY > 150) {
+    throw new Error(`Invalid retention chart (Y-axis: ${maxY}%)`);
+  }
+
+  // Extract X-axis scale (time)
+  const xAxisTicks = Array.from(svg.querySelectorAll('.x.axis .tick text tspan'));
+  const xAxisValues = xAxisTicks.map(tick => {
+    const text = tick.textContent.trim();
+    const parts = text.split(':').map(Number);
+    return parts[0] * 60 + (parts[1] || 0);
+  }).filter(val => !isNaN(val));
+
+  const minTime = Math.min(...xAxisValues);
+  const maxTime = Math.max(...xAxisValues);
+
+  const xAxisTickElements = Array.from(svg.querySelectorAll('.x.axis .tick'));
+  const xPixels = xAxisTickElements.map(tick => {
+    const transform = tick.getAttribute('transform');
+    const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
+    return match ? parseFloat(match[1]) : null;
+  }).filter(val => val !== null);
+
+  const minXPixel = Math.min(...xPixels);
+  const maxXPixel = Math.max(...xPixels);
+  const chartWidth = maxXPixel - minXPixel;
+
+  // Validate X-axis
+  if (maxTime > 7200 || maxTime < 1) {
+    throw new Error(`Invalid video duration (${maxTime}s)`);
+  }
+
+  // Conversion functions
+  const pixelToTime = (x) => {
+    return minTime + (x - minXPixel) * (maxTime - minTime) / chartWidth;
+  };
+
+  const pixelToRetention = (y) => {
+    const percentageRange = maxY - minY;
+    return maxY - ((y - minYPixel) * percentageRange / chartHeight);
+  };
+
+  // Get retention at specific time
+  function getRetentionAtTime(targetSeconds) {
+    const targetX = minXPixel + (targetSeconds - minTime) * chartWidth / (maxTime - minTime);
+
+    let closest = points[0];
+    let minDistance = Math.abs(points[0].x - targetX);
+
+    for (const point of points) {
+      const distance = Math.abs(point.x - targetX);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = point;
+      }
+    }
+
+    const retention = pixelToRetention(closest.y);
+    return Math.round(retention * 10) / 10;
+  }
+
+  // Determine video type and get metric
+  const isShort = maxTime < 60;
+  const targetTime = isShort ? 3 : 30;
+
+  let retentionValue = null;
+  if (targetTime <= maxTime) {
+    retentionValue = getRetentionAtTime(targetTime);
+  }
+
+  console.log(`Retention extracted: ${retentionValue}% at ${targetTime}s`);
+
+  return {
+    value: retentionValue ? `${retentionValue}%` : 'N/A',
+    targetTime: targetTime,
+    isShort: isShort,
+    videoDuration: maxTime
+  };
+}
+
 // Main: Extract PRE/POST Metrics
-async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statusCallback) {
+async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention = false) {
   try {
     if (statusCallback) statusCallback('🔧 Selecting metrics...');
     await selectMetrics();
@@ -478,11 +754,47 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
     if (statusCallback) statusCallback('📥 Extracting POST metrics...');
     const postMetrics = await extractValues();
 
+    // Extract retention if enabled
+    let preRetention = null;
+    let postRetention = null;
+
+    if (includeRetention) {
+      try {
+        if (statusCallback) statusCallback('📊 Navigating to Audience Retention...');
+        await navigateToAudienceRetention();
+
+        if (statusCallback) statusCallback('📊 Extracting PRE retention...');
+        await setCustomDateRange(preStart, preEnd);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        preRetention = await extractRetentionMetric();
+
+        if (statusCallback) statusCallback('📊 Extracting POST retention...');
+        await setCustomDateRange(postStart, postEnd);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        postRetention = await extractRetentionMetric();
+
+        if (statusCallback) statusCallback('📊 Returning to metrics table...');
+        await navigateBackToMetrics();
+
+      } catch (error) {
+        console.warn('Retention extraction failed:', error);
+        // Continue without retention data
+        preRetention = { value: 'N/A', error: error.message };
+        postRetention = { value: 'N/A', error: error.message };
+      }
+    }
+
     if (statusCallback) statusCallback('✅ Extraction complete!');
 
     return {
-      pre: preMetrics,
-      post: postMetrics,
+      pre: {
+        ...preMetrics,
+        retention: preRetention
+      },
+      post: {
+        ...postMetrics,
+        retention: postRetention
+      },
       periods: {
         pre: { start: preStart, end: preEnd },
         post: { start: postStart, end: postEnd }
@@ -601,7 +913,7 @@ function createHelperPanel() {
     <div class="helper-body">
       <div class="input-section">
         <label for="treatment-date">Treatment Date:</label>
-        <input type="date" id="treatment-date" class="date-input" />
+        <input type="date" id="treatment-date" class="date-input" max="" />
         <button id="calculate-btn" class="action-btn">Calculate Periods</button>
       </div>
 
@@ -647,6 +959,12 @@ function createHelperPanel() {
         </div>
 
         <div class="auto-extract-section">
+          <div class="extraction-options">
+            <label class="checkbox-label">
+              <input type="checkbox" id="include-retention-checkbox" />
+              <span>Include 30s/3s Retention (experimental)</span>
+            </label>
+          </div>
           <button id="auto-extract-btn" class="action-btn primary-btn">
             🚀 Auto-Extract Metrics
           </button>
@@ -675,6 +993,10 @@ function createHelperPanel() {
                 <span class="metric-label">Consumption:</span>
                 <span id="pre-consumption" class="metric-value">—</span>
               </div>
+              <div class="metric-item retention-metric" style="display: none;">
+                <span class="metric-label">Retention:</span>
+                <span id="pre-retention" class="metric-value">—</span>
+              </div>
             </div>
 
             <div class="metrics-column">
@@ -694,6 +1016,10 @@ function createHelperPanel() {
               <div class="metric-item">
                 <span class="metric-label">Consumption:</span>
                 <span id="post-consumption" class="metric-value">—</span>
+              </div>
+              <div class="metric-item retention-metric" style="display: none;">
+                <span class="metric-label">Retention:</span>
+                <span id="post-retention" class="metric-value">—</span>
               </div>
             </div>
           </div>
@@ -716,6 +1042,13 @@ function createHelperPanel() {
   `;
 
   document.body.appendChild(panel);
+
+  // Set max date to yesterday (YouTube doesn't have today's data)
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const maxDate = yesterday.toISOString().split('T')[0];
+  document.getElementById('treatment-date').setAttribute('max', maxDate);
 
   // Make panel draggable
   makePanelDraggable(panel);
@@ -786,12 +1119,6 @@ function createHelperPanel() {
 
   // Auto-Extract button functionality
   document.getElementById('auto-extract-btn').addEventListener('click', async () => {
-    // Check if on Advanced Mode page
-    if (!window.location.href.includes('/explore?')) {
-      alert('Please navigate to Advanced Mode first.\n\nSteps:\n1. Go to any video\'s Analytics\n2. Click "See more" or "Advanced mode"\n3. Then click "Auto-Extract Metrics"');
-      return;
-    }
-
     // Get the calculated date ranges
     const preStart = document.getElementById('pre-start').value;
     const preEnd = document.getElementById('pre-end').value;
@@ -803,28 +1130,22 @@ function createHelperPanel() {
       return;
     }
 
-    // Check if using future dates (or today)
-    const treatmentDate = document.getElementById('treatment-date').value;
-    const treatment = new Date(treatmentDate);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    today.setHours(0, 0, 0, 0);
-    yesterday.setHours(0, 0, 0, 0);
-    treatment.setHours(0, 0, 0, 0);
-
-    if (treatment >= today) {
-      const todayStr = formatDate(today);
-      const yesterdayStr = formatDate(yesterday);
-      alert(`⚠️ Warning: Treatment date cannot be TODAY or in the FUTURE!\n\nYouTube Analytics only has data up to YESTERDAY.\n\nToday: ${todayStr}\nLatest available data: ${yesterdayStr}\n\nPlease use ${yesterdayStr} or an earlier date.`);
-      return;
-    }
-
     const statusEl = document.getElementById('extraction-status');
     const autoExtractBtn = document.getElementById('auto-extract-btn');
 
     try {
+      // Check if on Advanced Mode page, if not navigate there
+      if (!window.location.href.includes('/explore?')) {
+        statusEl.style.display = 'block';
+        statusEl.className = 'extraction-status';
+        statusEl.textContent = '🔄 Navigating to Advanced Mode...';
+        autoExtractBtn.disabled = true;
+
+        await navigateToAdvancedMode();
+
+        // Brief wait after navigation
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
       // Show status, disable button
       statusEl.style.display = 'block';
       statusEl.className = 'extraction-status';
@@ -834,11 +1155,15 @@ function createHelperPanel() {
         statusEl.textContent = message;
       };
 
+      // Check if retention extraction is enabled
+      const includeRetention = document.getElementById('include-retention-checkbox').checked;
+
       // Run extraction
       const result = await extractPrePostMetrics(
         preStart, preEnd,
         postStart, postEnd,
-        updateStatus
+        updateStatus,
+        includeRetention
       );
 
       // Display results
@@ -851,6 +1176,16 @@ function createHelperPanel() {
       document.getElementById('post-ctr').textContent = result.post.ctr || '—';
       document.getElementById('post-awt').textContent = result.post.awt || '—';
       document.getElementById('post-consumption').textContent = result.post.consumption || '—';
+
+      // Display retention if included
+      const retentionItems = document.querySelectorAll('.retention-metric');
+      if (includeRetention && result.pre.retention) {
+        document.getElementById('pre-retention').textContent = result.pre.retention.value || '—';
+        document.getElementById('post-retention').textContent = result.post.retention.value || '—';
+        retentionItems.forEach(item => item.style.display = 'flex');
+      } else {
+        retentionItems.forEach(item => item.style.display = 'none');
+      }
 
       document.getElementById('metrics-results').style.display = 'block';
 
@@ -891,17 +1226,35 @@ function createHelperPanel() {
     const postAwt = document.getElementById('post-awt').textContent;
     const postConsumption = document.getElementById('post-consumption').textContent;
 
-    const text = `PRE Period Metrics:
+    // Check if retention metrics are displayed
+    const retentionVisible = document.querySelector('.retention-metric').style.display !== 'none';
+    let preRetention = '';
+    let postRetention = '';
+
+    if (retentionVisible) {
+      preRetention = document.getElementById('pre-retention').textContent;
+      postRetention = document.getElementById('post-retention').textContent;
+    }
+
+    let text = `PRE Period Metrics:
 Views: ${preViews}
 CTR: ${preCtr}
 AWT: ${preAwt}
-Consumption: ${preConsumption}
+Consumption: ${preConsumption}`;
 
-POST Period Metrics:
+    if (retentionVisible) {
+      text += `\nRetention: ${preRetention}`;
+    }
+
+    text += `\n\nPOST Period Metrics:
 Views: ${postViews}
 CTR: ${postCtr}
 AWT: ${postAwt}
 Consumption: ${postConsumption}`;
+
+    if (retentionVisible) {
+      text += `\nRetention: ${postRetention}`;
+    }
 
     navigator.clipboard.writeText(text).then(() => {
       const btn = document.getElementById('copy-metrics-btn');
