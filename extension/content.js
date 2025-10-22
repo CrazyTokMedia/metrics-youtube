@@ -81,27 +81,30 @@ function calculateDateRanges(treatmentDate) {
   // Calculate days since treatment (up to yesterday)
   const daysSince = Math.floor((yesterday - treatment) / (1000 * 60 * 60 * 24));
 
-  // PRE period: Same number of days BEFORE treatment
-  const preStart = new Date(treatment);
-  preStart.setDate(preStart.getDate() - daysSince);
-  const preEnd = new Date(treatment);
-  preEnd.setDate(preEnd.getDate() - 1); // Day before treatment
-
   // POST period: Treatment day to YESTERDAY (not today - YouTube doesn't have today's data yet)
   const postStart = new Date(treatment);
   const postEnd = new Date(yesterday);
+  const postDays = daysSince + 1; // Including treatment day
+
+  // PRE period: Same number of days as POST, BEFORE treatment
+  // If POST is 8 days, PRE should also be 8 days
+  const preStart = new Date(treatment);
+  preStart.setDate(preStart.getDate() - postDays);
+  const preEnd = new Date(treatment);
+  preEnd.setDate(preEnd.getDate() - 1); // Day before treatment
+  const preDays = postDays; // Same as POST
 
   return {
     daysSince: daysSince,
     pre: {
       start: formatDate(preStart),
       end: formatDate(preEnd),
-      days: daysSince
+      days: preDays
     },
     post: {
       start: formatDate(postStart),
       end: formatDate(postEnd),
-      days: daysSince + 1 // Including treatment day
+      days: postDays
     }
   };
 }
@@ -318,8 +321,9 @@ async function setCustomDateRange(startDate, endDate) {
   const normalizeDate = (str) => str.replace(/\s+/g, ' ').toLowerCase();
 
   // Extract day numbers from formatted dates (e.g., "12" from "12/10/2025")
-  const startDay = formattedStart.split('/')[0];
-  const endDay = formattedEnd.split('/')[0];
+  // Parse as integers to strip leading zeros ("05" becomes "5")
+  const startDay = parseInt(formattedStart.split('/')[0]).toString();
+  const endDay = parseInt(formattedEnd.split('/')[0]).toString();
 
   // Check if both start and end dates are in the sidebar text
   const sidebarNormalized = normalizeDate(currentDateText);
