@@ -297,53 +297,20 @@ async function setCustomDateRange(startDate, endDate) {
   console.log(`Using date format: ${format} (detected locale: ${locale})`);
   console.log(`Setting dates: ${formattedStart} to ${formattedEnd}`);
 
-  // Function to properly set date input value by simulating typing
+  // Function to set date input value directly and fast
   const setDateInput = async (input, value, label) => {
-    console.log(`Setting ${label} input...`);
-
-    // Click and focus the input
-    input.click();
-    await new Promise(resolve => setTimeout(resolve, 100));
-
+    // Focus the input
     input.focus();
-    await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Select all existing text
-    input.select();
-    await new Promise(resolve => setTimeout(resolve, 50));
+    // Set value directly
+    input.value = value;
 
-    // Simulate backspace to clear
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }));
-    input.value = '';
-    input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Backspace', bubbles: true }));
+    // Trigger events to notify YouTube of the change
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Type each character with keyboard events
-    for (let i = 0; i < value.length; i++) {
-      const char = value[i];
-
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
-      input.value = value.substring(0, i + 1);
-      input.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-      input.dispatchEvent(new KeyboardEvent('keyup', { key: char, bubbles: true }));
-
-      // Small delay between characters (test showed this works)
-      await new Promise(resolve => setTimeout(resolve, 20));
-    }
-
-    // Wait for validation
-    await new Promise(resolve => setTimeout(resolve, 150));
-
-    // Dispatch change event
-    input.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
-    await new Promise(resolve => setTimeout(resolve, 100));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Blur to finalize
     input.blur();
-    await new Promise(resolve => setTimeout(resolve, 150));
-
-    console.log(`${label} input value after setting: "${input.value}"`);
   };
 
   // SMART ORDERING: Decide which date to set first based on cached vs target values
@@ -403,29 +370,20 @@ async function setCustomDateRange(startDate, endDate) {
   if (setEndFirst) {
     // Set end date first, then start date
     await setDateInput(endInput, formattedEnd, 'End');
-    await new Promise(resolve => setTimeout(resolve, 300));
     await setDateInput(startInput, formattedStart, 'Start');
   } else {
     // Set start date first, then end date
     await setDateInput(startInput, formattedStart, 'Start');
-    await new Promise(resolve => setTimeout(resolve, 300));
     await setDateInput(endInput, formattedEnd, 'End');
   }
-
-  // Wait for any validation to complete
-  await new Promise(resolve => setTimeout(resolve, 300));
 
   const applyButton = dateDialog.querySelector('#apply-button');
   if (!applyButton) throw new Error('Apply button not found');
 
-  console.log('Clicking Apply button...');
   applyButton.click();
 
   // Wait for date dialog to close
   await waitForElementRemoval('.date-input-dialog-contents', 5000);
-
-  // Wait for sidebar to update (table will refresh automatically)
-  await new Promise(resolve => setTimeout(resolve, 1000));
 
   // Verify the date was actually applied by checking the sidebar
   const verifyTrigger = sidebar.querySelectorAll('ytcp-dropdown-trigger');
@@ -513,7 +471,6 @@ async function selectMetrics() {
     const checkboxDiv = checkbox.querySelector('[role="checkbox"]');
     if (checkboxDiv && checkboxDiv.getAttribute('aria-checked') === 'false') {
       checkboxDiv.click();
-      await new Promise(resolve => setTimeout(resolve, 50));
     }
   }
 
@@ -858,9 +815,6 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
 
     if (statusCallback) statusCallback('📥 Extracting PRE metrics...');
     const preMetrics = await extractValues();
-
-    // Brief wait before setting POST period
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     if (statusCallback) statusCallback('📅 Setting POST period...');
     await setCustomDateRange(postStart, postEnd);
