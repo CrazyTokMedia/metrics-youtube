@@ -602,7 +602,7 @@ async function navigateToAdvancedMode() {
   await waitForUrlChange('/explore?', 10000);
 
   // Wait for the metrics table to appear (confirms page is loaded)
-  await waitForElement('yta-table', 5000);
+  await waitForElement('yta-explore-table.data-container', 10000);
 
   console.log('Navigated to Advanced Mode');
 }
@@ -700,7 +700,7 @@ async function navigateBackToMetrics() {
   topContentOption.click();
 
   // Wait for metrics table to load
-  await waitForElement('yta-table', 5000);
+  await waitForElement('yta-explore-table.data-container', 10000);
 
   console.log('Navigated back to metrics table');
 }
