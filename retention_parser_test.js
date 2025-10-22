@@ -10,14 +10,38 @@
   console.log('========================================\n');
 
   // Step 1: Find the SVG chart
-  console.log('1️⃣ Finding SVG chart...');
-  const svg = document.querySelector('yta-line-chart-base svg');
+  console.log('1️⃣ Finding Audience Retention chart...');
+
+  // Look for the specific audience retention chart container
+  const chartContainers = Array.from(document.querySelectorAll('yta-line-chart-base'));
+  let svg = null;
+
+  // First, try to find by checking parent structure
+  for (const container of chartContainers) {
+    const parent = container.closest('yta-explore-chart-with-player');
+    if (parent) {
+      // This is likely the audience retention chart
+      svg = container.querySelector('svg');
+      if (svg) {
+        console.log('✅ Found audience retention chart (via parent structure)');
+        break;
+      }
+    }
+  }
+
+  // Fallback: Find any line chart
+  if (!svg) {
+    svg = document.querySelector('yta-line-chart-base svg');
+    if (svg) {
+      console.log('⚠️  Found a chart (unable to confirm it\'s audience retention)');
+    }
+  }
 
   if (!svg) {
     console.error('❌ SVG chart not found. Make sure you are on the Audience Retention page.');
+    console.error('   Navigate to: Report dropdown → "Audience retention"');
     return;
   }
-  console.log('✅ SVG chart found');
 
   // Step 2: Extract the path data
   console.log('\n2️⃣ Extracting path data...');
@@ -79,6 +103,15 @@
   console.log(`   Y-axis pixels: ${minYPixel}px to ${maxYPixel}px`);
   console.log(`   Chart height: ${chartHeight}px`);
 
+  // Validate: Retention should be 0-150% max
+  if (maxY > 150) {
+    console.error(`\n❌ ERROR: Y-axis shows ${maxY}%, which is too high for retention!`);
+    console.error(`   This doesn't look like an audience retention chart.`);
+    console.error(`   Please navigate to: Report dropdown → "Audience retention"`);
+    console.error(`   Current page might be showing: Views, Watch time, or other metrics`);
+    return;
+  }
+
   // Get X-axis scale (time)
   const xAxisTicks = Array.from(svg.querySelectorAll('.x.axis .tick text tspan'));
   const xAxisValues = xAxisTicks.map(tick => {
@@ -105,6 +138,21 @@
   console.log(`✅ X-axis scale: ${minTime}s to ${maxTime}s (${maxTime}s total)`);
   console.log(`   X-axis pixels: ${minXPixel}px to ${maxXPixel}px`);
   console.log(`   Chart width: ${chartWidth}px`);
+
+  // Validate: Video duration should be reasonable
+  if (maxTime > 7200) { // 2 hours
+    console.error(`\n❌ ERROR: Video duration shows ${maxTime}s (${Math.floor(maxTime/60)} minutes)!`);
+    console.error(`   This is too long - might be reading wrong chart or wrong time scale.`);
+    console.error(`   Please navigate to: Report dropdown → "Audience retention"`);
+    return;
+  }
+
+  if (maxTime < 1) {
+    console.error(`\n❌ ERROR: Video duration shows ${maxTime}s!`);
+    console.error(`   This is too short - X-axis might not be parsed correctly.`);
+    console.error(`   X-axis tick labels found: ${xAxisTicks.map(t => t.textContent.trim()).join(', ')}`);
+    return;
+  }
 
   // Step 5: Create conversion functions
   console.log('\n5️⃣ Creating coordinate conversion functions...');
