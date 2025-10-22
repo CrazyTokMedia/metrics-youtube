@@ -261,17 +261,26 @@ async function setCustomDateRange(startDate, endDate) {
   let setEndFirst = true; // Default to END first
 
   if (cachedStartDay > 0 && cachedEndDay > 0) {
-    // If target START > cached END: Set END first (expanding upward)
-    // If target END < cached START: Set START first (contracting downward)
-    if (targetEndDay < cachedStartDay) {
-      setEndFirst = false; // Set START first when moving down
-      console.log(`   Strategy: START first (moving down: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
-    } else if (targetStartDay > cachedEndDay) {
-      setEndFirst = true; // Set END first when moving up
-      console.log(`   Strategy: END first (moving up: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
+    // Strategy: Always set the date that's expanding the range FIRST
+    // This prevents YouTube's validation from rejecting the change
+
+    // If moving the range forward in time (target START >= cached END)
+    if (targetStartDay >= cachedEndDay) {
+      setEndFirst = true; // Set END first to expand range upward
+      console.log(`   Strategy: END first (expanding forward: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
+    }
+    // If moving the range backward in time (target END <= cached START)
+    else if (targetEndDay <= cachedStartDay) {
+      setEndFirst = false; // Set START first to expand range downward
+      console.log(`   Strategy: START first (expanding backward: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
+    }
+    // If ranges overlap, check which direction we're primarily moving
+    else if (targetStartDay > cachedStartDay) {
+      setEndFirst = false; // Moving start forward, set START first
+      console.log(`   Strategy: START first (start moving forward: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
     } else {
-      // Ranges overlap, either order should work
-      console.log(`   Strategy: END first (default - ranges overlap)`);
+      setEndFirst = true; // Moving end or overlapping, set END first
+      console.log(`   Strategy: END first (default overlap: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
     }
   } else {
     console.log(`   Strategy: END first (default - no cached values)`);
@@ -959,12 +968,6 @@ function createHelperPanel() {
         </div>
 
         <div class="auto-extract-section">
-          <div class="extraction-options">
-            <label class="checkbox-label">
-              <input type="checkbox" id="include-retention-checkbox" />
-              <span>Include 30s/3s Retention (experimental)</span>
-            </label>
-          </div>
           <button id="auto-extract-btn" class="action-btn primary-btn">
             🚀 Auto-Extract Metrics
           </button>
@@ -993,7 +996,7 @@ function createHelperPanel() {
                 <span class="metric-label">Consumption:</span>
                 <span id="pre-consumption" class="metric-value">—</span>
               </div>
-              <div class="metric-item retention-metric" style="display: none;">
+              <div class="metric-item retention-metric">
                 <span class="metric-label">Retention:</span>
                 <span id="pre-retention" class="metric-value">—</span>
               </div>
@@ -1017,7 +1020,7 @@ function createHelperPanel() {
                 <span class="metric-label">Consumption:</span>
                 <span id="post-consumption" class="metric-value">—</span>
               </div>
-              <div class="metric-item retention-metric" style="display: none;">
+              <div class="metric-item retention-metric">
                 <span class="metric-label">Retention:</span>
                 <span id="post-retention" class="metric-value">—</span>
               </div>
@@ -1155,15 +1158,12 @@ function createHelperPanel() {
         statusEl.textContent = message;
       };
 
-      // Check if retention extraction is enabled
-      const includeRetention = document.getElementById('include-retention-checkbox').checked;
-
-      // Run extraction
+      // Run extraction (always include retention)
       const result = await extractPrePostMetrics(
         preStart, preEnd,
         postStart, postEnd,
         updateStatus,
-        includeRetention
+        true // Always extract retention
       );
 
       // Display results
@@ -1171,21 +1171,13 @@ function createHelperPanel() {
       document.getElementById('pre-ctr').textContent = result.pre.ctr || '—';
       document.getElementById('pre-awt').textContent = result.pre.awt || '—';
       document.getElementById('pre-consumption').textContent = result.pre.consumption || '—';
+      document.getElementById('pre-retention').textContent = result.pre.retention?.value || 'N/A';
 
       document.getElementById('post-views').textContent = result.post.views || '—';
       document.getElementById('post-ctr').textContent = result.post.ctr || '—';
       document.getElementById('post-awt').textContent = result.post.awt || '—';
       document.getElementById('post-consumption').textContent = result.post.consumption || '—';
-
-      // Display retention if included
-      const retentionItems = document.querySelectorAll('.retention-metric');
-      if (includeRetention && result.pre.retention) {
-        document.getElementById('pre-retention').textContent = result.pre.retention.value || '—';
-        document.getElementById('post-retention').textContent = result.post.retention.value || '—';
-        retentionItems.forEach(item => item.style.display = 'flex');
-      } else {
-        retentionItems.forEach(item => item.style.display = 'none');
-      }
+      document.getElementById('post-retention').textContent = result.post.retention?.value || 'N/A';
 
       document.getElementById('metrics-results').style.display = 'block';
 
@@ -1220,41 +1212,27 @@ function createHelperPanel() {
     const preCtr = document.getElementById('pre-ctr').textContent;
     const preAwt = document.getElementById('pre-awt').textContent;
     const preConsumption = document.getElementById('pre-consumption').textContent;
+    const preRetention = document.getElementById('pre-retention').textContent;
 
     const postViews = document.getElementById('post-views').textContent;
     const postCtr = document.getElementById('post-ctr').textContent;
     const postAwt = document.getElementById('post-awt').textContent;
     const postConsumption = document.getElementById('post-consumption').textContent;
+    const postRetention = document.getElementById('post-retention').textContent;
 
-    // Check if retention metrics are displayed
-    const retentionVisible = document.querySelector('.retention-metric').style.display !== 'none';
-    let preRetention = '';
-    let postRetention = '';
-
-    if (retentionVisible) {
-      preRetention = document.getElementById('pre-retention').textContent;
-      postRetention = document.getElementById('post-retention').textContent;
-    }
-
-    let text = `PRE Period Metrics:
+    const text = `PRE Period Metrics:
 Views: ${preViews}
 CTR: ${preCtr}
 AWT: ${preAwt}
-Consumption: ${preConsumption}`;
+Consumption: ${preConsumption}
+Retention: ${preRetention}
 
-    if (retentionVisible) {
-      text += `\nRetention: ${preRetention}`;
-    }
-
-    text += `\n\nPOST Period Metrics:
+POST Period Metrics:
 Views: ${postViews}
 CTR: ${postCtr}
 AWT: ${postAwt}
-Consumption: ${postConsumption}`;
-
-    if (retentionVisible) {
-      text += `\nRetention: ${postRetention}`;
-    }
+Consumption: ${postConsumption}
+Retention: ${postRetention}`;
 
     navigator.clipboard.writeText(text).then(() => {
       const btn = document.getElementById('copy-metrics-btn');
