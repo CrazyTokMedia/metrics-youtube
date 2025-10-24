@@ -1247,10 +1247,15 @@ function createHelperPanel() {
               <span class="period-label">PRE</span>
               <span class="period-duration"><span id="pre-days">0</span>d</span>
             </div>
-            <div class="period-dates">
-              <input type="date" id="pre-start" class="date-edit" readonly data-original="" />
-              <span class="date-separator">→</span>
-              <input type="date" id="pre-end" class="date-edit" readonly data-original="" />
+            <div class="period-dates-vertical">
+              <div class="date-row">
+                <label class="date-label">Start</label>
+                <input type="date" id="pre-start" class="date-edit" disabled />
+              </div>
+              <div class="date-row">
+                <label class="date-label">End</label>
+                <input type="date" id="pre-end" class="date-edit" disabled />
+              </div>
             </div>
           </div>
 
@@ -1259,10 +1264,15 @@ function createHelperPanel() {
               <span class="period-label">POST</span>
               <span class="period-duration"><span id="post-days">0</span>d</span>
             </div>
-            <div class="period-dates">
-              <input type="date" id="post-start" class="date-edit" readonly data-original="" />
-              <span class="date-separator">→</span>
-              <input type="date" id="post-end" class="date-edit" readonly data-original="" />
+            <div class="period-dates-vertical">
+              <div class="date-row">
+                <label class="date-label">Start</label>
+                <input type="date" id="post-start" class="date-edit" disabled />
+              </div>
+              <div class="date-row">
+                <label class="date-label">End</label>
+                <input type="date" id="post-end" class="date-edit" disabled />
+              </div>
             </div>
           </div>
         </div>
@@ -1393,23 +1403,26 @@ function createHelperPanel() {
       e.stopPropagation();
 
       const dateInputs = document.querySelectorAll('.date-edit');
-      const isEditing = editBtn.textContent === 'Done';
+      const isEditing = editBtn.textContent.trim() === 'Done';
 
       if (isEditing) {
         // Save and lock
-        dateInputs.forEach(input => input.readonly = true);
+        dateInputs.forEach(input => {
+          input.disabled = true;
+          input.classList.remove('editable');
+        });
         editBtn.textContent = 'Edit';
         editBtn.classList.remove('editing');
         console.log('Dates locked');
       } else {
         // Enable editing
         dateInputs.forEach(input => {
-          input.readonly = false;
+          input.disabled = false;
           input.classList.add('editable');
         });
         editBtn.textContent = 'Done';
         editBtn.classList.add('editing');
-        console.log('Dates now editable');
+        console.log('Dates now editable - you can click to open calendar');
       }
     }
   });

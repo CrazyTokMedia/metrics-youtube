@@ -314,52 +314,59 @@
   border-radius: 6px;
 }
 
-.period-dates {
+.period-dates-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px;
+  gap: 8px;
   background: white;
-  border-radius: 8px;
-  overflow: hidden;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.date-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  min-width: 40px;
 }
 
 .date-edit {
   flex: 1;
-  text-align: center;
   font-family: 'Courier New', monospace;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #1f2937;
-  border: 1px solid transparent;
-  background: transparent;
-  padding: 4px;
-  border-radius: 4px;
+  border: 2px solid #e5e7eb;
+  background: #fafafa;
+  padding: 6px 10px;
+  border-radius: 6px;
   transition: all 0.2s;
-  min-width: 0;
+  cursor: not-allowed;
 }
 
-.date-edit:read-only {
-  cursor: default;
+.date-edit:disabled {
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 .date-edit.editable,
-.date-edit:not(:read-only) {
+.date-edit:not(:disabled) {
   border-color: #667eea;
-  background: #f0f9ff;
-  cursor: text;
+  background: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .date-edit:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-}
-
-.date-separator {
-  color: #9ca3af;
-  font-size: 14px;
-  flex-shrink: 0;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
 }
 
 /* ============================================================
