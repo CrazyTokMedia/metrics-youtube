@@ -410,6 +410,58 @@
   box-shadow: none;
 }
 
+/* Extract Controls */
+.extract-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cancel-btn {
+  padding: 12px 20px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* Progress Bar */
+.progress-container {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.progress-bar {
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  font-weight: 500;
+}
+
 /* Extraction Status */
 .extraction-status {
   padding: 12px 16px;

@@ -1306,9 +1306,21 @@ function createHelperPanel() {
         </div>
 
         <!-- Step 3: Extract -->
-        <button id="auto-extract-btn" class="action-btn extract-btn">
-          <span class="btn-icon">📊</span> Extract Metrics
-        </button>
+        <div class="extract-controls">
+          <button id="auto-extract-btn" class="action-btn extract-btn">
+            <span class="btn-icon">📊</span> Extract Metrics
+          </button>
+          <button id="cancel-extract-btn" class="cancel-btn" style="display: none;">Cancel</button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progress-container" class="progress-container" style="display: none;">
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="progress-text" class="progress-text">0/6 steps</div>
+        </div>
+
         <div id="extraction-status" class="extraction-status" style="display: none;"></div>
 
         <!-- Step 4: Results -->
@@ -1485,42 +1497,90 @@ function createHelperPanel() {
   // Auto-Extract button functionality with retry logic
   let extractionAttempts = 0;
   const maxAttempts = 2;
+  let extractionCancelled = false;
+  let partialData = { pre: null, post: null };
 
-  document.getElementById('auto-extract-btn').addEventListener('click', async () => {
-    // Get the actual dates from the inputs (user may have edited them)
+  // Tab change detection
+  let wasHidden = false;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && autoExtractBtn.disabled) {
+      wasHidden = true;
+    } else if (!document.hidden && wasHidden) {
+      wasHidden = false;
+      const statusEl = document.getElementById('extraction-status');
+      if (statusEl && statusEl.style.display !== 'none') {
+        statusEl.innerHTML = '⚠️ Tab was switched during extraction. Results may be incomplete.<br>Please try again.';
+        statusEl.className = 'extraction-status error';
+      }
+    }
+  });
+
+  // Cancel button
+  document.getElementById('cancel-extract-btn').addEventListener('click', () => {
+    extractionCancelled = true;
+    const statusEl = document.getElementById('extraction-status');
+    statusEl.textContent = '🛑 Extraction cancelled by user';
+    statusEl.className = 'extraction-status error';
+    document.getElementById('cancel-extract-btn').style.display = 'none';
+    document.getElementById('auto-extract-btn').disabled = false;
+    document.getElementById('progress-container').style.display = 'none';
+  });
+
+  const runExtraction = async (isRetry = false) => {
     const preStart = document.getElementById('pre-start').value;
     const preEnd = document.getElementById('pre-end').value;
     const postStart = document.getElementById('post-start').value;
     const postEnd = document.getElementById('post-end').value;
 
-    if (!preStart || !preEnd || !postStart || !postEnd) {
-      alert('Please calculate date ranges first');
-      return;
-    }
-
     const statusEl = document.getElementById('extraction-status');
     const autoExtractBtn = document.getElementById('auto-extract-btn');
+    const cancelBtn = document.getElementById('cancel-extract-btn');
+    const progressContainer = document.getElementById('progress-container');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+
     let currentStep = '';
+    let totalSteps = 6;
+    let currentStepNum = 0;
+
+    const updateProgress = (step, stepNum) => {
+      currentStep = step;
+      currentStepNum = stepNum;
+      const percentage = (stepNum / totalSteps) * 100;
+      progressFill.style.width = `${percentage}%`;
+      progressText.textContent = `${stepNum}/${totalSteps} steps`;
+      statusEl.textContent = step;
+    };
+
+    extractionCancelled = false;
 
     try {
-      // Check if on Advanced Mode page, if not navigate there
-      if (!window.location.href.includes('/explore?')) {
-        currentStep = 'Navigating to Advanced Mode';
-        statusEl.style.display = 'block';
-        statusEl.className = 'extraction-status';
-        statusEl.textContent = '🔄 Navigating to Advanced Mode...';
-        autoExtractBtn.disabled = true;
-
-        await navigateToAdvancedMode();
-      }
-      // Show status, disable button
+      // Show UI
       statusEl.style.display = 'block';
       statusEl.className = 'extraction-status';
       autoExtractBtn.disabled = true;
+      cancelBtn.style.display = 'block';
+      progressContainer.style.display = 'block';
+      updateProgress('Starting extraction...', 0);
+
+      // Check if on Advanced Mode page
+      if (!window.location.href.includes('/explore?')) {
+        updateProgress('🔄 Navigating to Advanced Mode...', 0);
+        await navigateToAdvancedMode();
+        if (extractionCancelled) throw new Error('Cancelled by user');
+      }
 
       const updateStatus = (message) => {
-        currentStep = message;
-        statusEl.textContent = message;
+        if (extractionCancelled) throw new Error('Cancelled by user');
+
+        // Map messages to step numbers
+        if (message.includes('Selecting metrics')) updateProgress(message, 1);
+        else if (message.includes('Setting PRE')) updateProgress(message, 2);
+        else if (message.includes('Extracting PRE')) updateProgress(message, 3);
+        else if (message.includes('Setting POST')) updateProgress(message, 4);
+        else if (message.includes('Extracting POST')) updateProgress(message, 5);
+        else if (message.includes('retention') || message.includes('Audience')) updateProgress(message, 6);
+        else statusEl.textContent = message;
       };
 
       // Run extraction (always include retention)
@@ -1556,8 +1616,10 @@ function createHelperPanel() {
         }, 100);
       }
 
+      updateProgress('✅ Complete!', totalSteps);
       statusEl.textContent = '✅ Metrics extracted successfully!';
       statusEl.className = 'extraction-status success';
+      cancelBtn.style.display = 'none';
 
       // Reset attempt counter on success
       extractionAttempts = 0;
@@ -1570,27 +1632,38 @@ function createHelperPanel() {
     } catch (error) {
       console.error('Extraction failed:', error);
       extractionAttempts++;
+      cancelBtn.style.display = 'none';
+
+      // Check if cancelled
+      if (error.message === 'Cancelled by user') {
+        return; // Already handled by cancel button
+      }
 
       // Check if it's an extension context error
       if (!isExtensionContextValid()) {
         statusEl.innerHTML = `❌ Extension reloaded. Please <strong>refresh this page</strong> (F5) to continue.`;
         statusEl.className = 'extraction-status error';
+        progressContainer.style.display = 'none';
         alert('The extension was reloaded.\n\nPlease refresh this page (press F5) and try again.');
       } else {
         // Build helpful error message
         let errorMsg = `❌ Failed at: ${currentStep}\n`;
         errorMsg += `Error: ${error.message}`;
 
-        if (extractionAttempts < maxAttempts) {
-          // First failure - suggest retry
-          errorMsg += `\n\n💡 Please try clicking "Extract Metrics" again.`;
+        if (extractionAttempts < maxAttempts && !isRetry) {
+          // First failure - auto-retry after 2 seconds
+          errorMsg += `\n\n🔄 Auto-retrying in 2 seconds...`;
           statusEl.innerHTML = errorMsg.replace(/\n/g, '<br>');
           statusEl.className = 'extraction-status error';
+
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          return runExtraction(true); // Retry
         } else {
           // Second failure - suggest page refresh
           errorMsg += `\n\n💡 Please refresh the page (F5) and try again.`;
           statusEl.innerHTML = errorMsg.replace(/\n/g, '<br>');
           statusEl.className = 'extraction-status error';
+          progressContainer.style.display = 'none';
 
           // Show alert for critical failures
           if (error.message.includes('not found') || error.message.includes('Timeout')) {
@@ -1601,6 +1674,21 @@ function createHelperPanel() {
     } finally {
       autoExtractBtn.disabled = false;
     }
+  };
+
+  // Extract button click handler
+  document.getElementById('auto-extract-btn').addEventListener('click', async () => {
+    const preStart = document.getElementById('pre-start').value;
+    const preEnd = document.getElementById('pre-end').value;
+    const postStart = document.getElementById('post-start').value;
+    const postEnd = document.getElementById('post-end').value;
+
+    if (!preStart || !preEnd || !postStart || !postEnd) {
+      alert('Please calculate date ranges first');
+      return;
+    }
+
+    await runExtraction(false);
   });
 
 
