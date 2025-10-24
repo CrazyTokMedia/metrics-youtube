@@ -112,7 +112,7 @@
 
 /* Add bottom spacing to last child instead */
 .helper-body > *:last-child {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 /* Scrollbar */
