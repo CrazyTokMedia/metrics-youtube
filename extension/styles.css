@@ -104,10 +104,15 @@
 
 /* Body */
 .helper-body {
-  padding: 24px;
+  padding: 24px 24px 0 24px; /* Remove bottom padding */
   max-height: calc(90vh - 76px);
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* Add bottom spacing to last child instead */
+.helper-body > *:last-child {
+  margin-bottom: 24px;
 }
 
 /* Scrollbar */
