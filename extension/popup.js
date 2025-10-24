@@ -33,6 +33,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         action: 'togglePanel',
         visible: isPanelVisible
       });
+
+      // Auto-close popup when showing the panel
+      if (isPanelVisible) {
+        window.close();
+      }
     } else {
       // Not on YouTube Studio
       alert('Please navigate to YouTube Studio first');
