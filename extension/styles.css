@@ -435,6 +435,8 @@
   border-left-color: #ef4444;
   color: #991b1b;
   animation: none;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 @keyframes pulse {

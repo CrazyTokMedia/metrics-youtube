@@ -1482,7 +1482,10 @@ function createHelperPanel() {
     });
   });
 
-  // Auto-Extract button functionality
+  // Auto-Extract button functionality with retry logic
+  let extractionAttempts = 0;
+  const maxAttempts = 2;
+
   document.getElementById('auto-extract-btn').addEventListener('click', async () => {
     // Get the actual dates from the inputs (user may have edited them)
     const preStart = document.getElementById('pre-start').value;
@@ -1497,10 +1500,12 @@ function createHelperPanel() {
 
     const statusEl = document.getElementById('extraction-status');
     const autoExtractBtn = document.getElementById('auto-extract-btn');
+    let currentStep = '';
 
     try {
       // Check if on Advanced Mode page, if not navigate there
       if (!window.location.href.includes('/explore?')) {
+        currentStep = 'Navigating to Advanced Mode';
         statusEl.style.display = 'block';
         statusEl.className = 'extraction-status';
         statusEl.textContent = '🔄 Navigating to Advanced Mode...';
@@ -1514,10 +1519,12 @@ function createHelperPanel() {
       autoExtractBtn.disabled = true;
 
       const updateStatus = (message) => {
+        currentStep = message;
         statusEl.textContent = message;
       };
 
       // Run extraction (always include retention)
+      currentStep = 'Extracting metrics';
       const result = await extractPrePostMetrics(
         preStart, preEnd,
         postStart, postEnd,
@@ -1552,6 +1559,9 @@ function createHelperPanel() {
       statusEl.textContent = '✅ Metrics extracted successfully!';
       statusEl.className = 'extraction-status success';
 
+      // Reset attempt counter on success
+      extractionAttempts = 0;
+
       // Save to storage
       safeStorage.set({
         lastExtractedMetrics: result
@@ -1559,6 +1569,7 @@ function createHelperPanel() {
 
     } catch (error) {
       console.error('Extraction failed:', error);
+      extractionAttempts++;
 
       // Check if it's an extension context error
       if (!isExtensionContextValid()) {
@@ -1566,8 +1577,26 @@ function createHelperPanel() {
         statusEl.className = 'extraction-status error';
         alert('The extension was reloaded.\n\nPlease refresh this page (press F5) and try again.');
       } else {
-        statusEl.textContent = `❌ Error: ${error.message}`;
-        statusEl.className = 'extraction-status error';
+        // Build helpful error message
+        let errorMsg = `❌ Failed at: ${currentStep}\n`;
+        errorMsg += `Error: ${error.message}`;
+
+        if (extractionAttempts < maxAttempts) {
+          // First failure - suggest retry
+          errorMsg += `\n\n💡 Please try clicking "Extract Metrics" again.`;
+          statusEl.innerHTML = errorMsg.replace(/\n/g, '<br>');
+          statusEl.className = 'extraction-status error';
+        } else {
+          // Second failure - suggest page refresh
+          errorMsg += `\n\n💡 Please refresh the page (F5) and try again.`;
+          statusEl.innerHTML = errorMsg.replace(/\n/g, '<br>');
+          statusEl.className = 'extraction-status error';
+
+          // Show alert for critical failures
+          if (error.message.includes('not found') || error.message.includes('Timeout')) {
+            alert('Extraction failed twice.\n\nPlease:\n1. Refresh the page (F5)\n2. Make sure you\'re on a video analytics page\n3. Try again');
+          }
+        }
       }
     } finally {
       autoExtractBtn.disabled = false;
