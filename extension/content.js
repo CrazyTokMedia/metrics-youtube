@@ -620,7 +620,11 @@ async function setCustomDateRange(startDate, endDate) {
   }
 
   console.log(`   ✅ Both dates verified in sidebar!`);
-  console.log(`   Waiting for table to refresh...`);
+  console.log(`   Waiting for table/chart to refresh...`);
+
+  // Wait for data to refresh after date change
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  console.log(`   Data should be refreshed, proceeding to extraction...`);
 
   // Note: Dialog auto-closes after Apply, no need to manually close
   // ESC key was breaking the UI by closing the advanced metrics tab
@@ -1328,6 +1332,10 @@ function createHelperPanel() {
                 <span class="metric-label">Consumption</span>
                 <span id="pre-consumption" class="metric-value">—</span>
               </div>
+              <div class="metric-row">
+                <span class="metric-label">Retention</span>
+                <span id="pre-retention" class="metric-value">—</span>
+              </div>
               <button class="copy-btn" data-period="pre"><span class="btn-icon">📋</span> Copy to Airtable</button>
             </div>
 
@@ -1348,6 +1356,10 @@ function createHelperPanel() {
               <div class="metric-row">
                 <span class="metric-label">Consumption</span>
                 <span id="post-consumption" class="metric-value">—</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">Retention</span>
+                <span id="post-retention" class="metric-value">—</span>
               </div>
               <button class="copy-btn" data-period="post"><span class="btn-icon">📋</span> Copy to Airtable</button>
             </div>
@@ -1456,14 +1468,15 @@ function createHelperPanel() {
     btn.addEventListener('click', (e) => {
       const period = e.target.getAttribute('data-period');
 
-      // Get metrics in order: CTR, Views, AWT, Consumption
+      // Get metrics in order: CTR, Views, AWT, Consumption, Retention
       const ctr = document.getElementById(`${period}-ctr`).textContent;
       const views = document.getElementById(`${period}-views`).textContent;
       const awt = document.getElementById(`${period}-awt`).textContent;
       const consumption = document.getElementById(`${period}-consumption`).textContent;
+      const retention = document.getElementById(`${period}-retention`).textContent;
 
       // Format as tab-separated values for Airtable
-      const airtableFormat = `${ctr}\t${views}\t${awt}\t${consumption}`;
+      const airtableFormat = `${ctr}\t${views}\t${awt}\t${consumption}\t${retention}`;
 
       navigator.clipboard.writeText(airtableFormat).then(() => {
         const originalText = e.target.textContent;
