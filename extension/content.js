@@ -350,8 +350,24 @@ async function setCustomDateRange(startDate, endDate) {
   customOption.click();
   await new Promise(resolve => setTimeout(resolve, 800));
 
-  const dateDialog = document.querySelector('ytcp-date-period-picker');
-  if (!dateDialog) throw new Error('Date picker not found');
+  // Find the VISIBLE date picker (not just any in DOM)
+  // This is critical because multiple pickers can exist from different tabs
+  const allDateDialogs = document.querySelectorAll('ytcp-date-period-picker');
+  let dateDialog = null;
+
+  for (const dialog of allDateDialogs) {
+    // Check if this dialog is actually visible
+    if (dialog.offsetParent !== null) {
+      dateDialog = dialog;
+      console.log('Found VISIBLE date picker dialog');
+      break;
+    }
+  }
+
+  if (!dateDialog) {
+    console.error(`Found ${allDateDialogs.length} date pickers but none are visible`);
+    throw new Error('No visible date picker found');
+  }
 
   const startInput = dateDialog.querySelector('#start-date input');
   const endInput = dateDialog.querySelector('#end-date input');
@@ -391,31 +407,20 @@ async function setCustomDateRange(startDate, endDate) {
   console.log(`Using date format: ${format} (detected locale: ${locale})`);
   console.log(`Setting dates: ${formattedStart} to ${formattedEnd}`);
 
-  // Function to set date input value using NATIVE SETTER (more reliable)
-  // IMPORTANT: Does NOT blur - matches standalone script that works
+  // Function to set date input value
   const setDateInput = async (input, value, label) => {
     console.log(`   Setting ${label}: target="${value}"`);
 
-    // Get the native setter (bypasses React/custom setters)
+    // Use native setter to bypass React's getter/setter
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-
-    // Focus the input
-    input.focus();
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    // Set value using native setter
     nativeInputValueSetter.call(input, value);
-    console.log(`   After native setter: input.value="${input.value}"`);
 
-    // Trigger events
+    // Trigger events to notify React
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
 
-    // DO NOT blur() - let next focus handle unfocusing
-    // Blurring triggers YouTube's formatter which changes "06/10/2025" to "6 Oct 2025"
-    await new Promise(resolve => setTimeout(resolve, 200));
-
-    console.log(`   After events: input.value="${input.value}"`);
+    await new Promise(resolve => setTimeout(resolve, 100));
+    console.log(`   After setting: input.value="${input.value}"`);
   };
 
   // SMART ORDERING: Decide which date to set first based on cached vs target values
@@ -482,35 +487,9 @@ async function setCustomDateRange(startDate, endDate) {
     await setDateInput(endInput, formattedEnd, 'End');
   }
 
-  // CRITICAL: Wait for YouTube's async validation to complete
-  console.log(`   Waiting 500ms for YouTube validation...`);
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  // AGGRESSIVE FIX: Force-correct any reformatted dates RIGHT before Apply
-  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-
-  console.log(`   Final check before Apply:`);
-  console.log(`      START current: "${startInput.value}" (want: "${formattedStart}")`);
-  console.log(`      END current: "${endInput.value}" (want: "${formattedEnd}")`);
-
-  // If YouTube reformatted them, force them back
-  if (startInput.value !== formattedStart) {
-    console.log(`      ⚠️ START was reformatted! Forcing back to ${formattedStart}`);
-    startInput.focus();
-    nativeInputValueSetter.call(startInput, formattedStart);
-    startInput.dispatchEvent(new Event('input', { bubbles: true }));
-    startInput.dispatchEvent(new Event('change', { bubbles: true }));
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-
-  if (endInput.value !== formattedEnd) {
-    console.log(`      ⚠️ END was reformatted! Forcing back to ${formattedEnd}`);
-    endInput.focus();
-    nativeInputValueSetter.call(endInput, formattedEnd);
-    endInput.dispatchEvent(new Event('input', { bubbles: true }));
-    endInput.dispatchEvent(new Event('change', { bubbles: true }));
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
+  // Wait for React to process
+  console.log(`   Waiting 300ms for React to process...`);
+  await new Promise(resolve => setTimeout(resolve, 300));
 
   const applyButton = dateDialog.querySelector('#apply-button');
   if (!applyButton) throw new Error('Apply button not found');
