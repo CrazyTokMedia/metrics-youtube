@@ -482,16 +482,44 @@ async function setCustomDateRange(startDate, endDate) {
     await setDateInput(endInput, formattedEnd, 'End');
   }
 
-  // Extra wait after setting both dates (matches standalone script)
-  await new Promise(resolve => setTimeout(resolve, 300));
+  // CRITICAL: Wait for YouTube's async validation to complete
+  console.log(`   Waiting 500ms for YouTube validation...`);
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // AGGRESSIVE FIX: Force-correct any reformatted dates RIGHT before Apply
+  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+
+  console.log(`   Final check before Apply:`);
+  console.log(`      START current: "${startInput.value}" (want: "${formattedStart}")`);
+  console.log(`      END current: "${endInput.value}" (want: "${formattedEnd}")`);
+
+  // If YouTube reformatted them, force them back
+  if (startInput.value !== formattedStart) {
+    console.log(`      ⚠️ START was reformatted! Forcing back to ${formattedStart}`);
+    startInput.focus();
+    nativeInputValueSetter.call(startInput, formattedStart);
+    startInput.dispatchEvent(new Event('input', { bubbles: true }));
+    startInput.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  if (endInput.value !== formattedEnd) {
+    console.log(`      ⚠️ END was reformatted! Forcing back to ${formattedEnd}`);
+    endInput.focus();
+    nativeInputValueSetter.call(endInput, formattedEnd);
+    endInput.dispatchEvent(new Event('input', { bubbles: true }));
+    endInput.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
 
   const applyButton = dateDialog.querySelector('#apply-button');
   if (!applyButton) throw new Error('Apply button not found');
 
-  // DEBUG: Check input values RIGHT BEFORE clicking Apply
-  console.log(`   START input value: "${startInput.value}"`);
-  console.log(`   END input value: "${endInput.value}"`);
-  console.log(`   Apply button disabled: ${applyButton.disabled || applyButton.getAttribute('aria-disabled')}`);
+  // FINAL CHECK: Log values RIGHT before clicking Apply
+  console.log(`   Final values before Apply:`);
+  console.log(`      START: "${startInput.value}"`);
+  console.log(`      END: "${endInput.value}"`);
+  console.log(`      Apply button disabled: ${applyButton.disabled || applyButton.getAttribute('aria-disabled')}`);
 
   // Check for validation errors
   const errors = dateDialog.querySelectorAll('.error, [role="alert"], .validation-error');
