@@ -1329,10 +1329,6 @@ function createHelperPanel() {
                 <span id="pre-awt" class="metric-value">—</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Consumption</span>
-                <span id="pre-consumption" class="metric-value">—</span>
-              </div>
-              <div class="metric-row">
                 <span class="metric-label">Retention</span>
                 <span id="pre-retention" class="metric-value">—</span>
               </div>
@@ -1352,10 +1348,6 @@ function createHelperPanel() {
               <div class="metric-row">
                 <span class="metric-label">AWT</span>
                 <span id="post-awt" class="metric-value">—</span>
-              </div>
-              <div class="metric-row">
-                <span class="metric-label">Consumption</span>
-                <span id="post-consumption" class="metric-value">—</span>
               </div>
               <div class="metric-row">
                 <span class="metric-label">Retention</span>
@@ -1468,15 +1460,14 @@ function createHelperPanel() {
     btn.addEventListener('click', (e) => {
       const period = e.target.getAttribute('data-period');
 
-      // Get metrics in order: CTR, Views, AWT, Consumption, Retention
+      // Get metrics in order: CTR, Views, AWT, Retention
       const ctr = document.getElementById(`${period}-ctr`).textContent;
       const views = document.getElementById(`${period}-views`).textContent;
       const awt = document.getElementById(`${period}-awt`).textContent;
-      const consumption = document.getElementById(`${period}-consumption`).textContent;
       const retention = document.getElementById(`${period}-retention`).textContent;
 
       // Format as tab-separated values for Airtable
-      const airtableFormat = `${ctr}\t${views}\t${awt}\t${consumption}\t${retention}`;
+      const airtableFormat = `${ctr}\t${views}\t${awt}\t${retention}`;
 
       navigator.clipboard.writeText(airtableFormat).then(() => {
         const originalText = e.target.textContent;
@@ -1538,13 +1529,11 @@ function createHelperPanel() {
       document.getElementById('pre-views').textContent = result.pre.views || '—';
       document.getElementById('pre-ctr').textContent = result.pre.ctr || '—';
       document.getElementById('pre-awt').textContent = result.pre.awt || '—';
-      document.getElementById('pre-consumption').textContent = result.pre.consumption || '—';
       document.getElementById('pre-retention').textContent = result.pre.retention?.value || 'N/A';
 
       document.getElementById('post-views').textContent = result.post.views || '—';
       document.getElementById('post-ctr').textContent = result.post.ctr || '—';
       document.getElementById('post-awt').textContent = result.post.awt || '—';
-      document.getElementById('post-consumption').textContent = result.post.consumption || '—';
       document.getElementById('post-retention').textContent = result.post.retention?.value || 'N/A';
 
       document.getElementById('metrics-results').style.display = 'block';
