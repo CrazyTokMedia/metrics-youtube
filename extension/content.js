@@ -3,6 +3,37 @@
  * Phase 1: Manual Helper - Calculate date ranges and display them
  */
 
+// Suppress YouTube Studio's annoying console errors and warnings
+(function() {
+  const originalError = console.error;
+  const originalWarn = console.warn;
+  const originalLog = console.log;
+
+  const shouldSuppress = (args) => {
+    const message = JSON.stringify(args).toLowerCase();
+    return message.includes('could not get metadata') ||
+           message.includes('videometadataprovider') ||
+           message.includes('requeststorageaccessfor') ||
+           message.includes('feedback-pa.clients6.google.com') ||
+           message.includes('gapi.loaded');
+  };
+
+  console.error = function(...args) {
+    if (shouldSuppress(args)) return;
+    originalError.apply(console, args);
+  };
+
+  console.warn = function(...args) {
+    if (shouldSuppress(args)) return;
+    originalWarn.apply(console, args);
+  };
+
+  console.log = function(...args) {
+    if (shouldSuppress(args)) return;
+    originalLog.apply(console, args);
+  };
+})();
+
 // Check if extension context is still valid
 function isExtensionContextValid() {
   try {
@@ -175,12 +206,21 @@ const safeStorage = {
   }
 };
 
-// Utility: Format date as YYYY-MM-DD
+// Utility: Format date as YYYY-MM-DD (for internal use)
 function formatDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+// Utility: Format date as DD/MM/YY (for display)
+function formatDateDisplay(dateStr) {
+  // Input: "2025-10-24" (YYYY-MM-DD)
+  // Output: "24/10/25" (DD/MM/YY)
+  const [year, month, day] = dateStr.split('-');
+  const shortYear = year.slice(-2);
+  return `${day}/${month}/${shortYear}`;
 }
 
 // Core Logic: Calculate PRE and POST date ranges
@@ -247,11 +287,65 @@ async function setCustomDateRange(startDate, endDate) {
 
   if (!dateTrigger) throw new Error('Date trigger not found');
 
-  dateTrigger.click();
-  await new Promise(resolve => setTimeout(resolve, 500));
+  console.log(`Found date trigger with text: "${dateTrigger.textContent.substring(0, 50).trim()}..."`);
 
-  const customOption = document.querySelector('tp-yt-paper-item[test-id="fixed"]');
-  if (!customOption) throw new Error('Custom option not found');
+  // Close any existing dropdown first
+  const existingDropdown = document.querySelector('tp-yt-paper-listbox[role="listbox"]');
+  if (existingDropdown) {
+    console.log('Closing existing dropdown first...');
+    // Click outside to close
+    document.body.click();
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+
+  // Ensure the trigger is visible and scrolled into view
+  dateTrigger.scrollIntoView({ behavior: 'instant', block: 'center' });
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  // Focus and click the trigger to open dropdown
+  dateTrigger.focus();
+  await new Promise(resolve => setTimeout(resolve, 50));
+  dateTrigger.click();
+  console.log('Clicked date trigger, waiting for dropdown menu...');
+
+  // Wait for a VISIBLE dropdown to appear (not just any dropdown in DOM)
+  console.log('Waiting for VISIBLE dropdown menu...');
+  let visibleDropdown = null;
+  const maxAttempts = 20; // 20 attempts x 250ms = 5 seconds
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const dropdowns = document.querySelectorAll('tp-yt-paper-listbox[role="listbox"]');
+    for (const dropdown of dropdowns) {
+      // Check if dropdown is actually visible
+      if (dropdown.offsetParent !== null) {
+        visibleDropdown = dropdown;
+        console.log(`Visible dropdown found after ${i * 250}ms`);
+        break;
+      }
+    }
+    if (visibleDropdown) break;
+
+    console.log(`Attempt ${i + 1}/${maxAttempts}: No visible dropdown yet, waiting...`);
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+
+  if (!visibleDropdown) {
+    console.error('No visible dropdown appeared after clicking date trigger');
+    throw new Error('Date dropdown did not open');
+  }
+
+  // Now find the custom option in the VISIBLE dropdown
+  const customOption = visibleDropdown.querySelector('tp-yt-paper-item[test-id="fixed"]');
+
+  if (!customOption) {
+    // Debug: show what options ARE available in the visible dropdown
+    const allOptions = visibleDropdown.querySelectorAll('tp-yt-paper-item');
+    console.error(`Custom option not found in visible dropdown. Found ${allOptions.length} options:`,
+      Array.from(allOptions).map(o => o.getAttribute('test-id')).filter(Boolean));
+    throw new Error('Custom date option not found in dropdown');
+  }
+
+  console.log('Custom option found in visible dropdown');
 
   customOption.click();
   await new Promise(resolve => setTimeout(resolve, 800));
@@ -297,29 +391,31 @@ async function setCustomDateRange(startDate, endDate) {
   console.log(`Using date format: ${format} (detected locale: ${locale})`);
   console.log(`Setting dates: ${formattedStart} to ${formattedEnd}`);
 
-  // Function to set date input value fast with proper events
+  // Function to set date input value using NATIVE SETTER (more reliable)
+  // IMPORTANT: Does NOT blur - matches standalone script that works
   const setDateInput = async (input, value, label) => {
-    // Focus and click the input
+    console.log(`   Setting ${label}: target="${value}"`);
+
+    // Get the native setter (bypasses React/custom setters)
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+
+    // Focus the input
     input.focus();
-    input.click();
+    await new Promise(resolve => setTimeout(resolve, 50));
 
-    // Clear existing value
-    input.value = '';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    // Set value using native setter
+    nativeInputValueSetter.call(input, value);
+    console.log(`   After native setter: input.value="${input.value}"`);
 
-    // Set new value
-    input.value = value;
-
-    // Trigger input and change events with proper bubbling
+    // Trigger events
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
 
-    // Trigger keyboard events to simulate user interaction
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
+    // DO NOT blur() - let next focus handle unfocusing
+    // Blurring triggers YouTube's formatter which changes "06/10/2025" to "6 Oct 2025"
+    await new Promise(resolve => setTimeout(resolve, 200));
 
-    // Blur to finalize
-    input.blur();
+    console.log(`   After events: input.value="${input.value}"`);
   };
 
   // SMART ORDERING: Decide which date to set first based on cached vs target values
@@ -386,26 +482,93 @@ async function setCustomDateRange(startDate, endDate) {
     await setDateInput(endInput, formattedEnd, 'End');
   }
 
+  // Extra wait after setting both dates (matches standalone script)
+  await new Promise(resolve => setTimeout(resolve, 300));
+
   const applyButton = dateDialog.querySelector('#apply-button');
   if (!applyButton) throw new Error('Apply button not found');
 
+  // DEBUG: Check input values RIGHT BEFORE clicking Apply
+  console.log(`   START input value: "${startInput.value}"`);
+  console.log(`   END input value: "${endInput.value}"`);
+  console.log(`   Apply button disabled: ${applyButton.disabled || applyButton.getAttribute('aria-disabled')}`);
+
+  // Check for validation errors
+  const errors = dateDialog.querySelectorAll('.error, [role="alert"], .validation-error');
+  if (errors.length > 0) {
+    console.log(`   ⚠️ VALIDATION ERRORS FOUND:`);
+    errors.forEach((err, i) => {
+      console.log(`      ${i + 1}. ${err.textContent.trim()}`);
+    });
+  }
+
+  // Get the current sidebar date BEFORE clicking Apply
+  const getSidebarDateText = () => {
+    const triggers = sidebar.querySelectorAll('ytcp-dropdown-trigger');
+    for (const trigger of triggers) {
+      const text = trigger.textContent;
+      if (text.includes('–') || text.includes('Since') || text.includes('days')) {
+        return text.trim();
+      }
+    }
+    return '';
+  };
+
+  const beforeDate = getSidebarDateText();
+  console.log(`   Sidebar before Apply: "${beforeDate}"`);
+
+  // Try multiple click methods
+  console.log('   Clicking Apply button...');
+  applyButton.focus();
+  await new Promise(resolve => setTimeout(resolve, 100));
   applyButton.click();
 
-  // Wait for date dialog to close
-  await waitForElementRemoval('.date-input-dialog-contents', 5000);
+  // Also try dispatching click event
+  applyButton.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 
-  // Brief wait for sidebar to update with new dates
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // Try clicking the actual button inside if it exists
+  const actualButton = applyButton.querySelector('button');
+  if (actualButton) {
+    console.log('   Also clicking inner button element...');
+    actualButton.click();
+  }
 
-  // Verify the date was actually applied by checking the sidebar
-  const verifyTrigger = sidebar.querySelectorAll('ytcp-dropdown-trigger');
-  let currentDateText = '';
-  for (const trigger of verifyTrigger) {
-    const text = trigger.textContent;
-    if (text.includes('–') || text.includes('Since') || text.includes('days')) {
-      currentDateText = text.trim();
+  // Wait for the date dialog to actually close (check if it becomes hidden)
+  console.log('   Waiting for dialog to close...');
+  await new Promise((resolve) => {
+    const checkInterval = setInterval(() => {
+      const dialog = document.querySelector('ytcp-date-period-picker');
+      if (!dialog || dialog.offsetParent === null) {
+        clearInterval(checkInterval);
+        resolve();
+      }
+    }, 100);
+
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      resolve();
+    }, 5000);
+  });
+
+  // Wait for sidebar to actually UPDATE with new dates (poll for change)
+  console.log('   Waiting for sidebar to update...');
+  let currentDateText = beforeDate;
+  const maxWait = 30; // 30 attempts x 200ms = 6 seconds
+
+  for (let i = 0; i < maxWait; i++) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    currentDateText = getSidebarDateText();
+
+    // Check if sidebar changed from the before date
+    if (currentDateText !== beforeDate) {
+      console.log(`   Sidebar updated after ${(i + 1) * 200}ms`);
       break;
     }
+  }
+
+  if (currentDateText === beforeDate) {
+    console.log(`   ⚠️ WARNING: Sidebar did not change after ${maxWait * 200}ms`);
   }
 
   console.log(`✅ Date range applied successfully!`);
@@ -458,8 +621,40 @@ async function selectMetrics() {
     'VIDEO_THUMBNAIL_IMPRESSIONS_VTR'
   ];
 
-  const metricPicker = document.querySelector('#metric-picker');
-  if (!metricPicker) throw new Error('Metric picker not found');
+  // Check if metric picker exists - if not, we might be on wrong tab
+  let metricPicker = document.querySelector('#metric-picker');
+  if (!metricPicker) {
+    console.log('Metric picker not found, checking current tab...');
+
+    // Check if we're on Audience Retention or another tab without metric picker
+    const reportTriggers = Array.from(document.querySelectorAll('ytcp-dropdown-trigger'));
+    let currentTab = 'unknown';
+
+    for (const trigger of reportTriggers) {
+      const labelText = trigger.querySelector('.label-text');
+      if (labelText && labelText.textContent.trim() === 'Report') {
+        const dropdownText = trigger.querySelector('.dropdown-trigger-text');
+        if (dropdownText) {
+          currentTab = dropdownText.textContent.trim();
+        }
+        break;
+      }
+    }
+
+    console.log(`Current tab: "${currentTab}"`);
+
+    // If not on Top content tab, navigate there
+    if (!currentTab.toLowerCase().includes('top content')) {
+      console.log('Not on Top content tab, navigating there...');
+      await navigateBackToMetrics();
+
+      // Try to find metric picker again
+      metricPicker = document.querySelector('#metric-picker');
+      if (!metricPicker) throw new Error('Metric picker not found even after navigating to Top content');
+    } else {
+      throw new Error('Metric picker not found on Top content tab');
+    }
+  }
 
   const trigger = metricPicker.querySelector('ytcp-dropdown-trigger');
   if (!trigger) throw new Error('Metric trigger not found');
@@ -500,6 +695,10 @@ async function selectMetrics() {
 // Helper: Extract Values
 async function extractValues() {
   console.log('Extracting values...');
+
+  // Wait for table to load (can take time after date/metric changes)
+  console.log('Waiting for table to load...');
+  await waitForElement('yta-explore-table.data-container', 10000);
 
   const table = document.querySelector('yta-explore-table.data-container');
   if (!table) throw new Error('Table not found');
@@ -598,22 +797,40 @@ async function navigateToAudienceRetention() {
 
   reportDropdown.click();
 
-  // Wait for dropdown menu to appear
-  await waitForElement('tp-yt-paper-item', 3000);
+  // Wait for dropdown menu with Audience retention option to appear
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Timeout waiting for Audience retention option')), 5000);
+    const checkInterval = setInterval(() => {
+      const items = document.querySelectorAll('tp-yt-paper-item');
+      for (const item of items) {
+        if (item.textContent.toLowerCase().includes('audience retention')) {
+          clearTimeout(timeout);
+          clearInterval(checkInterval);
+          resolve();
+          return;
+        }
+      }
+    }, 100);
+  });
 
-  // Find and click Audience retention option
+  // Find and click Audience retention option (case-insensitive)
   const menuItems = Array.from(document.querySelectorAll('tp-yt-paper-item'));
+  console.log(`Found ${menuItems.length} menu items`);
+
   let retentionOption = null;
 
   for (const item of menuItems) {
-    const text = item.textContent;
-    if (text.includes('Audience retention')) {
+    const text = item.textContent.toLowerCase();
+    console.log(`Checking menu item: "${text.substring(0, 50)}..."`);
+    if (text.includes('audience retention')) {
       retentionOption = item;
+      console.log('Found Audience retention option!');
       break;
     }
   }
 
   if (!retentionOption) {
+    console.error('Available menu items:', menuItems.map(i => i.textContent.substring(0, 50)));
     throw new Error('Audience retention option not found');
   }
 
@@ -650,20 +867,21 @@ async function navigateBackToMetrics() {
   // Wait for dropdown menu to appear
   await waitForElement('tp-yt-paper-item', 3000);
 
-  // Find and click Top content option (default metrics view)
+  // Find and click "Top content in the past 28 days" option (default metrics view)
   const menuItems = Array.from(document.querySelectorAll('tp-yt-paper-item'));
   let topContentOption = null;
 
   for (const item of menuItems) {
-    const text = item.textContent;
-    if (text.includes('Top content')) {
+    const text = item.textContent.trim();
+    // Match "Top content in the past 28 days" (with or without nbsp)
+    if (text.includes('Top content in the past 28') && text.includes('days')) {
       topContentOption = item;
       break;
     }
   }
 
   if (!topContentOption) {
-    throw new Error('Top content option not found');
+    throw new Error('Top content in the past 28 days option not found');
   }
 
   topContentOption.click();
@@ -984,131 +1202,100 @@ function createHelperPanel() {
     <div class="helper-header">
       <div class="header-content">
         <span class="drag-handle">⋮⋮</span>
-        <h3>Treatment Date Comparison</h3>
+        <h3>Treatment Comparison</h3>
       </div>
       <button id="helper-close" class="helper-close-btn">×</button>
     </div>
     <div class="helper-body">
+
+      <!-- Step 1: Treatment Date -->
       <div class="input-section">
-        <label for="treatment-date">Treatment Date:</label>
-        <input type="date" id="treatment-date" class="date-input" max="" />
-        <button id="calculate-btn" class="action-btn">Calculate Periods</button>
+        <input type="date" id="treatment-date" class="date-input" placeholder="Select treatment date" max="" />
+        <button id="calculate-btn" class="action-btn calculate-btn">Calculate</button>
       </div>
 
+      <!-- Step 2: Date Ranges -->
       <div id="results-section" class="results-section" style="display: none;">
-        <div class="period-info">
-          <div class="info-badge">
-            <strong>Days Since Treatment:</strong> <span id="days-since">0</span> days
+
+        <div class="periods-container">
+          <div class="period-block pre-period">
+            <div class="period-header">
+              <span class="period-label">PRE</span>
+              <span class="period-duration"><span id="pre-days">0</span>d</span>
+            </div>
+            <div class="period-dates">
+              <span id="pre-start" class="date">—</span>
+              <span class="date-separator">→</span>
+              <span id="pre-end" class="date">—</span>
+            </div>
+          </div>
+
+          <div class="period-block post-period">
+            <div class="period-header">
+              <span class="period-label">POST</span>
+              <span class="period-duration"><span id="post-days">0</span>d</span>
+            </div>
+            <div class="period-dates">
+              <span id="post-start" class="date">—</span>
+              <span class="date-separator">→</span>
+              <span id="post-end" class="date">—</span>
+            </div>
           </div>
         </div>
 
-        <div class="period-block pre-period">
-          <h4>PRE Period</h4>
-          <div class="date-range">
-            <div class="date-item">
-              <label>Start:</label>
-              <input type="text" id="pre-start" class="date-display" readonly />
-              <button class="copy-btn" data-target="pre-start">Copy</button>
-            </div>
-            <div class="date-item">
-              <label>End:</label>
-              <input type="text" id="pre-end" class="date-display" readonly />
-              <button class="copy-btn" data-target="pre-end">Copy</button>
-            </div>
-            <div class="period-days">Duration: <span id="pre-days">0</span> days</div>
-          </div>
-        </div>
+        <!-- Step 3: Extract -->
+        <button id="auto-extract-btn" class="action-btn extract-btn">
+          Extract Metrics
+        </button>
+        <div id="extraction-status" class="extraction-status" style="display: none;"></div>
 
-        <div class="period-block post-period">
-          <h4>POST Period</h4>
-          <div class="date-range">
-            <div class="date-item">
-              <label>Start:</label>
-              <input type="text" id="post-start" class="date-display" readonly />
-              <button class="copy-btn" data-target="post-start">Copy</button>
-            </div>
-            <div class="date-item">
-              <label>End:</label>
-              <input type="text" id="post-end" class="date-display" readonly />
-              <button class="copy-btn" data-target="post-end">Copy</button>
-            </div>
-            <div class="period-days">Duration: <span id="post-days">0</span> days</div>
-          </div>
-        </div>
-
-        <div class="auto-extract-section">
-          <button id="auto-extract-btn" class="action-btn primary-btn">
-            🚀 Auto-Extract Metrics
-          </button>
-          <div id="extraction-status" class="extraction-status" style="display: none;"></div>
-        </div>
-
+        <!-- Step 4: Results -->
         <div id="metrics-results" class="metrics-results" style="display: none;">
-          <h4>📊 Extracted Metrics</h4>
-
-          <div class="metrics-comparison">
-            <div class="metrics-column">
-              <h5>PRE Period</h5>
-              <div class="metric-item">
-                <span class="metric-label">Views:</span>
-                <span id="pre-views" class="metric-value">—</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-label">CTR:</span>
+          <div class="metrics-grid">
+            <div class="metrics-column pre-column">
+              <div class="column-header">PRE</div>
+              <div class="metric-row">
+                <span class="metric-label">CTR</span>
                 <span id="pre-ctr" class="metric-value">—</span>
               </div>
-              <div class="metric-item">
-                <span class="metric-label">AWT:</span>
+              <div class="metric-row">
+                <span class="metric-label">Views</span>
+                <span id="pre-views" class="metric-value">—</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">AWT</span>
                 <span id="pre-awt" class="metric-value">—</span>
               </div>
-              <div class="metric-item">
-                <span class="metric-label">Consumption:</span>
+              <div class="metric-row">
+                <span class="metric-label">Consumption</span>
                 <span id="pre-consumption" class="metric-value">—</span>
               </div>
-              <div class="metric-item retention-metric">
-                <span class="metric-label">Retention:</span>
-                <span id="pre-retention" class="metric-value">—</span>
-              </div>
+              <button class="copy-btn" data-period="pre">Copy to Airtable</button>
             </div>
 
-            <div class="metrics-column">
-              <h5>POST Period</h5>
-              <div class="metric-item">
-                <span class="metric-label">Views:</span>
-                <span id="post-views" class="metric-value">—</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-label">CTR:</span>
+            <div class="metrics-column post-column">
+              <div class="column-header">POST</div>
+              <div class="metric-row">
+                <span class="metric-label">CTR</span>
                 <span id="post-ctr" class="metric-value">—</span>
               </div>
-              <div class="metric-item">
-                <span class="metric-label">AWT:</span>
+              <div class="metric-row">
+                <span class="metric-label">Views</span>
+                <span id="post-views" class="metric-value">—</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">AWT</span>
                 <span id="post-awt" class="metric-value">—</span>
               </div>
-              <div class="metric-item">
-                <span class="metric-label">Consumption:</span>
+              <div class="metric-row">
+                <span class="metric-label">Consumption</span>
                 <span id="post-consumption" class="metric-value">—</span>
               </div>
-              <div class="metric-item retention-metric">
-                <span class="metric-label">Retention:</span>
-                <span id="post-retention" class="metric-value">—</span>
-              </div>
+              <button class="copy-btn" data-period="post">Copy to Airtable</button>
             </div>
           </div>
-
-          <button id="copy-metrics-btn" class="action-btn">Copy All Metrics</button>
         </div>
 
-        <div class="instructions">
-          <p><strong>Manual Option:</strong></p>
-          <ol>
-            <li>Copy the PRE period dates using the buttons above</li>
-            <li>Apply them to YouTube Studio date filter</li>
-            <li>Note down the metrics you want to compare</li>
-            <li>Copy the POST period dates and repeat</li>
-            <li>Compare the results manually</li>
-          </ol>
-        </div>
       </div>
     </div>
   `;
@@ -1149,15 +1336,13 @@ function createHelperPanel() {
 
     const ranges = calculateDateRanges(treatmentDate);
 
-    // Display results
-    document.getElementById('days-since').textContent = ranges.daysSince;
-
-    document.getElementById('pre-start').value = ranges.pre.start;
-    document.getElementById('pre-end').value = ranges.pre.end;
+    // Display results (format as DD/MM/YY for display)
+    document.getElementById('pre-start').textContent = formatDateDisplay(ranges.pre.start);
+    document.getElementById('pre-end').textContent = formatDateDisplay(ranges.pre.end);
     document.getElementById('pre-days').textContent = ranges.pre.days;
 
-    document.getElementById('post-start').value = ranges.post.start;
-    document.getElementById('post-end').value = ranges.post.end;
+    document.getElementById('post-start').textContent = formatDateDisplay(ranges.post.start);
+    document.getElementById('post-end').textContent = formatDateDisplay(ranges.post.end);
     document.getElementById('post-days').textContent = ranges.post.days;
 
     document.getElementById('results-section').style.display = 'block';
@@ -1169,14 +1354,21 @@ function createHelperPanel() {
     });
   });
 
-  // Copy button functionality
+  // Copy period for Airtable functionality
   document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const targetId = e.target.getAttribute('data-target');
-      const input = document.getElementById(targetId);
+      const period = e.target.getAttribute('data-period');
 
-      // Copy to clipboard
-      navigator.clipboard.writeText(input.value).then(() => {
+      // Get metrics in order: CTR, Views, AWT, Consumption
+      const ctr = document.getElementById(`${period}-ctr`).textContent;
+      const views = document.getElementById(`${period}-views`).textContent;
+      const awt = document.getElementById(`${period}-awt`).textContent;
+      const consumption = document.getElementById(`${period}-consumption`).textContent;
+
+      // Format as tab-separated values for Airtable
+      const airtableFormat = `${ctr}\t${views}\t${awt}\t${consumption}`;
+
+      navigator.clipboard.writeText(airtableFormat).then(() => {
         const originalText = e.target.textContent;
         e.target.textContent = 'Copied!';
         e.target.classList.add('copied');
@@ -1272,46 +1464,6 @@ function createHelperPanel() {
     }
   });
 
-  // Copy All Metrics button functionality
-  document.getElementById('copy-metrics-btn').addEventListener('click', () => {
-    const preViews = document.getElementById('pre-views').textContent;
-    const preCtr = document.getElementById('pre-ctr').textContent;
-    const preAwt = document.getElementById('pre-awt').textContent;
-    const preConsumption = document.getElementById('pre-consumption').textContent;
-    const preRetention = document.getElementById('pre-retention').textContent;
-
-    const postViews = document.getElementById('post-views').textContent;
-    const postCtr = document.getElementById('post-ctr').textContent;
-    const postAwt = document.getElementById('post-awt').textContent;
-    const postConsumption = document.getElementById('post-consumption').textContent;
-    const postRetention = document.getElementById('post-retention').textContent;
-
-    const text = `PRE Period Metrics:
-Views: ${preViews}
-CTR: ${preCtr}
-AWT: ${preAwt}
-Consumption: ${preConsumption}
-Retention: ${preRetention}
-
-POST Period Metrics:
-Views: ${postViews}
-CTR: ${postCtr}
-AWT: ${postAwt}
-Consumption: ${postConsumption}
-Retention: ${postRetention}`;
-
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.getElementById('copy-metrics-btn');
-      const originalText = btn.textContent;
-      btn.textContent = 'Copied!';
-      btn.classList.add('copied');
-
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.classList.remove('copied');
-      }, 1500);
-    });
-  });
 
   // Load last used treatment date if available
   safeStorage.get(['lastTreatmentDate']).then((result) => {
