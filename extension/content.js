@@ -1255,7 +1255,7 @@ function createHelperPanel() {
 
         <!-- Step 3: Extract -->
         <button id="auto-extract-btn" class="action-btn extract-btn">
-          Extract Metrics
+          <span class="btn-icon">📊</span> Extract Metrics
         </button>
         <div id="extraction-status" class="extraction-status" style="display: none;"></div>
 
@@ -1280,7 +1280,7 @@ function createHelperPanel() {
                 <span class="metric-label">Consumption</span>
                 <span id="pre-consumption" class="metric-value">—</span>
               </div>
-              <button class="copy-btn" data-period="pre">Copy to Airtable</button>
+              <button class="copy-btn" data-period="pre"><span class="btn-icon">📋</span> Copy to Airtable</button>
             </div>
 
             <div class="metrics-column post-column">
@@ -1301,7 +1301,7 @@ function createHelperPanel() {
                 <span class="metric-label">Consumption</span>
                 <span id="post-consumption" class="metric-value">—</span>
               </div>
-              <button class="copy-btn" data-period="post">Copy to Airtable</button>
+              <button class="copy-btn" data-period="post"><span class="btn-icon">📋</span> Copy to Airtable</button>
             </div>
           </div>
         </div>

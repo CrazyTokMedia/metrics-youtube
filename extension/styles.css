@@ -66,9 +66,14 @@
 
 .drag-handle {
   font-size: 20px;
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: move;
   letter-spacing: -3px;
+  transition: opacity 0.2s;
+}
+
+.helper-header:hover .drag-handle {
+  opacity: 0.8;
 }
 
 .helper-header h3 {
@@ -466,6 +471,14 @@
   color: #1f2937;
 }
 
+/* Button Icons */
+.btn-icon {
+  display: inline-block;
+  font-size: 16px;
+  line-height: 1;
+  margin-right: 4px;
+}
+
 /* Copy Button */
 .copy-btn {
   width: 100%;
@@ -479,6 +492,10 @@
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .copy-btn:hover {
