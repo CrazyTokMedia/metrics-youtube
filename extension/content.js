@@ -1367,14 +1367,15 @@ function createHelperPanel() {
     });
   });
 
-  // Edit dates button functionality
-  const editDatesBtn = document.getElementById('edit-dates-btn');
-  if (editDatesBtn) {
-    editDatesBtn.addEventListener('click', () => {
+  // Edit dates button functionality (using event delegation)
+  panel.addEventListener('click', (e) => {
+    if (e.target.id === 'edit-dates-btn' || e.target.closest('#edit-dates-btn')) {
       document.getElementById('treatment-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      document.getElementById('treatment-date').focus();
-    });
-  }
+      setTimeout(() => {
+        document.getElementById('treatment-date').focus();
+      }, 300); // Wait for scroll to finish
+    }
+  });
 
   // Copy period for Airtable functionality
   document.querySelectorAll('.copy-btn').forEach(btn => {

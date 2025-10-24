@@ -245,16 +245,18 @@
 .periods-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
 .period-block {
   background: linear-gradient(to bottom, #fafafa 0%, #f5f5f5 100%);
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px;
   border: 2px solid #e5e7eb;
   transition: all 0.2s;
+  box-sizing: border-box;
+  min-width: 0; /* Prevent overflow */
 }
 
 .period-block:hover {
@@ -305,24 +307,31 @@
 .period-dates {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
+  gap: 6px;
+  padding: 10px;
   background: white;
   border-radius: 8px;
   font-family: 'Courier New', monospace;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #1f2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .date {
   flex: 1;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .date-separator {
   color: #9ca3af;
-  font-size: 16px;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
 /* ============================================================
@@ -401,14 +410,16 @@
 .metrics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
 }
 
 .metrics-column {
   background: linear-gradient(to bottom, #fafafa 0%, #f5f5f5 100%);
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px;
   border: 2px solid #e5e7eb;
+  box-sizing: border-box;
+  min-width: 0; /* Prevent overflow */
 }
 
 .pre-column {
