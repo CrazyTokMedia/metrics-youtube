@@ -866,6 +866,10 @@ async function navigateToAudienceRetention() {
 
   retentionOption.click();
 
+  // Wait for tab switch to complete
+  console.log('Waiting for tab to switch...');
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
   // Wait for retention chart to load
   await waitForElement('yta-line-chart-base svg', 10000);
 
@@ -915,6 +919,10 @@ async function navigateBackToMetrics() {
   }
 
   topContentOption.click();
+
+  // Wait for tab switch to complete
+  console.log('Waiting for tab to switch...');
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
   // Wait for metrics table to load
   await waitForElement('yta-explore-table.data-container', 10000);
