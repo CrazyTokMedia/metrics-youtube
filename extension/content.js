@@ -274,14 +274,23 @@ async function setCustomDateRange(startDate, endDate) {
   const sidebar = document.querySelector('yta-explore-sidebar');
   if (!sidebar) throw new Error('Sidebar not found');
 
-  const triggers = sidebar.querySelectorAll('ytcp-dropdown-trigger');
   let dateTrigger = null;
 
-  for (const trigger of triggers) {
-    const text = trigger.textContent;
-    if (text.includes('–') || text.includes('Since') || text.includes('days')) {
-      dateTrigger = trigger;
-      break;
+  // Check if we're on Audience Retention page (has yta-time-picker)
+  const timePicker = sidebar.querySelector('yta-time-picker');
+  if (timePicker) {
+    console.log('Found yta-time-picker (Audience Retention page)');
+    dateTrigger = timePicker.querySelector('ytcp-dropdown-trigger');
+  } else {
+    // Regular Content page - find date dropdown trigger
+    console.log('Looking for regular dropdown trigger (Content page)');
+    const triggers = sidebar.querySelectorAll('ytcp-dropdown-trigger');
+    for (const trigger of triggers) {
+      const text = trigger.textContent;
+      if (text.includes('–') || text.includes('Since') || text.includes('days')) {
+        dateTrigger = trigger;
+        break;
+      }
     }
   }
 
