@@ -1336,7 +1336,7 @@ function createHelperPanel() {
                 <span class="metric-label">Retention</span>
                 <span id="pre-retention" class="metric-value">—</span>
               </div>
-              <button class="copy-btn" data-period="pre"><span class="btn-icon">📋</span> Copy to Airtable</button>
+              <button class="copy-btn" data-period="pre"><span class="btn-icon">📋</span> Copy Pre</button>
             </div>
 
             <div class="metrics-column post-column">
@@ -1361,7 +1361,7 @@ function createHelperPanel() {
                 <span class="metric-label">Retention</span>
                 <span id="post-retention" class="metric-value">—</span>
               </div>
-              <button class="copy-btn" data-period="post"><span class="btn-icon">📋</span> Copy to Airtable</button>
+              <button class="copy-btn" data-period="post"><span class="btn-icon">📋</span> Copy Post</button>
             </div>
           </div>
         </div>
@@ -1548,6 +1548,17 @@ function createHelperPanel() {
       document.getElementById('post-retention').textContent = result.post.retention?.value || 'N/A';
 
       document.getElementById('metrics-results').style.display = 'block';
+
+      // Scroll to bottom to show results
+      const helperBody = document.querySelector('.helper-body');
+      if (helperBody) {
+        setTimeout(() => {
+          helperBody.scrollTo({
+            top: helperBody.scrollHeight,
+            behavior: 'smooth'
+          });
+        }, 100);
+      }
 
       statusEl.textContent = '✅ Metrics extracted successfully!';
       statusEl.className = 'extraction-status success';
