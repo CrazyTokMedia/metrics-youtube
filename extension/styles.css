@@ -124,13 +124,55 @@
 }
 
 /* ============================================================
+   STEPS & LABELS
+   ============================================================ */
+.step-container {
+  margin-bottom: 24px;
+}
+
+.step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.step-label-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.edit-link {
+  background: transparent;
+  border: none;
+  color: #667eea;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.edit-link:hover {
+  background: rgba(102, 126, 234, 0.1);
+  text-decoration: none;
+}
+
+/* ============================================================
    STEP 1: INPUT SECTION
    ============================================================ */
 .input-section {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 12px;
-  margin-bottom: 24px;
 }
 
 .date-input {
@@ -199,7 +241,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .period-block {

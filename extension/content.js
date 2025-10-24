@@ -1209,13 +1209,23 @@ function createHelperPanel() {
     <div class="helper-body">
 
       <!-- Step 1: Treatment Date -->
-      <div class="input-section">
-        <input type="date" id="treatment-date" class="date-input" placeholder="Select treatment date" max="" />
-        <button id="calculate-btn" class="action-btn calculate-btn">Calculate</button>
+      <div class="step-container" id="step-1">
+        <div class="step-label">Select treatment date</div>
+        <div class="input-section">
+          <input type="date" id="treatment-date" class="date-input" max="" />
+          <button id="calculate-btn" class="action-btn calculate-btn">Calculate</button>
+        </div>
       </div>
 
       <!-- Step 2: Date Ranges -->
       <div id="results-section" class="results-section" style="display: none;">
+
+        <div class="step-container">
+          <div class="step-label-with-action">
+            <span class="step-label">Calculated periods</span>
+            <button id="edit-dates-btn" class="edit-link">Edit</button>
+          </div>
+        </div>
 
         <div class="periods-container">
           <div class="period-block pre-period">
@@ -1347,12 +1357,24 @@ function createHelperPanel() {
 
     document.getElementById('results-section').style.display = 'block';
 
+    // Scroll to results
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
     // Save to storage for future use
     safeStorage.set({
       lastTreatmentDate: treatmentDate,
       lastCalculatedRanges: ranges
     });
   });
+
+  // Edit dates button functionality
+  const editDatesBtn = document.getElementById('edit-dates-btn');
+  if (editDatesBtn) {
+    editDatesBtn.addEventListener('click', () => {
+      document.getElementById('treatment-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('treatment-date').focus();
+    });
+  }
 
   // Copy period for Airtable functionality
   document.querySelectorAll('.copy-btn').forEach(btn => {
@@ -1383,16 +1405,19 @@ function createHelperPanel() {
 
   // Auto-Extract button functionality
   document.getElementById('auto-extract-btn').addEventListener('click', async () => {
-    // Get the calculated date ranges
-    const preStart = document.getElementById('pre-start').value;
-    const preEnd = document.getElementById('pre-end').value;
-    const postStart = document.getElementById('post-start').value;
-    const postEnd = document.getElementById('post-end').value;
+    // Get the calculated date ranges from storage
+    const stored = await safeStorage.get(['lastCalculatedRanges']);
+    const ranges = stored.lastCalculatedRanges;
 
-    if (!preStart || !postStart) {
-      alert('Please calculate date ranges first by clicking "Calculate Periods"');
+    if (!ranges) {
+      alert('Please calculate date ranges first');
       return;
     }
+
+    const preStart = ranges.pre.start;
+    const preEnd = ranges.pre.end;
+    const postStart = ranges.post.start;
+    const postEnd = ranges.post.end;
 
     const statusEl = document.getElementById('extraction-status');
     const autoExtractBtn = document.getElementById('auto-extract-btn');
