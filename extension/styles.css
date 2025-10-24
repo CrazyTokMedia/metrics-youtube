@@ -171,6 +171,16 @@
   text-decoration: none;
 }
 
+.edit-link.editing {
+  background: #10b981;
+  color: white;
+  text-decoration: none;
+}
+
+.edit-link.editing:hover {
+  background: #059669;
+}
+
 /* ============================================================
    STEP 1: INPUT SECTION
    ============================================================ */
@@ -311,21 +321,39 @@
   padding: 10px;
   background: white;
   border-radius: 8px;
+  overflow: hidden;
+}
+
+.date-edit {
+  flex: 1;
+  text-align: center;
   font-family: 'Courier New', monospace;
   font-size: 13px;
   font-weight: 600;
   color: #1f2937;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  min-width: 0;
 }
 
-.date {
-  flex: 1;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
+.date-edit:read-only {
+  cursor: default;
+}
+
+.date-edit.editable,
+.date-edit:not(:read-only) {
+  border-color: #667eea;
+  background: #f0f9ff;
+  cursor: text;
+}
+
+.date-edit:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
 }
 
 .date-separator {

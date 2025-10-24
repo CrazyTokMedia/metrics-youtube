@@ -1248,9 +1248,9 @@ function createHelperPanel() {
               <span class="period-duration"><span id="pre-days">0</span>d</span>
             </div>
             <div class="period-dates">
-              <span id="pre-start" class="date">—</span>
+              <input type="date" id="pre-start" class="date-edit" readonly data-original="" />
               <span class="date-separator">→</span>
-              <span id="pre-end" class="date">—</span>
+              <input type="date" id="pre-end" class="date-edit" readonly data-original="" />
             </div>
           </div>
 
@@ -1260,9 +1260,9 @@ function createHelperPanel() {
               <span class="period-duration"><span id="post-days">0</span>d</span>
             </div>
             <div class="period-dates">
-              <span id="post-start" class="date">—</span>
+              <input type="date" id="post-start" class="date-edit" readonly data-original="" />
               <span class="date-separator">→</span>
-              <span id="post-end" class="date">—</span>
+              <input type="date" id="post-end" class="date-edit" readonly data-original="" />
             </div>
           </div>
         </div>
@@ -1360,13 +1360,17 @@ function createHelperPanel() {
 
     const ranges = calculateDateRanges(treatmentDate);
 
-    // Display results (format as DD/MM/YY for display)
-    document.getElementById('pre-start').textContent = formatDateDisplay(ranges.pre.start);
-    document.getElementById('pre-end').textContent = formatDateDisplay(ranges.pre.end);
+    // Display results (use YYYY-MM-DD for date inputs)
+    document.getElementById('pre-start').value = ranges.pre.start;
+    document.getElementById('pre-start').dataset.original = ranges.pre.start;
+    document.getElementById('pre-end').value = ranges.pre.end;
+    document.getElementById('pre-end').dataset.original = ranges.pre.end;
     document.getElementById('pre-days').textContent = ranges.pre.days;
 
-    document.getElementById('post-start').textContent = formatDateDisplay(ranges.post.start);
-    document.getElementById('post-end').textContent = formatDateDisplay(ranges.post.end);
+    document.getElementById('post-start').value = ranges.post.start;
+    document.getElementById('post-start').dataset.original = ranges.post.start;
+    document.getElementById('post-end').value = ranges.post.end;
+    document.getElementById('post-end').dataset.original = ranges.post.end;
     document.getElementById('post-days').textContent = ranges.post.days;
 
     document.getElementById('results-section').style.display = 'block';
@@ -1381,17 +1385,32 @@ function createHelperPanel() {
     });
   });
 
-  // Edit dates button functionality (using event delegation)
+  // Edit dates button functionality
   panel.addEventListener('click', (e) => {
     const editBtn = e.target.closest('#edit-dates-btn');
     if (editBtn || e.target.id === 'edit-dates-btn') {
       e.preventDefault();
       e.stopPropagation();
-      console.log('Edit button clicked, scrolling to date input');
-      document.getElementById('treatment-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => {
-        document.getElementById('treatment-date').focus();
-      }, 300);
+
+      const dateInputs = document.querySelectorAll('.date-edit');
+      const isEditing = editBtn.textContent === 'Done';
+
+      if (isEditing) {
+        // Save and lock
+        dateInputs.forEach(input => input.readonly = true);
+        editBtn.textContent = 'Edit';
+        editBtn.classList.remove('editing');
+        console.log('Dates locked');
+      } else {
+        // Enable editing
+        dateInputs.forEach(input => {
+          input.readonly = false;
+          input.classList.add('editable');
+        });
+        editBtn.textContent = 'Done';
+        editBtn.classList.add('editing');
+        console.log('Dates now editable');
+      }
     }
   });
 
@@ -1424,19 +1443,16 @@ function createHelperPanel() {
 
   // Auto-Extract button functionality
   document.getElementById('auto-extract-btn').addEventListener('click', async () => {
-    // Get the calculated date ranges from storage
-    const stored = await safeStorage.get(['lastCalculatedRanges']);
-    const ranges = stored.lastCalculatedRanges;
+    // Get the actual dates from the inputs (user may have edited them)
+    const preStart = document.getElementById('pre-start').value;
+    const preEnd = document.getElementById('pre-end').value;
+    const postStart = document.getElementById('post-start').value;
+    const postEnd = document.getElementById('post-end').value;
 
-    if (!ranges) {
+    if (!preStart || !preEnd || !postStart || !postEnd) {
       alert('Please calculate date ranges first');
       return;
     }
-
-    const preStart = ranges.pre.start;
-    const preEnd = ranges.pre.end;
-    const postStart = ranges.post.start;
-    const postEnd = ranges.post.end;
 
     const statusEl = document.getElementById('extraction-status');
     const autoExtractBtn = document.getElementById('auto-extract-btn');
