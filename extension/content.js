@@ -696,12 +696,29 @@ async function selectMetrics() {
 async function extractValues() {
   console.log('Extracting values...');
 
-  // Wait for table to load (can take time after date/metric changes)
-  console.log('Waiting for table to load...');
+  // Wait for table to load AND have data rows
+  console.log('Waiting for table with data to load...');
   await waitForElement('yta-explore-table.data-container', 10000);
 
-  const table = document.querySelector('yta-explore-table.data-container');
+  // Wait for actual data rows to appear (table might exist but be empty)
+  const startTime = Date.now();
+  const maxWait = 10000;
+  let table, row;
+
+  while (Date.now() - startTime < maxWait) {
+    table = document.querySelector('yta-explore-table.data-container');
+    if (table) {
+      row = table.querySelector('yta-explore-table-row');
+      if (row) {
+        console.log('Table with data rows found');
+        break;
+      }
+    }
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+
   if (!table) throw new Error('Table not found');
+  if (!row) throw new Error('No row found - table may still be loading data');
 
   const headers = table.querySelectorAll('yta-explore-table-header-cell.metric-column');
   const headerOrder = [];
@@ -711,9 +728,6 @@ async function extractValues() {
       headerOrder.push(titleEl.textContent.trim());
     }
   });
-
-  const row = table.querySelector('yta-explore-table-row');
-  if (!row) throw new Error('No row found');
 
   const container = row.querySelector('.layout.horizontal');
   if (!container) throw new Error('Row container not found');
@@ -1369,11 +1383,15 @@ function createHelperPanel() {
 
   // Edit dates button functionality (using event delegation)
   panel.addEventListener('click', (e) => {
-    if (e.target.id === 'edit-dates-btn' || e.target.closest('#edit-dates-btn')) {
+    const editBtn = e.target.closest('#edit-dates-btn');
+    if (editBtn || e.target.id === 'edit-dates-btn') {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('Edit button clicked, scrolling to date input');
       document.getElementById('treatment-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
       setTimeout(() => {
         document.getElementById('treatment-date').focus();
-      }, 300); // Wait for scroll to finish
+      }, 300);
     }
   });
 
