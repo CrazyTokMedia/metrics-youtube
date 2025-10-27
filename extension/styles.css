@@ -108,6 +108,7 @@
   max-height: calc(90vh - 76px);
   overflow-y: auto;
   overflow-x: hidden;
+  border-radius: 0 0 16px 16px; /* Match parent's bottom rounded corners */
 }
 
 /* Add bottom spacing to last child instead */
@@ -440,12 +441,18 @@
   margin-bottom: 12px;
 }
 
+.progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .progress-bar {
+  flex: 1;
   height: 4px;
   background: #e5e7eb;
   border-radius: 2px;
   overflow: hidden;
-  margin-bottom: 6px;
 }
 
 .progress-fill {
@@ -455,11 +462,13 @@
   transition: width 0.3s ease;
 }
 
-.progress-text {
-  font-size: 12px;
-  color: #6b7280;
-  text-align: center;
-  font-weight: 500;
+.progress-percent {
+  font-size: 13px;
+  color: #667eea;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+  font-family: 'Courier New', monospace;
 }
 
 /* Extraction Status */
@@ -622,6 +631,48 @@
 @keyframes copyPulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.02); }
+}
+
+/* ============================================================
+   PERIOD WARNING
+   ============================================================ */
+.period-warning {
+  margin: 16px 0 0 0;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #9a3412;
+  text-align: center;
+}
+
+/* ============================================================
+   TREATMENT ERROR
+   ============================================================ */
+.treatment-error {
+  margin: 16px 0;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #991b1b;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ============================================================
+   DISABLED BUTTON STATE
+   ============================================================ */
+.extract-btn.disabled,
+.extract-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #9ca3af !important;
+  pointer-events: none;
 }
 
 /* ============================================================

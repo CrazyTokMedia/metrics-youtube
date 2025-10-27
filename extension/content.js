@@ -34,6 +34,84 @@
   };
 })();
 
+// ============================================================
+// GLOBAL ERROR HANDLING & CLEANUP
+// ============================================================
+
+// Global error handler for the extension
+window.addEventListener('error', (event) => {
+  // Only handle errors from our extension code
+  const isExtensionError = event.filename &&
+    (event.filename.includes('content.js') || event.filename.includes('chrome-extension://'));
+
+  if (isExtensionError) {
+    console.error('🔴 Extension error caught:', event.error?.message || event.message);
+    console.error('Stack:', event.error?.stack);
+
+    // Try to show user-friendly error
+    try {
+      const extractBtn = document.getElementById('auto-extract-btn');
+      if (extractBtn && extractBtn.disabled) {
+        extractBtn.disabled = false;
+        extractBtn.classList.remove('disabled');
+        const originalText = extractBtn.textContent;
+        extractBtn.innerHTML = '<span class="btn-icon">⚠️</span> Error - Click to Retry';
+
+        // Restore original text after 5 seconds
+        setTimeout(() => {
+          extractBtn.innerHTML = '<span class="btn-icon">📊</span> Extract Metrics';
+        }, 5000);
+      }
+    } catch (e) {
+      // If we can't update UI, just log
+      console.error('Could not update UI after error:', e);
+    }
+
+    // Prevent default browser error handling for our errors
+    event.preventDefault();
+  }
+});
+
+// Cleanup function for extension unload/disable
+const cleanup = () => {
+  console.log('🧹 Cleaning up extension...');
+
+  // Disconnect any MutationObservers
+  if (window.extensionObservers && window.extensionObservers.length > 0) {
+    window.extensionObservers.forEach(observer => {
+      try {
+        observer.disconnect();
+      } catch (e) {
+        console.warn('Could not disconnect observer:', e);
+      }
+    });
+    window.extensionObservers = [];
+  }
+
+  // Remove UI elements
+  const panel = document.getElementById('yt-treatment-helper');
+  if (panel) panel.remove();
+
+  const toggle = document.querySelector('.treatment-helper-toggle');
+  if (toggle) toggle.remove();
+
+  console.log('✅ Cleanup complete');
+};
+
+// Store observers globally for cleanup
+window.extensionObservers = window.extensionObservers || [];
+
+// Helper: Register observer for cleanup
+function registerObserver(observer) {
+  window.extensionObservers.push(observer);
+  return observer;
+}
+
+// Listen for extension disable/unload
+if (chrome.runtime && chrome.runtime.onSuspend) {
+  chrome.runtime.onSuspend.addListener(cleanup);
+}
+
 // Check if extension context is still valid
 function isExtensionContextValid() {
   try {
@@ -223,17 +301,122 @@ function formatDateDisplay(dateStr) {
   return `${day}/${month}/${shortYear}`;
 }
 
+// Helper: Get video publish date from page
+function getVideoPublishDate() {
+  // Try multiple methods to find the publish date
+
+  // Method 1 (BEST): Extract from Analytics page date selector
+  // When on Analytics tab, the default "Since published" shows the exact publish date
+  // Look for: <div class="label-text">21 Oct 2025 – Now</div>
+  //           <span class="dropdown-trigger-text">Since published</span>
+
+  const dateSelectors = document.querySelectorAll('ytcp-dropdown-trigger');
+  for (const selector of dateSelectors) {
+    const triggerText = selector.querySelector('.dropdown-trigger-text');
+    const labelText = selector.querySelector('.label-text');
+
+    if (triggerText && labelText) {
+      const triggerContent = triggerText.textContent.trim();
+      const labelContent = labelText.textContent.trim();
+
+      // Check if this is the "Since published" selector
+      if (triggerContent.toLowerCase().includes('since published') ||
+          triggerContent.toLowerCase().includes('published')) {
+
+        // Extract start date from label like "21 Oct 2025 – Now"
+        // Match patterns: "21 Oct 2025", "21 October 2025", etc.
+        const dateMatch = labelContent.match(/(\d{1,2}\s+\w{3,9}\s+\d{4})/);
+        if (dateMatch) {
+          const publishDate = new Date(dateMatch[1]);
+          if (!isNaN(publishDate.getTime())) {
+            console.log(`✅ Found publish date from Analytics date selector: ${formatDate(publishDate)}`);
+            return publishDate;
+          }
+        }
+      }
+    }
+  }
+
+  // Method 2: Check yta-time-picker (another common location on Analytics page)
+  const timePicker = document.querySelector('yta-time-picker ytcp-dropdown-trigger');
+  if (timePicker) {
+    const labelText = timePicker.querySelector('.label-text');
+    const triggerText = timePicker.querySelector('.dropdown-trigger-text');
+
+    if (labelText && triggerText && triggerText.textContent.toLowerCase().includes('published')) {
+      const dateMatch = labelText.textContent.match(/(\d{1,2}\s+\w{3,9}\s+\d{4})/);
+      if (dateMatch) {
+        const publishDate = new Date(dateMatch[1]);
+        if (!isNaN(publishDate.getTime())) {
+          console.log(`✅ Found publish date from time picker: ${formatDate(publishDate)}`);
+          return publishDate;
+        }
+      }
+    }
+  }
+
+  // Method 3: Check URL for video ID and use ytInitialData
+  if (window.ytInitialData) {
+    try {
+      const videoDetails = window.ytInitialData?.videoDetails;
+      if (videoDetails?.publishDate) {
+        const publishDate = new Date(videoDetails.publishDate);
+        console.log(`✅ Found publish date from ytInitialData: ${formatDate(publishDate)}`);
+        return publishDate;
+      }
+    } catch (e) {
+      console.log('Could not extract publish date from ytInitialData');
+    }
+  }
+
+  // Method 4: Look for publish date in the Details tab metadata
+  const metaElements = document.querySelectorAll('ytcp-video-metadata-editor-sidepanel [class*="metadata"], [class*="published"]');
+  for (const el of metaElements) {
+    const text = el.textContent;
+    const dateMatch = text.match(/(?:Published|Uploaded).*?(\w{3}\s+\d{1,2},?\s+\d{4})/i);
+    if (dateMatch) {
+      const publishDate = new Date(dateMatch[1]);
+      if (!isNaN(publishDate.getTime())) {
+        console.log(`✅ Found publish date from metadata: ${formatDate(publishDate)}`);
+        return publishDate;
+      }
+    }
+  }
+
+  console.warn('⚠️ Could not detect video publish date from any source');
+  return null;
+}
+
 // Core Logic: Calculate PRE and POST date ranges
-function calculateDateRanges(treatmentDate) {
+function calculateDateRanges(treatmentDate, videoPublishDate = null) {
   const treatment = new Date(treatmentDate);
   const today = new Date();
 
-  // YouTube Analytics only has data up to YESTERDAY (not today)
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  // YouTube Analytics only has data up to 2 days ago (not today or yesterday)
+  // This accounts for:
+  // 1. Timezone differences (you might be ahead of YouTube's servers)
+  // 2. YouTube's data processing delay
+  // We use 2 days ago to be safe and avoid validation errors
+  const maxYouTubeDate = new Date(today);
+  maxYouTubeDate.setDate(maxYouTubeDate.getDate() - 2);
+  const yesterday = maxYouTubeDate; // Rename for backward compatibility
+
+  // Set to start of day to avoid timezone issues
+  yesterday.setHours(0, 0, 0, 0);
+  treatment.setHours(0, 0, 0, 0);
 
   // Calculate days since treatment (up to yesterday)
   const daysSince = Math.floor((yesterday - treatment) / (1000 * 60 * 60 * 24));
+
+  // Validate that treatment date is not in the future
+  if (daysSince < 0) {
+    throw new Error('Treatment date cannot be in the future. Please select a date at least 1 day ago.');
+  }
+
+  // Validate that treatment date is not too recent (need at least 2 full days of data)
+  if (daysSince < 2) {
+    throw new Error('Treatment date must be at least 3 days ago to have enough data for analysis. YouTube data has a 2-day delay.');
+  }
 
   // POST period: Treatment day to YESTERDAY (not today - YouTube doesn't have today's data yet)
   const postStart = new Date(treatment);
@@ -242,14 +425,47 @@ function calculateDateRanges(treatmentDate) {
 
   // PRE period: Same number of days as POST, BEFORE treatment
   // If POST is 8 days, PRE should also be 8 days
-  const preStart = new Date(treatment);
+  let preStart = new Date(treatment);
   preStart.setDate(preStart.getDate() - postDays);
   const preEnd = new Date(treatment);
   preEnd.setDate(preEnd.getDate() - 1); // Day before treatment
-  const preDays = postDays; // Same as POST
+  let preDays = postDays; // Same as POST
+
+  // IMPORTANT: Check if PRE period starts before video was published
+  if (videoPublishDate) {
+    const publishDate = new Date(videoPublishDate);
+    publishDate.setHours(0, 0, 0, 0);
+
+    if (preStart < publishDate) {
+      console.warn(`⚠️ PRE period starts before video publish date!`);
+      console.warn(`   Original PRE start: ${formatDate(preStart)}`);
+      console.warn(`   Video published: ${formatDate(publishDate)}`);
+
+      // Adjust PRE start to video publish date
+      preStart = new Date(publishDate);
+
+      // Recalculate PRE days based on new start date
+      preDays = Math.floor((preEnd - preStart) / (1000 * 60 * 60 * 24)) + 1;
+
+      console.warn(`   Adjusted PRE start: ${formatDate(preStart)}`);
+      console.warn(`   Adjusted PRE days: ${preDays} (was ${postDays})`);
+      console.warn(`   Note: PRE and POST periods now have different lengths!`);
+    }
+  }
+
+  console.log(`Date calculation:
+    Today: ${formatDate(today)}
+    Yesterday (YouTube max): ${formatDate(yesterday)}
+    Treatment: ${formatDate(treatment)}
+    Video published: ${videoPublishDate ? formatDate(videoPublishDate) : 'Unknown'}
+    Days since: ${daysSince}
+    POST: ${formatDate(postStart)} to ${formatDate(postEnd)} (${postDays} days)
+    PRE: ${formatDate(preStart)} to ${formatDate(preEnd)} (${preDays} days)
+  `);
 
   return {
     daysSince: daysSince,
+    videoPublishDate: videoPublishDate ? formatDate(videoPublishDate) : null,
     pre: {
       start: formatDate(preStart),
       end: formatDate(preEnd),
@@ -311,47 +527,137 @@ async function setCustomDateRange(startDate, endDate) {
   dateTrigger.scrollIntoView({ behavior: 'instant', block: 'center' });
   await new Promise(resolve => setTimeout(resolve, 100));
 
+  // Helper: Check if element is truly visible
+  const isElementVisible = (element) => {
+    if (!element) return false;
+
+    // Check 1: Basic offsetParent
+    if (!element.offsetParent) return false;
+
+    // Check 2: Computed style
+    const style = window.getComputedStyle(element);
+    if (style.display === 'none') return false;
+    if (style.visibility === 'hidden') return false;
+    if (style.opacity === '0') return false;
+
+    // Check 3: Has dimensions
+    const rect = element.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return false;
+
+    return true;
+  };
+
   // Focus and click the trigger to open dropdown
   dateTrigger.focus();
   await new Promise(resolve => setTimeout(resolve, 50));
   dateTrigger.click();
   console.log('Clicked date trigger, waiting for dropdown menu...');
 
-  // Wait for a VISIBLE dropdown to appear (not just any dropdown in DOM)
-  console.log('Waiting for VISIBLE dropdown menu...');
+  // Wait for dropdown using MutationObserver + polling (more robust)
+  console.log('Waiting for dropdown menu to appear...');
   let visibleDropdown = null;
-  const maxAttempts = 20; // 20 attempts x 250ms = 5 seconds
 
-  for (let i = 0; i < maxAttempts; i++) {
-    const dropdowns = document.querySelectorAll('tp-yt-paper-listbox[role="listbox"]');
-    for (const dropdown of dropdowns) {
-      // Check if dropdown is actually visible
-      if (dropdown.offsetParent !== null) {
+  try {
+    visibleDropdown = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        observer.disconnect();
+        reject(new Error('Dropdown did not appear within 3 seconds'));
+      }, 3000);
+
+      // MutationObserver to detect dropdown appearance
+      const observer = new MutationObserver(() => {
+        const dropdowns = document.querySelectorAll('tp-yt-paper-listbox[role="listbox"]');
+        for (const dropdown of dropdowns) {
+          if (isElementVisible(dropdown)) {
+            clearTimeout(timeout);
+            observer.disconnect();
+            console.log('Dropdown detected via MutationObserver');
+            resolve(dropdown);
+            return;
+          }
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+
+      // Also poll as backup (in case mutation doesn't trigger)
+      const pollInterval = setInterval(() => {
+        const dropdowns = document.querySelectorAll('tp-yt-paper-listbox[role="listbox"]');
+        for (const dropdown of dropdowns) {
+          if (isElementVisible(dropdown)) {
+            clearTimeout(timeout);
+            clearInterval(pollInterval);
+            observer.disconnect();
+            console.log('Dropdown detected via polling');
+            resolve(dropdown);
+            return;
+          }
+        }
+      }, 100);
+    });
+  } catch (error) {
+    // If we can't detect the dropdown but can find "Custom" option, proceed anyway
+    console.warn('Could not detect dropdown visibility, attempting to find Custom option anyway...');
+    const allDropdowns = document.querySelectorAll('tp-yt-paper-listbox[role="listbox"]');
+    for (const dropdown of allDropdowns) {
+      const customOption = dropdown.querySelector('tp-yt-paper-item[test-id="fixed"]');
+      if (customOption) {
+        console.log('Found Custom option in a dropdown, proceeding...');
         visibleDropdown = dropdown;
-        console.log(`Visible dropdown found after ${i * 250}ms`);
         break;
       }
     }
-    if (visibleDropdown) break;
 
-    console.log(`Attempt ${i + 1}/${maxAttempts}: No visible dropdown yet, waiting...`);
-    await new Promise(resolve => setTimeout(resolve, 250));
-  }
-
-  if (!visibleDropdown) {
-    console.error('No visible dropdown appeared after clicking date trigger');
-    throw new Error('Date dropdown did not open');
+    if (!visibleDropdown) {
+      console.error('No visible dropdown appeared after clicking date trigger');
+      throw new Error('Date dropdown did not open');
+    }
   }
 
   // Now find the custom option in the VISIBLE dropdown
-  const customOption = visibleDropdown.querySelector('tp-yt-paper-item[test-id="fixed"]');
+  let customOption = visibleDropdown.querySelector('tp-yt-paper-item[test-id="fixed"]');
 
   if (!customOption) {
-    // Debug: show what options ARE available in the visible dropdown
+    // Debug: show what options ARE available
     const allOptions = visibleDropdown.querySelectorAll('tp-yt-paper-item');
-    console.error(`Custom option not found in visible dropdown. Found ${allOptions.length} options:`,
+    console.warn(`Custom option not found on first try. Found ${allOptions.length} options:`,
       Array.from(allOptions).map(o => o.getAttribute('test-id')).filter(Boolean));
-    throw new Error('Custom date option not found in dropdown');
+
+    // Sometimes the dropdown needs more time to populate. Wait and retry.
+    console.log('Waiting 1 second for dropdown to fully populate...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Try again
+    customOption = visibleDropdown.querySelector('tp-yt-paper-item[test-id="fixed"]');
+
+    if (!customOption) {
+      // Still not found - try alternate selectors
+      console.log('Trying alternate selectors for Custom option...');
+
+      // Try finding by text content "Custom"
+      const allItems = visibleDropdown.querySelectorAll('tp-yt-paper-item');
+      for (const item of allItems) {
+        if (item.textContent.toLowerCase().includes('custom')) {
+          customOption = item;
+          console.log('Found Custom option by text content');
+          break;
+        }
+      }
+    }
+
+    if (!customOption) {
+      console.error('Custom option still not found after retry. Available options:',
+        Array.from(allOptions).map(o => ({
+          testId: o.getAttribute('test-id'),
+          text: o.textContent.trim()
+        })));
+      throw new Error('Custom date option not found in dropdown. The page may not be fully loaded. Please refresh and try again.');
+    }
   }
 
   console.log('Custom option found in visible dropdown');
@@ -511,11 +817,32 @@ async function setCustomDateRange(startDate, endDate) {
 
   // Check for validation errors
   const errors = dateDialog.querySelectorAll('.error, [role="alert"], .validation-error');
+  const errorMessages = [];
+
   if (errors.length > 0) {
     console.log(`   ⚠️ VALIDATION ERRORS FOUND:`);
     errors.forEach((err, i) => {
-      console.log(`      ${i + 1}. ${err.textContent.trim()}`);
+      const errorText = err.textContent.trim();
+      console.log(`      ${i + 1}. ${errorText}`);
+      if (errorText) {
+        errorMessages.push(errorText);
+      }
     });
+  }
+
+  // If there are real validation errors (not just empty error elements), abort
+  if (errorMessages.length > 0) {
+    const errorSummary = errorMessages.join('; ');
+    console.error(`   ❌ ABORTING: Validation errors prevent date change: ${errorSummary}`);
+
+    // Close the dialog
+    const cancelButton = dateDialog.querySelector('#cancel-button, [aria-label="Cancel"]');
+    if (cancelButton) {
+      cancelButton.click();
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    throw new Error(`YouTube validation failed: ${errorSummary}. The dates you're trying to set are outside YouTube's allowed range. Please check that your dates are not in the future.`);
   }
 
   // Get the current sidebar date BEFORE clicking Apply
@@ -787,9 +1114,80 @@ async function extractValues() {
   return metrics;
 }
 
+// Helper: Check if on Analytics tab
+function isOnAnalyticsTab() {
+  // Check URL pattern - Analytics tab URLs contain /analytics/
+  const urlPattern = /\/video\/[^\/]+\/analytics\//;
+  return urlPattern.test(window.location.href);
+}
+
+// Helper: Navigate to Analytics tab (if not already there)
+async function navigateToAnalyticsTab() {
+  console.log('Checking if on Analytics tab...');
+
+  // Check if already on Analytics tab
+  if (isOnAnalyticsTab()) {
+    console.log('Already on Analytics tab');
+    return;
+  }
+
+  console.log('Not on Analytics tab, navigating there...');
+
+  // Find the Analytics navigation link in the left sidebar
+  // Based on analytics-navigation-panel.html, the Analytics link has:
+  // - class="menu-item-link"
+  // - contains "Analytics" text
+  // - href pattern: /video/{videoId}/analytics/tab-overview/period-default
+
+  const navLinks = Array.from(document.querySelectorAll('a.menu-item-link'));
+  let analyticsLink = null;
+
+  for (const link of navLinks) {
+    const linkText = link.textContent.toLowerCase();
+    const href = link.getAttribute('href') || '';
+
+    // Check if this is the Analytics link
+    if (linkText.includes('analytics') && href.includes('/analytics/')) {
+      analyticsLink = link;
+      console.log(`Found Analytics link with href: ${href}`);
+      break;
+    }
+  }
+
+  if (!analyticsLink) {
+    // Try alternative selector - the tp-yt-paper-icon-item with class "analytics"
+    const analyticsItem = document.querySelector('tp-yt-paper-icon-item.analytics');
+    if (analyticsItem) {
+      const parentLink = analyticsItem.closest('a.menu-item-link');
+      if (parentLink) {
+        analyticsLink = parentLink;
+        console.log('Found Analytics link via icon item');
+      }
+    }
+  }
+
+  if (!analyticsLink) {
+    throw new Error('Analytics navigation link not found. Please navigate to a video page first.');
+  }
+
+  // Click the Analytics link
+  analyticsLink.click();
+
+  // Wait for URL to change to Analytics tab
+  await waitForUrlChange('/analytics/', 10000);
+
+  // Wait for the page to load
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  console.log('Navigated to Analytics tab');
+}
+
 // Helper: Navigate to Advanced Mode
 async function navigateToAdvancedMode() {
   console.log('Navigating to Advanced Mode...');
+
+  // First, ensure we're on the Analytics tab
+  await navigateToAnalyticsTab();
 
   // Find the Advanced mode button
   const advancedButton = document.querySelector('#advanced-analytics button');
@@ -805,6 +1203,22 @@ async function navigateToAdvancedMode() {
 
   // Wait for the metrics table to appear (confirms page is loaded)
   await waitForElement('yta-explore-table.data-container', 10000);
+
+  // Give additional time for all interactive elements to load
+  // This helps prevent "Custom option not found" errors
+  await new Promise(resolve => setTimeout(resolve, 1500));
+
+  // Ensure progress bar state persists after navigation
+  const progressContainer = document.getElementById('progress-container');
+  if (progressContainer && progressContainer.dataset.currentStep) {
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercent = document.getElementById('progress-percent');
+    const savedPercentage = progressContainer.dataset.currentPercentage;
+    if (progressFill && progressPercent) {
+      progressFill.style.width = `${savedPercentage}%`;
+      progressPercent.textContent = `${savedPercentage}%`;
+    }
+  }
 
   console.log('Navigated to Advanced Mode');
 }
@@ -874,6 +1288,18 @@ async function navigateToAudienceRetention() {
   console.log('Waiting for tab to switch...');
   await new Promise(resolve => setTimeout(resolve, 1000));
 
+  // Ensure progress bar state persists after navigation
+  const progressContainer = document.getElementById('progress-container');
+  if (progressContainer && progressContainer.dataset.currentStep) {
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercent = document.getElementById('progress-percent');
+    const savedPercentage = progressContainer.dataset.currentPercentage;
+    if (progressFill && progressPercent) {
+      progressFill.style.width = `${savedPercentage}%`;
+      progressPercent.textContent = `${savedPercentage}%`;
+    }
+  }
+
   // Wait for retention chart to load
   await waitForElement('yta-line-chart-base svg', 10000);
 
@@ -930,6 +1356,18 @@ async function navigateBackToMetrics() {
 
   // Wait for metrics table to load
   await waitForElement('yta-explore-table.data-container', 10000);
+
+  // Ensure progress bar state persists after navigation
+  const progressContainer = document.getElementById('progress-container');
+  if (progressContainer && progressContainer.dataset.currentStep) {
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercent = document.getElementById('progress-percent');
+    const savedPercentage = progressContainer.dataset.currentPercentage;
+    if (progressFill && progressPercent) {
+      progressFill.style.width = `${savedPercentage}%`;
+      progressPercent.textContent = `${savedPercentage}%`;
+    }
+  }
 
   console.log('Navigated back to metrics table');
 }
@@ -1079,19 +1517,34 @@ async function extractRetentionMetric() {
 // Main: Extract PRE/POST Metrics
 async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention = false) {
   try {
-    if (statusCallback) statusCallback('🔧 Selecting metrics...');
+    if (statusCallback) statusCallback('🔧 Opening metrics picker...');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    if (statusCallback) statusCallback('🔧 Selecting required metrics...');
     await selectMetrics();
 
-    if (statusCallback) statusCallback('📅 Setting PRE period...');
+    if (statusCallback) statusCallback('📅 Opening date picker for PRE...');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    if (statusCallback) statusCallback('📅 Setting PRE period dates...');
     await setCustomDateRange(preStart, preEnd);
 
-    if (statusCallback) statusCallback('📥 Extracting PRE metrics...');
+    if (statusCallback) statusCallback('⏳ Waiting for PRE data to load...');
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (statusCallback) statusCallback('📥 Reading PRE metrics from table...');
     const preMetrics = await extractValues();
 
-    if (statusCallback) statusCallback('📅 Setting POST period...');
+    if (statusCallback) statusCallback('📅 Opening date picker for POST...');
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    if (statusCallback) statusCallback('📅 Setting POST period dates...');
     await setCustomDateRange(postStart, postEnd);
 
-    if (statusCallback) statusCallback('📥 Extracting POST metrics...');
+    if (statusCallback) statusCallback('⏳ Waiting for POST data to load...');
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (statusCallback) statusCallback('📥 Reading POST metrics from table...');
     const postMetrics = await extractValues();
 
     // Extract retention if enabled
@@ -1100,18 +1553,28 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
 
     if (includeRetention) {
       try {
-        if (statusCallback) statusCallback('📊 Navigating to Audience Retention...');
+        if (statusCallback) statusCallback('📊 Opening report menu...');
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        if (statusCallback) statusCallback('📊 Switching to Audience Retention...');
         await navigateToAudienceRetention();
 
-        if (statusCallback) statusCallback('📊 Extracting PRE retention...');
+        if (statusCallback) statusCallback('⏳ Waiting for retention chart...');
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        if (statusCallback) statusCallback('📅 Setting PRE dates for retention...');
         await setCustomDateRange(preStart, preEnd);
+
+        if (statusCallback) statusCallback('📊 Reading PRE retention value...');
         preRetention = await extractRetentionMetric();
 
-        if (statusCallback) statusCallback('📊 Extracting POST retention...');
+        if (statusCallback) statusCallback('📅 Setting POST dates for retention...');
         await setCustomDateRange(postStart, postEnd);
+
+        if (statusCallback) statusCallback('📊 Reading POST retention value...');
         postRetention = await extractRetentionMetric();
 
-        if (statusCallback) statusCallback('📊 Returning to metrics table...');
+        if (statusCallback) statusCallback('🔙 Switching back to metrics table...');
         await navigateBackToMetrics();
 
       } catch (error) {
@@ -1305,6 +1768,16 @@ function createHelperPanel() {
           </div>
         </div>
 
+        <!-- Warning for unequal periods -->
+        <div id="period-warning" class="period-warning" style="display: none;">
+          ⚠️ PRE period is shorter than POST because the video publish date was reached.
+        </div>
+
+        <!-- Error for invalid treatment date -->
+        <div id="treatment-error" class="treatment-error" style="display: none;">
+          ❌ Treatment date cannot be before the video was published!
+        </div>
+
         <!-- Step 3: Extract -->
         <div class="extract-controls">
           <button id="auto-extract-btn" class="action-btn extract-btn">
@@ -1315,10 +1788,12 @@ function createHelperPanel() {
 
         <!-- Progress Bar -->
         <div id="progress-container" class="progress-container" style="display: none;">
-          <div class="progress-bar">
-            <div id="progress-fill" class="progress-fill"></div>
+          <div class="progress-wrapper">
+            <div class="progress-bar">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div id="progress-percent" class="progress-percent">0%</div>
           </div>
-          <div id="progress-text" class="progress-text">0/6 steps</div>
         </div>
 
         <div id="extraction-status" class="extraction-status" style="display: none;"></div>
@@ -1376,11 +1851,12 @@ function createHelperPanel() {
 
   document.body.appendChild(panel);
 
-  // Set max date to yesterday (YouTube doesn't have today's data)
+  // Set max date to 2 days ago (YouTube doesn't have today's or yesterday's data)
+  // This accounts for timezone differences and YouTube's data processing delay
   const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const maxDate = yesterday.toISOString().split('T')[0];
+  const maxYouTubeDate = new Date(today);
+  maxYouTubeDate.setDate(maxYouTubeDate.getDate() - 2);
+  const maxDate = maxYouTubeDate.toISOString().split('T')[0];
   document.getElementById('treatment-date').setAttribute('max', maxDate);
 
   // Make panel draggable
@@ -1400,7 +1876,7 @@ function createHelperPanel() {
     await safeStorage.set({ panelVisible: false });
   });
 
-  document.getElementById('calculate-btn').addEventListener('click', () => {
+  document.getElementById('calculate-btn').addEventListener('click', async () => {
     const treatmentDate = document.getElementById('treatment-date').value;
 
     if (!treatmentDate) {
@@ -1408,7 +1884,85 @@ function createHelperPanel() {
       return;
     }
 
-    const ranges = calculateDateRanges(treatmentDate);
+    // Navigate to Analytics tab first to ensure we can get publish date
+    try {
+      await navigateToAnalyticsTab();
+    } catch (error) {
+      console.warn('Could not navigate to Analytics tab:', error);
+    }
+
+    // Wait a bit for Analytics page to load
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Try to get video publish date from Analytics page
+    const videoPublishDate = getVideoPublishDate();
+
+    if (videoPublishDate) {
+      console.log(`✅ Video publish date detected: ${formatDate(videoPublishDate)}`);
+
+      // Set minimum date for treatment date picker to publish date
+      const treatmentDateInput = document.getElementById('treatment-date');
+      const publishDateStr = formatDate(videoPublishDate);
+      treatmentDateInput.setAttribute('min', publishDateStr);
+      console.log(`Set treatment date minimum to: ${publishDateStr}`);
+    } else {
+      console.warn('⚠️ Could not detect video publish date. PRE period may extend before video was published.');
+    }
+
+    // Validate: Treatment date cannot be before publish date
+    const errorEl = document.getElementById('treatment-error');
+    const warningEl = document.getElementById('period-warning');
+    const extractBtn = document.getElementById('auto-extract-btn');
+
+    if (videoPublishDate) {
+      const treatment = new Date(treatmentDate);
+      const publish = new Date(videoPublishDate);
+      treatment.setHours(0, 0, 0, 0);
+      publish.setHours(0, 0, 0, 0);
+
+      if (treatment < publish) {
+        // Treatment date is BEFORE video was published - this is invalid!
+        console.error(`❌ Invalid: Treatment date ${formatDate(treatment)} is before publish date ${formatDate(publish)}`);
+
+        // Show error message
+        errorEl.style.display = 'block';
+        warningEl.style.display = 'none';
+
+        // Disable Extract button
+        extractBtn.disabled = true;
+        extractBtn.classList.add('disabled');
+
+        // Still show the calculated periods (even though they're invalid) so user can see the problem
+        document.getElementById('results-section').style.display = 'block';
+
+        // Show "invalid" periods
+        document.getElementById('pre-start').value = '';
+        document.getElementById('pre-end').value = '';
+        document.getElementById('pre-days').textContent = '—';
+
+        document.getElementById('post-start').value = treatmentDate;
+        document.getElementById('post-end').value = '';
+        document.getElementById('post-days').textContent = '—';
+
+        // Scroll to show the error
+        document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        return; // Stop here - don't calculate ranges
+      }
+    }
+
+    // Valid treatment date - proceed with calculation
+    errorEl.style.display = 'none';
+    extractBtn.disabled = false;
+    extractBtn.classList.remove('disabled');
+
+    let ranges;
+    try {
+      ranges = calculateDateRanges(treatmentDate, videoPublishDate);
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
 
     // Display results (use YYYY-MM-DD for date inputs)
     document.getElementById('pre-start').value = ranges.pre.start;
@@ -1423,6 +1977,18 @@ function createHelperPanel() {
     document.getElementById('post-end').dataset.original = ranges.post.end;
     document.getElementById('post-days').textContent = ranges.post.days;
 
+    // Show warning if PRE and POST periods have different lengths
+    if (ranges.pre.days !== ranges.post.days) {
+      const warningMsg = `⚠️ Note: PRE period (${ranges.pre.days} days) is shorter than POST period (${ranges.post.days} days) because the video was published on ${formatDateDisplay(ranges.videoPublishDate)}. The PRE period cannot start before the video was published.`;
+      console.warn(warningMsg);
+
+      // Show warning in UI
+      warningEl.style.display = 'block';
+    } else {
+      // Hide warning if periods are equal
+      warningEl.style.display = 'none';
+    }
+
     document.getElementById('results-section').style.display = 'block';
 
     // Scroll to results
@@ -1431,7 +1997,8 @@ function createHelperPanel() {
     // Save to storage for future use
     safeStorage.set({
       lastTreatmentDate: treatmentDate,
-      lastCalculatedRanges: ranges
+      lastCalculatedRanges: ranges,
+      videoPublishDate: videoPublishDate ? formatDate(videoPublishDate) : null
     });
   });
 
@@ -1537,19 +2104,28 @@ function createHelperPanel() {
     const cancelBtn = document.getElementById('cancel-extract-btn');
     const progressContainer = document.getElementById('progress-container');
     const progressFill = document.getElementById('progress-fill');
-    const progressText = document.getElementById('progress-text');
+    const progressPercent = document.getElementById('progress-percent');
 
     let currentStep = '';
-    let totalSteps = 6;
+    let totalSteps = 18; // Granular progress with 18 steps
     let currentStepNum = 0;
 
     const updateProgress = (step, stepNum) => {
       currentStep = step;
       currentStepNum = stepNum;
-      const percentage = (stepNum / totalSteps) * 100;
+      const percentage = Math.round((stepNum / totalSteps) * 100);
+
+      // Store progress in DOM for persistence across page changes
+      progressContainer.dataset.currentStep = stepNum;
+      progressContainer.dataset.currentPercentage = percentage;
+
+      // Apply visual updates - force style to persist
       progressFill.style.width = `${percentage}%`;
-      progressText.textContent = `${stepNum}/${totalSteps} steps`;
+      progressPercent.textContent = `${percentage}%`;
       statusEl.textContent = step;
+
+      // Force layout recalculation to ensure changes are applied
+      void progressFill.offsetHeight;
     };
 
     extractionCancelled = false;
@@ -1561,6 +2137,16 @@ function createHelperPanel() {
       autoExtractBtn.disabled = true;
       cancelBtn.style.display = 'block';
       progressContainer.style.display = 'block';
+
+      // Restore progress if this is a retry or continuation
+      if (progressContainer.dataset.currentStep && !isRetry) {
+        const savedStep = parseInt(progressContainer.dataset.currentStep);
+        const savedPercentage = parseInt(progressContainer.dataset.currentPercentage);
+        progressFill.style.width = `${savedPercentage}%`;
+        progressPercent.textContent = `${savedPercentage}%`;
+        currentStepNum = savedStep;
+      }
+
       updateProgress('Starting extraction...', 0);
 
       // Check if on Advanced Mode page
@@ -1573,13 +2159,25 @@ function createHelperPanel() {
       const updateStatus = (message) => {
         if (extractionCancelled) throw new Error('Cancelled by user');
 
-        // Map messages to step numbers
-        if (message.includes('Selecting metrics')) updateProgress(message, 1);
-        else if (message.includes('Setting PRE')) updateProgress(message, 2);
-        else if (message.includes('Extracting PRE')) updateProgress(message, 3);
-        else if (message.includes('Setting POST')) updateProgress(message, 4);
-        else if (message.includes('Extracting POST')) updateProgress(message, 5);
-        else if (message.includes('retention') || message.includes('Audience')) updateProgress(message, 6);
+        // Map messages to step numbers (18 granular steps total)
+        if (message.includes('Opening metrics picker')) updateProgress(message, 1);
+        else if (message.includes('Selecting required metrics')) updateProgress(message, 2);
+        else if (message.includes('Opening date picker for PRE')) updateProgress(message, 3);
+        else if (message.includes('Setting PRE period dates')) updateProgress(message, 4);
+        else if (message.includes('Waiting for PRE data')) updateProgress(message, 5);
+        else if (message.includes('Reading PRE metrics')) updateProgress(message, 6);
+        else if (message.includes('Opening date picker for POST')) updateProgress(message, 7);
+        else if (message.includes('Setting POST period dates')) updateProgress(message, 8);
+        else if (message.includes('Waiting for POST data')) updateProgress(message, 9);
+        else if (message.includes('Reading POST metrics')) updateProgress(message, 10);
+        else if (message.includes('Opening report menu')) updateProgress(message, 11);
+        else if (message.includes('Switching to Audience Retention')) updateProgress(message, 12);
+        else if (message.includes('Waiting for retention chart')) updateProgress(message, 13);
+        else if (message.includes('Setting PRE dates for retention')) updateProgress(message, 14);
+        else if (message.includes('Reading PRE retention')) updateProgress(message, 15);
+        else if (message.includes('Setting POST dates for retention')) updateProgress(message, 16);
+        else if (message.includes('Reading POST retention')) updateProgress(message, 17);
+        else if (message.includes('Switching back to metrics')) updateProgress(message, 18);
         else statusEl.textContent = message;
       };
 
