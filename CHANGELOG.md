@@ -2,6 +2,26 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [1.0.2] - 2024-10-28
+
+### Fixed
+- **Edit Button Functionality**: Custom date editing now works properly
+  - Day counts now update automatically when dates are changed
+  - Added validation for edited dates (order, overlap, length)
+  - Prevents extraction with invalid date ranges
+  - Shows clear error messages for invalid edits
+
+### Added
+- Real-time validation when manually editing dates
+- Automatic day count updates as dates change
+- Warning for unequal period lengths after editing
+- Comprehensive error messages for invalid date combinations
+- Logging of all manual date edits for debugging
+
+### Changed
+- Edit button now validates dates when "Done" is clicked
+- Extract button is disabled if edited dates are invalid
+
 ## [1.0.1] - 2024-10-28
 
 ### Fixed

@@ -2265,6 +2265,115 @@ function createHelperPanel() {
     });
   });
 
+  // Helper: Calculate days between two dates
+  function calculateDaysBetween(startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const diffTime = end - start;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end
+    return diffDays;
+  }
+
+  // Helper: Validate and update date ranges after manual edit
+  function validateAndUpdateDateRanges() {
+    const preStart = document.getElementById('pre-start').value;
+    const preEnd = document.getElementById('pre-end').value;
+    const postStart = document.getElementById('post-start').value;
+    const postEnd = document.getElementById('post-end').value;
+    const warningEl = document.getElementById('period-warning');
+    const extractBtn = document.getElementById('auto-extract-btn');
+
+    // Check all dates are filled
+    if (!preStart || !preEnd || !postStart || !postEnd) {
+      console.warn('Not all dates filled');
+      return;
+    }
+
+    // Calculate days for each period
+    const preDays = calculateDaysBetween(preStart, preEnd);
+    const postDays = calculateDaysBetween(postStart, postEnd);
+
+    // Update day displays
+    document.getElementById('pre-days').textContent = preDays;
+    document.getElementById('post-days').textContent = postDays;
+
+    // Validate date order
+    const preStartDate = new Date(preStart);
+    const preEndDate = new Date(preEnd);
+    const postStartDate = new Date(postStart);
+    const postEndDate = new Date(postEnd);
+
+    let hasError = false;
+    let warningMsg = '';
+
+    // Check: PRE start <= PRE end
+    if (preStartDate > preEndDate) {
+      warningMsg = '❌ PRE period: Start date must be before or equal to end date';
+      hasError = true;
+    }
+    // Check: POST start <= POST end
+    else if (postStartDate > postEndDate) {
+      warningMsg = '❌ POST period: Start date must be before or equal to end date';
+      hasError = true;
+    }
+    // Check: PRE end < POST start (periods shouldn't overlap)
+    else if (preEndDate >= postStartDate) {
+      warningMsg = '❌ PRE period must end before POST period starts';
+      hasError = true;
+    }
+    // Check: Days are positive
+    else if (preDays <= 0 || postDays <= 0) {
+      warningMsg = '❌ Period must be at least 1 day long';
+      hasError = true;
+    }
+    // Warning: Unequal periods
+    else if (preDays !== postDays) {
+      warningMsg = `⚠️ Warning: PRE (${preDays}d) and POST (${postDays}d) periods have different lengths. This may affect comparison fairness.`;
+      hasError = false; // Warning, not error
+    }
+
+    // Show/hide warning
+    if (warningMsg) {
+      warningEl.innerHTML = warningMsg;
+      warningEl.style.display = 'block';
+      if (hasError) {
+        warningEl.style.background = '#ffebee';
+        warningEl.style.color = '#c62828';
+        extractBtn.disabled = true;
+        extractBtn.classList.add('disabled');
+      } else {
+        warningEl.style.background = '#fff3e0';
+        warningEl.style.color = '#e65100';
+        extractBtn.disabled = false;
+        extractBtn.classList.remove('disabled');
+      }
+    } else {
+      warningEl.style.display = 'none';
+      extractBtn.disabled = false;
+      extractBtn.classList.remove('disabled');
+    }
+
+    console.log(`Date ranges updated: PRE ${preDays}d, POST ${postDays}d`);
+
+    // Log user action
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logUserAction('Dates manually edited', {
+        preStart, preEnd, preDays,
+        postStart, postEnd, postDays,
+        valid: !hasError
+      });
+    }
+  }
+
+  // Add change listeners to all date inputs
+  document.querySelectorAll('.date-edit').forEach(input => {
+    input.addEventListener('change', () => {
+      validateAndUpdateDateRanges();
+    });
+  });
+
   // Edit dates button functionality
   panel.addEventListener('click', (e) => {
     const editBtn = e.target.closest('#edit-dates-btn');
@@ -2276,7 +2385,9 @@ function createHelperPanel() {
       const isEditing = editBtn.textContent.trim() === 'Done';
 
       if (isEditing) {
-        // Save and lock
+        // Save and lock - validate one final time
+        validateAndUpdateDateRanges();
+
         dateInputs.forEach(input => {
           input.disabled = true;
           input.classList.remove('editable');
@@ -2284,6 +2395,16 @@ function createHelperPanel() {
         editBtn.textContent = 'Edit';
         editBtn.classList.remove('editing');
         console.log('Dates locked');
+
+        // Log user action
+        if (window.ExtensionLogger) {
+          window.ExtensionLogger.logUserAction('Edit dates completed', {
+            preStart: document.getElementById('pre-start').value,
+            preEnd: document.getElementById('pre-end').value,
+            postStart: document.getElementById('post-start').value,
+            postEnd: document.getElementById('post-end').value
+          });
+        }
       } else {
         // Enable editing
         dateInputs.forEach(input => {
@@ -2293,6 +2414,11 @@ function createHelperPanel() {
         editBtn.textContent = 'Done';
         editBtn.classList.add('editing');
         console.log('Dates now editable - you can click to open calendar');
+
+        // Log user action
+        if (window.ExtensionLogger) {
+          window.ExtensionLogger.logUserAction('Edit dates started');
+        }
       }
     }
   });
