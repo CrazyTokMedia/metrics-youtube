@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Treatment Comparison Helper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Automate PRE vs POST treatment period comparison in YouTube Studio Analytics",
   "permissions": [
     "activeTab",

@@ -430,39 +430,56 @@ function calculateDateRanges(treatmentDate, videoPublishDate = null) {
     throw new Error('Treatment date must be at least 3 days ago to have enough data for analysis. YouTube data has a 2-day delay.');
   }
 
-  // POST period: Treatment day to YESTERDAY (not today - YouTube doesn't have today's data yet)
-  const postStart = new Date(treatment);
-  const postEnd = new Date(yesterday);
-  const postDays = daysSince + 1; // Including treatment day
+  // Calculate available POST days: from treatment to yesterday
+  const maxPostDays = daysSince + 1; // Including treatment day
 
-  // PRE period: Same number of days as POST, BEFORE treatment
-  // If POST is 8 days, PRE should also be 8 days
-  let preStart = new Date(treatment);
-  preStart.setDate(preStart.getDate() - postDays);
-  const preEnd = new Date(treatment);
-  preEnd.setDate(preEnd.getDate() - 1); // Day before treatment
-  let preDays = postDays; // Same as POST
+  // Calculate available PRE days: from publish date to day before treatment
+  let maxPreDays;
+  let publishDate;
 
-  // IMPORTANT: Check if PRE period starts before video was published
   if (videoPublishDate) {
-    const publishDate = new Date(videoPublishDate);
+    publishDate = new Date(videoPublishDate);
     publishDate.setHours(0, 0, 0, 0);
 
-    if (preStart < publishDate) {
-      console.warn(`⚠️ PRE period starts before video publish date!`);
-      console.warn(`   Original PRE start: ${formatDate(preStart)}`);
-      console.warn(`   Video published: ${formatDate(publishDate)}`);
+    // Calculate days between publish and treatment
+    const daysBetween = Math.floor((treatment - publishDate) / (1000 * 60 * 60 * 24));
+    maxPreDays = daysBetween; // Days available for PRE period
 
-      // Adjust PRE start to video publish date
-      preStart = new Date(publishDate);
+    console.log(`   Available PRE days: ${maxPreDays} (from ${formatDate(publishDate)} to day before treatment)`);
+    console.log(`   Available POST days: ${maxPostDays} (from treatment to ${formatDate(yesterday)})`);
+  } else {
+    // If no publish date, assume PRE can be as long as POST
+    maxPreDays = maxPostDays;
+    console.warn(`   No publish date - assuming equal periods are available`);
+  }
 
-      // Recalculate PRE days based on new start date
-      preDays = Math.floor((preEnd - preStart) / (1000 * 60 * 60 * 24)) + 1;
+  // Use the SHORTER of the two periods for fair comparison
+  const periodLength = Math.min(maxPreDays, maxPostDays);
 
-      console.warn(`   Adjusted PRE start: ${formatDate(preStart)}`);
-      console.warn(`   Adjusted PRE days: ${preDays} (was ${postDays})`);
-      console.warn(`   Note: PRE and POST periods now have different lengths!`);
-    }
+  console.log(`   Using period length: ${periodLength} days (shorter of PRE: ${maxPreDays}, POST: ${maxPostDays})`);
+
+  // PRE period: {periodLength} days ending the day before treatment
+  const preEnd = new Date(treatment);
+  preEnd.setDate(preEnd.getDate() - 1); // Day before treatment
+  const preStart = new Date(preEnd);
+  preStart.setDate(preStart.getDate() - periodLength + 1); // Go back {periodLength} days
+  const preDays = periodLength;
+
+  // POST period: {periodLength} days starting from treatment
+  const postStart = new Date(treatment);
+  const postEnd = new Date(postStart);
+  postEnd.setDate(postEnd.getDate() + periodLength - 1); // Forward {periodLength} days
+  const postDays = periodLength;
+
+  // Validate: Ensure periods don't exceed available data
+  if (videoPublishDate && preStart < publishDate) {
+    console.error(`❌ Error: Calculated PRE start ${formatDate(preStart)} is before publish ${formatDate(publishDate)}`);
+    throw new Error('Internal error: PRE period calculation error. Please report this bug.');
+  }
+
+  if (postEnd > yesterday) {
+    console.error(`❌ Error: Calculated POST end ${formatDate(postEnd)} is after yesterday ${formatDate(yesterday)}`);
+    throw new Error('Internal error: POST period calculation error. Please report this bug.');
   }
 
   console.log(`Date calculation:
@@ -1989,9 +2006,9 @@ function createHelperPanel() {
           </div>
         </div>
 
-        <!-- Warning for unequal periods -->
+        <!-- Info for period limitations -->
         <div id="period-warning" class="period-warning" style="display: none;">
-          ⚠️ PRE period is shorter than POST because the video publish date was reached.
+          ℹ️ Period length adjusted for fair comparison.
         </div>
 
         <!-- Error for invalid treatment date -->
@@ -2206,13 +2223,30 @@ function createHelperPanel() {
     document.getElementById('post-end').dataset.original = ranges.post.end;
     document.getElementById('post-days').textContent = ranges.post.days;
 
-    // Show warning if PRE and POST periods have different lengths
-    if (ranges.pre.days !== ranges.post.days) {
-      const warningMsg = `⚠️ Note: PRE period (${ranges.pre.days} days) is shorter than POST period (${ranges.post.days} days) because the video was published on ${formatDateDisplay(ranges.videoPublishDate)}. The PRE period cannot start before the video was published.`;
-      console.warn(warningMsg);
+    // Check if period was limited by publish date or available data
+    const maxPossiblePostDays = ranges.daysSince + 1;
+    const maxPossiblePreDays = ranges.videoPublishDate ?
+      Math.floor((new Date(treatmentDate) - new Date(ranges.videoPublishDate)) / (1000 * 60 * 60 * 24)) :
+      maxPossiblePostDays;
 
-      // Show warning in UI
+    if (ranges.pre.days < maxPossiblePostDays && maxPossiblePreDays < maxPossiblePostDays) {
+      const warningMsg = `ℹ️ Using ${ranges.pre.days}-day periods (limited by video publish date on ${formatDateDisplay(ranges.videoPublishDate)}). ${maxPossiblePostDays - ranges.pre.days} days of POST data available but unused for fair comparison.`;
+      console.log(warningMsg);
+
+      // Show info in UI
+      warningEl.innerHTML = warningMsg;
       warningEl.style.display = 'block';
+      warningEl.style.background = '#e3f2fd';
+      warningEl.style.color = '#1976d2';
+    } else if (ranges.pre.days < maxPossiblePostDays) {
+      const warningMsg = `ℹ️ Using ${ranges.pre.days}-day periods (limited by available POST data). Both periods are equal for fair comparison.`;
+      console.log(warningMsg);
+
+      // Show info in UI
+      warningEl.innerHTML = warningMsg;
+      warningEl.style.display = 'block';
+      warningEl.style.background = '#e3f2fd';
+      warningEl.style.color = '#1976d2';
     } else {
       // Hide warning if periods are equal
       warningEl.style.display = 'none';

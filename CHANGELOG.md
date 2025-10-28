@@ -2,6 +2,19 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [1.0.1] - 2024-10-28
+
+### Fixed
+- **Equal Period Comparison**: PRE and POST periods now always have the same length for fair comparison
+  - Previously: POST used all available days, PRE got cut off by publish date
+  - Now: Uses the shorter of the two available periods for both PRE and POST
+  - Example: If 2 days available for PRE and 7 days for POST, both periods use 2 days
+- Improved informational messages to explain when period length is limited
+
+### Changed
+- Updated date range calculation logic to prioritize comparison fairness over data availability
+- Better user feedback when periods are shortened for fair comparison
+
 ## [1.0.0] - 2024-10-28
 
 ### Initial Release
