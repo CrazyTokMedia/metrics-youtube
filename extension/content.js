@@ -48,6 +48,15 @@ window.addEventListener('error', (event) => {
     console.error('🔴 Extension error caught:', event.error?.message || event.message);
     console.error('Stack:', event.error?.stack);
 
+    // Log error to logger
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logError('Global error caught', event.error || new Error(event.message), {
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+      });
+    }
+
     // Try to show user-friendly error
     try {
       const extractBtn = document.getElementById('auto-extract-btn');
@@ -65,6 +74,9 @@ window.addEventListener('error', (event) => {
     } catch (e) {
       // If we can't update UI, just log
       console.error('Could not update UI after error:', e);
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logError('Failed to update UI after error', e);
+      }
     }
 
     // Prevent default browser error handling for our errors
@@ -1121,11 +1133,71 @@ function isOnAnalyticsTab() {
   return urlPattern.test(window.location.href);
 }
 
+// Helper: Check if on Advanced Mode (explore page)
+function isOnAdvancedMode() {
+  return window.location.href.includes('/explore?');
+}
+
+// Helper: Close Advanced Mode and return to regular Analytics
+async function closeAdvancedMode() {
+  console.log('Closing Advanced Mode...');
+
+  // Log action
+  if (window.ExtensionLogger) {
+    window.ExtensionLogger.logInfo('Closing Advanced Mode to fetch publish date');
+  }
+
+  // Find the close button in Advanced Mode
+  const closeButton = document.querySelector('yta-explore-page #close-button');
+
+  if (!closeButton) {
+    console.warn('Close button not found in Advanced Mode');
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logWarning('Close button not found in Advanced Mode');
+    }
+    return false;
+  }
+
+  // Click the close button
+  closeButton.click();
+
+  // Wait for navigation back to regular Analytics
+  try {
+    await waitForUrlChange('/analytics/tab-', 5000);
+  } catch (error) {
+    console.error('Timeout waiting for Advanced Mode to close');
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logError('Timeout closing Advanced Mode', error);
+    }
+    return false;
+  }
+
+  // Wait for page to load
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  console.log('Closed Advanced Mode, back to regular Analytics');
+  if (window.ExtensionLogger) {
+    window.ExtensionLogger.logInfo('Successfully closed Advanced Mode');
+  }
+  return true;
+}
+
 // Helper: Navigate to Analytics tab (if not already there)
 async function navigateToAnalyticsTab() {
   console.log('Checking if on Analytics tab...');
 
-  // Check if already on Analytics tab
+  // If on Advanced Mode, close it first to go back to regular Analytics
+  if (isOnAdvancedMode()) {
+    console.log('Currently on Advanced Mode, closing it first...');
+    const closed = await closeAdvancedMode();
+    if (closed) {
+      console.log('Advanced Mode closed, now on regular Analytics');
+      return;
+    }
+    // If close failed, continue with normal navigation
+  }
+
+  // Check if already on Analytics tab (but not Advanced Mode)
   if (isOnAnalyticsTab()) {
     console.log('Already on Analytics tab');
     return;
@@ -1701,6 +1773,11 @@ function createHelperPanel() {
     return;
   }
 
+  // Log panel creation
+  if (window.ExtensionLogger) {
+    window.ExtensionLogger.logInfo('Helper panel created');
+  }
+
   const panel = document.createElement('div');
   panel.id = 'yt-treatment-helper';
   panel.innerHTML = `
@@ -1879,8 +1956,16 @@ function createHelperPanel() {
   document.getElementById('calculate-btn').addEventListener('click', async () => {
     const treatmentDate = document.getElementById('treatment-date').value;
 
+    // Log user action
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logUserAction('Calculate button clicked', { treatmentDate });
+    }
+
     if (!treatmentDate) {
       alert('Please select a treatment date');
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logWarning('Calculate clicked without treatment date');
+      }
       return;
     }
 
@@ -2070,7 +2155,8 @@ function createHelperPanel() {
   // Tab change detection
   let wasHidden = false;
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && autoExtractBtn.disabled) {
+    const autoExtractBtn = document.getElementById('auto-extract-btn');
+    if (document.hidden && autoExtractBtn && autoExtractBtn.disabled) {
       wasHidden = true;
     } else if (!document.hidden && wasHidden) {
       wasHidden = false;
@@ -2222,6 +2308,20 @@ function createHelperPanel() {
       // Reset attempt counter on success
       extractionAttempts = 0;
 
+      // Log successful extraction
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logInfo('Extraction completed successfully', {
+          preStart,
+          preEnd,
+          postStart,
+          postEnd,
+          metrics: {
+            pre: result.pre,
+            post: result.post
+          }
+        });
+      }
+
       // Save to storage
       safeStorage.set({
         lastExtractedMetrics: result
@@ -2229,11 +2329,29 @@ function createHelperPanel() {
 
     } catch (error) {
       console.error('Extraction failed:', error);
+
+      // Log extraction error
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logError('Extraction failed', error, {
+          currentStep,
+          currentStepNum,
+          extractionAttempts,
+          isRetry,
+          preStart,
+          preEnd,
+          postStart,
+          postEnd
+        });
+      }
+
       extractionAttempts++;
       cancelBtn.style.display = 'none';
 
       // Check if cancelled
       if (error.message === 'Cancelled by user') {
+        if (window.ExtensionLogger) {
+          window.ExtensionLogger.logInfo('Extraction cancelled by user');
+        }
         return; // Already handled by cancel button
       }
 
@@ -2243,6 +2361,10 @@ function createHelperPanel() {
         statusEl.className = 'extraction-status error';
         progressContainer.style.display = 'none';
         alert('The extension was reloaded.\n\nPlease refresh this page (press F5) and try again.');
+
+        if (window.ExtensionLogger) {
+          window.ExtensionLogger.logError('Extension context invalid during extraction', error);
+        }
       } else {
         // Build helpful error message
         let errorMsg = `❌ Failed at: ${currentStep}\n`;
@@ -2253,6 +2375,12 @@ function createHelperPanel() {
           errorMsg += `\n\n🔄 Auto-retrying in 2 seconds...`;
           statusEl.innerHTML = errorMsg.replace(/\n/g, '<br>');
           statusEl.className = 'extraction-status error';
+
+          if (window.ExtensionLogger) {
+            window.ExtensionLogger.logInfo('Auto-retrying extraction after failure', {
+              attempt: extractionAttempts
+            });
+          }
 
           await new Promise(resolve => setTimeout(resolve, 2000));
           return runExtraction(true); // Retry
@@ -2281,8 +2409,21 @@ function createHelperPanel() {
     const postStart = document.getElementById('post-start').value;
     const postEnd = document.getElementById('post-end').value;
 
+    // Log user action
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logUserAction('Extract button clicked', {
+        preStart,
+        preEnd,
+        postStart,
+        postEnd
+      });
+    }
+
     if (!preStart || !preEnd || !postStart || !postEnd) {
       alert('Please calculate date ranges first');
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logWarning('Extract clicked without date ranges');
+      }
       return;
     }
 

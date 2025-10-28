@@ -100,6 +100,35 @@
     .toggle-btn.hide:hover {
       box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
+
+    .export-logs-btn {
+      width: 100%;
+      padding: 10px;
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: all 0.2s;
+    }
+
+    .export-logs-btn:hover {
+      background: #e5e7eb;
+      border-color: #9ca3af;
+    }
+
+    .export-logs-btn:active {
+      transform: scale(0.98);
+    }
+
+    .export-logs-btn.success {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+    }
   </style>
 </head>
 <body>
@@ -107,6 +136,10 @@
 
   <button id="toggle-panel-btn" class="toggle-btn">
     <span id="toggle-text">Show Panel</span>
+  </button>
+
+  <button id="export-logs-btn" class="export-logs-btn">
+    Download Debug Logs
   </button>
 
   <div class="status">
@@ -127,6 +160,7 @@
     Version 1.0.0 - Production Ready
   </div>
 
+  <script src="logger.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

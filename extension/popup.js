@@ -6,6 +6,12 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const toggleBtn = document.getElementById('toggle-panel-btn');
   const toggleText = document.getElementById('toggle-text');
+  const exportLogsBtn = document.getElementById('export-logs-btn');
+
+  // Log popup opened
+  if (window.ExtensionLogger) {
+    window.ExtensionLogger.logUserAction('Popup opened');
+  }
 
   // Get current panel state from storage
   const result = await chrome.storage.local.get(['panelVisible']);
@@ -18,6 +24,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   toggleBtn.addEventListener('click', async () => {
     // Toggle state
     isPanelVisible = !isPanelVisible;
+
+    // Log user action
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logUserAction('Panel toggled', {
+        newState: isPanelVisible ? 'visible' : 'hidden'
+      });
+    }
 
     // Save to storage
     await chrome.storage.local.set({ panelVisible: isPanelVisible });
@@ -40,7 +53,41 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } else {
       // Not on YouTube Studio
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logWarning('User tried to toggle panel outside YouTube Studio', {
+          currentUrl: tab?.url
+        });
+      }
       alert('Please navigate to YouTube Studio first');
+    }
+  });
+
+  // Handle export logs button click
+  exportLogsBtn.addEventListener('click', async () => {
+    try {
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logUserAction('Export logs button clicked');
+
+        const success = await window.ExtensionLogger.downloadLogs();
+
+        if (success) {
+          // Show success feedback
+          exportLogsBtn.textContent = 'Downloaded!';
+          exportLogsBtn.classList.add('success');
+
+          setTimeout(() => {
+            exportLogsBtn.textContent = 'Download Debug Logs';
+            exportLogsBtn.classList.remove('success');
+          }, 2000);
+        } else {
+          alert('Failed to download logs. Please try again.');
+        }
+      } else {
+        alert('Logger not available. Please reload the extension.');
+      }
+    } catch (error) {
+      console.error('Error downloading logs:', error);
+      alert('Error downloading logs: ' + error.message);
     }
   });
 
