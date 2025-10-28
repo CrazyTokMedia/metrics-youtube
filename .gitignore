@@ -66,3 +66,32 @@ htmlcov/
 # Documentation builds
 docs/_build/
 site/
+
+# Development and internal files (not for public repo)
+.serena/
+design_rules/
+docs/
+youtube_dom/
+youtube-analytics-api-setup/
+extension/modular-backup/
+
+# Internal documentation (keep locally)
+CODEBASE_ANALYSIS.md
+MODULARIZATION_GUIDE.md
+MODULARIZATION_STATUS.md
+PROJECT_STRUCTURE.md
+PROTOTYPE_SUMMARY.md
+UI_IMPROVEMENTS_TODO.md
+UI_REDESIGN_SUMMARY.md
+MAKE_PUBLIC_STEPS.md
+
+# Test and development scripts
+*_test.js
+*_debug.js
+click_listener.js
+retention_*.js
+console_filter.txt
+temp_*.md
+
+# Release packages
+releases/
