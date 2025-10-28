@@ -569,6 +569,46 @@ async function setCustomDateRange(startDate, endDate) {
   console.log('Waiting for dropdown menu to appear...');
   let visibleDropdown = null;
 
+  // Helper: Check if dropdown is the DATE dropdown (not metrics or other dropdowns)
+  const isDateDropdown = (dropdown) => {
+    if (!dropdown) return false;
+
+    // EXCLUDE metrics card dropdown - these have "yta-key-metric-card" in their items
+    const items = dropdown.querySelectorAll('tp-yt-paper-item');
+    for (const item of items) {
+      const className = item.className || '';
+      if (className.includes('yta-key-metric-card')) {
+        console.log('Excluding dropdown: contains yta-key-metric-card items (metrics selector)');
+        return false;
+      }
+    }
+
+    // Check 1: Look for ytcp-text-menu parent (date dropdowns have this)
+    const hasTextMenuParent = dropdown.closest('ytcp-text-menu') !== null;
+    if (hasTextMenuParent) {
+      console.log('Found date dropdown: has ytcp-text-menu parent');
+      return true;
+    }
+
+    // Check 2: Look for date-related text in the options
+    const dateKeywords = ['custom', 'last', 'days', 'week', 'month', 'since', 'published', 'uploaded'];
+
+    for (const item of items) {
+      const text = item.textContent.toLowerCase();
+      // Check if text contains date keywords but NOT metric keywords
+      const hasDateKeyword = dateKeywords.some(keyword => text.includes(keyword));
+      const hasMetricKeyword = text.includes('views') || text.includes('watch time') || text.includes('subscribers');
+
+      if (hasDateKeyword && !hasMetricKeyword) {
+        console.log('Found date dropdown: contains date-related options');
+        return true;
+      }
+    }
+
+    console.log('Not a date dropdown');
+    return false;
+  };
+
   try {
     visibleDropdown = await new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -580,7 +620,7 @@ async function setCustomDateRange(startDate, endDate) {
       const observer = new MutationObserver(() => {
         const dropdowns = document.querySelectorAll('tp-yt-paper-listbox[role="listbox"]');
         for (const dropdown of dropdowns) {
-          if (isElementVisible(dropdown)) {
+          if (isElementVisible(dropdown) && isDateDropdown(dropdown)) {
             clearTimeout(timeout);
             observer.disconnect();
             console.log('Dropdown detected via MutationObserver');
@@ -601,7 +641,7 @@ async function setCustomDateRange(startDate, endDate) {
       const pollInterval = setInterval(() => {
         const dropdowns = document.querySelectorAll('tp-yt-paper-listbox[role="listbox"]');
         for (const dropdown of dropdowns) {
-          if (isElementVisible(dropdown)) {
+          if (isElementVisible(dropdown) && isDateDropdown(dropdown)) {
             clearTimeout(timeout);
             clearInterval(pollInterval);
             observer.disconnect();
@@ -617,59 +657,114 @@ async function setCustomDateRange(startDate, endDate) {
     console.warn('Could not detect dropdown visibility, attempting to find Custom option anyway...');
     const allDropdowns = document.querySelectorAll('tp-yt-paper-listbox[role="listbox"]');
     for (const dropdown of allDropdowns) {
-      const customOption = dropdown.querySelector('tp-yt-paper-item[test-id="fixed"]');
-      if (customOption) {
-        console.log('Found Custom option in a dropdown, proceeding...');
+      if (isDateDropdown(dropdown)) {
+        console.log('Found date dropdown, proceeding...');
         visibleDropdown = dropdown;
         break;
       }
     }
 
     if (!visibleDropdown) {
-      console.error('No visible dropdown appeared after clicking date trigger');
+      console.error('No date dropdown appeared after clicking date trigger');
       throw new Error('Date dropdown did not open');
     }
   }
 
   // Now find the custom option in the VISIBLE dropdown
-  let customOption = visibleDropdown.querySelector('tp-yt-paper-item[test-id="fixed"]');
+  // Try multiple strategies to find the "Custom" option
+  let customOption = null;
+
+  // Strategy 1: Look for test-id="fixed" (legacy selector)
+  customOption = visibleDropdown.querySelector('tp-yt-paper-item[test-id="fixed"]');
 
   if (!customOption) {
-    // Debug: show what options ARE available
-    const allOptions = visibleDropdown.querySelectorAll('tp-yt-paper-item');
-    console.warn(`Custom option not found on first try. Found ${allOptions.length} options:`,
-      Array.from(allOptions).map(o => o.getAttribute('test-id')).filter(Boolean));
+    // Strategy 2: Look for yt-formatted-string containing "Custom"
+    const formattedStrings = visibleDropdown.querySelectorAll('yt-formatted-string');
+    for (const str of formattedStrings) {
+      if (str.textContent.trim().toLowerCase() === 'custom') {
+        // Navigate up to the tp-yt-paper-item parent
+        customOption = str.closest('tp-yt-paper-item');
+        if (customOption) {
+          console.log('Found Custom option via yt-formatted-string');
+          break;
+        }
+      }
+    }
+  }
 
-    // Sometimes the dropdown needs more time to populate. Wait and retry.
-    console.log('Waiting 1 second for dropdown to fully populate...');
+  if (!customOption) {
+    // Strategy 3: Look for tp-yt-paper-item with text content "Custom"
+    console.log('Trying to find Custom option by text content...');
+    const allItems = visibleDropdown.querySelectorAll('tp-yt-paper-item');
+    console.log(`Found ${allItems.length} items in date dropdown:`,
+      Array.from(allItems).map(o => o.textContent.trim().substring(0, 30)));
+
+    for (const item of allItems) {
+      const text = item.textContent.trim().toLowerCase();
+      // Match exactly "custom" or "custom..." but not longer phrases
+      if (text === 'custom' || text.startsWith('custom') && text.length < 20) {
+        customOption = item;
+        console.log('Found Custom option by text content match');
+        break;
+      }
+    }
+  }
+
+  if (!customOption) {
+    // Wait a bit and retry all strategies
+    console.log('Custom option not found, waiting 1 second and retrying...');
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Try again
+    // Retry all strategies
     customOption = visibleDropdown.querySelector('tp-yt-paper-item[test-id="fixed"]');
 
     if (!customOption) {
-      // Still not found - try alternate selectors
-      console.log('Trying alternate selectors for Custom option...');
-
-      // Try finding by text content "Custom"
-      const allItems = visibleDropdown.querySelectorAll('tp-yt-paper-item');
-      for (const item of allItems) {
-        if (item.textContent.toLowerCase().includes('custom')) {
-          customOption = item;
-          console.log('Found Custom option by text content');
-          break;
+      const formattedStrings = visibleDropdown.querySelectorAll('yt-formatted-string');
+      for (const str of formattedStrings) {
+        if (str.textContent.trim().toLowerCase() === 'custom') {
+          customOption = str.closest('tp-yt-paper-item');
+          if (customOption) break;
         }
       }
     }
 
     if (!customOption) {
-      console.error('Custom option still not found after retry. Available options:',
-        Array.from(allOptions).map(o => ({
-          testId: o.getAttribute('test-id'),
-          text: o.textContent.trim()
-        })));
-      throw new Error('Custom date option not found in dropdown. The page may not be fully loaded. Please refresh and try again.');
+      const allItems = visibleDropdown.querySelectorAll('tp-yt-paper-item');
+      for (const item of allItems) {
+        const text = item.textContent.trim().toLowerCase();
+        if (text === 'custom' || text.startsWith('custom') && text.length < 20) {
+          customOption = item;
+          break;
+        }
+      }
     }
+  }
+
+  if (!customOption) {
+    // Enhanced debugging: log all attributes and properties of each option
+    const allItems = visibleDropdown.querySelectorAll('tp-yt-paper-item');
+    const optionDetails = Array.from(allItems).map((o, index) => {
+      const attrs = {};
+      // Get all attributes
+      for (const attr of o.attributes) {
+        attrs[attr.name] = attr.value;
+      }
+      return {
+        index,
+        tagName: o.tagName,
+        text: o.textContent.trim().substring(0, 100),
+        innerHTML: o.innerHTML.substring(0, 100), // First 100 chars
+        attributes: attrs,
+        className: o.className,
+        id: o.id
+      };
+    });
+
+    console.error('Custom option still not found after retry. Available options:',
+      JSON.stringify(optionDetails, null, 2));
+    console.error('Raw dropdown HTML:', visibleDropdown.innerHTML.substring(0, 500));
+
+    throw new Error('Custom date option not found in dropdown. The page may not be fully loaded. Please refresh and try again.');
   }
 
   console.log('Custom option found in visible dropdown');
@@ -1384,39 +1479,76 @@ async function navigateBackToMetrics() {
 
   // Find and click Report dropdown
   const reportTriggers = Array.from(document.querySelectorAll('ytcp-dropdown-trigger'));
+  console.log(`Found ${reportTriggers.length} dropdown triggers`);
+
   let reportDropdown = null;
 
   for (const trigger of reportTriggers) {
     const labelText = trigger.querySelector('.label-text');
-    if (labelText && labelText.textContent.trim() === 'Report') {
+    const text = labelText ? labelText.textContent.trim() : '';
+    if (text === 'Report') {
       reportDropdown = trigger;
+      console.log('Found Report dropdown trigger');
       break;
     }
   }
 
   if (!reportDropdown) {
+    const availableLabels = reportTriggers
+      .map(t => t.querySelector('.label-text')?.textContent.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+    console.error('Report dropdown not found. Available labels:', availableLabels);
     throw new Error('Report dropdown not found');
   }
 
   reportDropdown.click();
 
   // Wait for dropdown menu to appear
-  await waitForElement('tp-yt-paper-item', 3000);
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Find the VISIBLE report menu dialog (not other dropdowns on the page)
+  const dialogs = document.querySelectorAll('tp-yt-paper-dialog[role="dialog"]');
+  let reportMenu = null;
+
+  for (const dialog of dialogs) {
+    // Check if this dialog is visible
+    if (dialog.offsetParent !== null) {
+      // Check if it contains a listbox with role="menu" (reports menu)
+      const listbox = dialog.querySelector('tp-yt-paper-listbox[role="menu"]');
+      if (listbox) {
+        reportMenu = listbox;
+        console.log('Found visible report menu');
+        break;
+      }
+    }
+  }
+
+  if (!reportMenu) {
+    console.error('Report menu not found. Found dialogs:', dialogs.length);
+    throw new Error('Report menu dialog not found');
+  }
 
   // Find and click "Top content in the past 28 days" option (default metrics view)
-  const menuItems = Array.from(document.querySelectorAll('tp-yt-paper-item'));
+  // Search ONLY within the report menu, not all items on the page
+  const menuItems = Array.from(reportMenu.querySelectorAll('tp-yt-paper-item'));
+  console.log(`Found ${menuItems.length} items in report menu`);
+
   let topContentOption = null;
 
   for (const item of menuItems) {
     const text = item.textContent.trim();
     // Match "Top content in the past 28 days" (with or without nbsp)
-    if (text.includes('Top content in the past 28') && text.includes('days')) {
+    if (text.includes('Top content') && text.includes('past 28') && text.includes('days')) {
       topContentOption = item;
+      console.log('Found "Top content in the past 28 days" option');
       break;
     }
   }
 
   if (!topContentOption) {
+    console.error('Top content option not found. Available options:',
+      menuItems.slice(0, 10).map(i => i.textContent.trim().substring(0, 50)));
     throw new Error('Top content in the past 28 days option not found');
   }
 
@@ -1646,8 +1778,20 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
         if (statusCallback) statusCallback('📊 Reading POST retention value...');
         postRetention = await extractRetentionMetric();
 
-        if (statusCallback) statusCallback('🔙 Switching back to metrics table...');
-        await navigateBackToMetrics();
+        // All data has been extracted successfully!
+        // Note: We could navigate back to the metrics table here for UX,
+        // but it's not necessary and can fail if the page structure has changed.
+        // Keeping the user on the Audience Retention page is fine.
+        if (statusCallback) statusCallback('✅ All data extracted!');
+
+        // Uncomment below if you want to try navigating back (optional, for UX only)
+        /*
+        try {
+          await navigateBackToMetrics();
+        } catch (navError) {
+          console.log('Staying on Audience Retention page (all data already extracted)');
+        }
+        */
 
       } catch (error) {
         console.warn('Retention extraction failed:', error);
@@ -2475,6 +2619,93 @@ function addToggleButton() {
   setTimeout(() => clearInterval(checkHeader), 10000);
 }
 
+// Helper: Extract video ID from URL
+function getVideoIdFromUrl() {
+  const match = window.location.pathname.match(/\/video\/([^\/]+)\//);
+  return match ? match[1] : null;
+}
+
+// Helper: Reset form when video changes
+function resetFormForNewVideo() {
+  console.log('🔄 New video detected - resetting form');
+
+  // Clear results section
+  const resultsSection = document.getElementById('results-section');
+  if (resultsSection) {
+    resultsSection.style.display = 'none';
+  }
+
+  // Clear date inputs
+  const preStart = document.getElementById('pre-start');
+  const preEnd = document.getElementById('pre-end');
+  const postStart = document.getElementById('post-start');
+  const postEnd = document.getElementById('post-end');
+
+  if (preStart) preStart.value = '';
+  if (preEnd) preEnd.value = '';
+  if (postStart) postStart.value = '';
+  if (postEnd) postEnd.value = '';
+
+  // Clear treatment date min attribute (from previous video)
+  const treatmentDateInput = document.getElementById('treatment-date');
+  if (treatmentDateInput) {
+    treatmentDateInput.removeAttribute('min');
+  }
+
+  // Clear error/warning messages
+  const errorEl = document.getElementById('treatment-error');
+  const warningEl = document.getElementById('period-warning');
+  if (errorEl) errorEl.style.display = 'none';
+  if (warningEl) warningEl.style.display = 'none';
+
+  // Re-enable extract button
+  const extractBtn = document.getElementById('auto-extract-btn');
+  if (extractBtn) {
+    extractBtn.disabled = false;
+    extractBtn.classList.remove('disabled');
+  }
+}
+
+// Monitor URL changes to detect video navigation
+let currentVideoId = null;
+
+function watchForVideoChanges() {
+  const checkVideoChange = () => {
+    const newVideoId = getVideoIdFromUrl();
+
+    if (newVideoId && newVideoId !== currentVideoId) {
+      console.log(`📹 Video changed: ${currentVideoId || 'none'} → ${newVideoId}`);
+      currentVideoId = newVideoId;
+
+      // Reset form when video changes
+      resetFormForNewVideo();
+    }
+  };
+
+  // Check immediately
+  currentVideoId = getVideoIdFromUrl();
+
+  // Check periodically (YouTube Studio is a SPA, URL changes without page reload)
+  setInterval(checkVideoChange, 1000);
+
+  // Also watch for history changes
+  const pushState = history.pushState;
+  history.pushState = function() {
+    pushState.apply(history, arguments);
+    setTimeout(checkVideoChange, 100);
+  };
+
+  const replaceState = history.replaceState;
+  history.replaceState = function() {
+    replaceState.apply(history, arguments);
+    setTimeout(checkVideoChange, 100);
+  };
+
+  window.addEventListener('popstate', () => {
+    setTimeout(checkVideoChange, 100);
+  });
+}
+
 // Initialize when page loads
 function init() {
   console.log('YouTube Treatment Comparison Helper loaded');
@@ -2483,6 +2714,7 @@ function init() {
   if (window.location.hostname === 'studio.youtube.com') {
     addToggleButton();
     createHelperPanel();
+    watchForVideoChanges(); // Start monitoring for video changes
   }
 }
 
