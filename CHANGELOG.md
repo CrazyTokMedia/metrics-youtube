@@ -2,6 +2,20 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [1.0.5] - 2025-11-03
+
+### Added
+- **Views in Spreadsheet Export**: Pre-views and post-views now included in spreadsheet export
+  - Adds views data at the end of tab-separated format
+  - Provides complete metrics for analysis
+- **CLAUDE.md Documentation**: Comprehensive development guide for future Claude Code instances
+  - Architecture and code organization patterns
+  - Date format dual-strategy explanation
+  - Common development patterns and gotchas
+
+### Changed
+- Spreadsheet export format now includes views as final columns
+
 ## [1.0.4] - 2025-11-03
 
 ### Added
