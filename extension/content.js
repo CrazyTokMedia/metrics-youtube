@@ -513,8 +513,8 @@ function calculateDateRanges(treatmentDate, videoPublishDate = null) {
 // ============================================================
 
 // Helper: Set Custom Date Range
-async function setCustomDateRange(startDate, endDate) {
-  console.log(`Setting date range: ${startDate} to ${endDate}`);
+async function setCustomDateRange(startDate, endDate, overrideFormat = null) {
+  console.log(`Setting date range: ${startDate} to ${endDate}${overrideFormat ? ` (forced format: ${overrideFormat})` : ''}`);
 
   const sidebar = document.querySelector('yta-explore-sidebar');
   if (!sidebar) throw new Error('Sidebar not found');
@@ -818,22 +818,59 @@ async function setCustomDateRange(startDate, endDate) {
   const cachedEnd = endInput.value;
   console.log(`   Dialog opened - pre-filled values: start="${cachedStart}", end="${cachedEnd}"`);
 
-  // Detect date format based on browser locale
-  const useDDMMYYYY = () => {
-    const locale = navigator.language || 'en-US';
-    // Countries that use DD/MM/YYYY: India, UK, Australia, most of Europe, etc.
-    const ddmmCountries = ['en-IN', 'en-GB', 'en-AU', 'en-NZ', 'en-ZA', 'hi-IN',
-                           'de', 'fr', 'es', 'it', 'pt', 'nl', 'pl', 'ru'];
-    return ddmmCountries.some(country => locale.startsWith(country.split('-')[0]));
+  // Detect date format from YouTube's actual UI instead of browser locale
+  const detectYouTubeDateFormat = (sampleDate) => {
+    if (!sampleDate || !sampleDate.includes('/')) {
+      return null; // Cannot detect format
+    }
+
+    const parts = sampleDate.split('/');
+    if (parts.length !== 3) {
+      return null; // Invalid format
+    }
+
+    const first = parseInt(parts[0]);
+    const second = parseInt(parts[1]);
+
+    // If first part is > 12, it must be the day (DD/MM/YYYY)
+    if (first > 12) {
+      return 'DD/MM/YYYY';
+    }
+    // If second part is > 12, it must be the day (MM/DD/YYYY)
+    if (second > 12) {
+      return 'MM/DD/YYYY';
+    }
+    // If both are <= 12, we can't determine for certain
+    // Fall back to browser locale as best guess
+    return null;
   };
+
+  // Use override format if provided, otherwise detect from cached values
+  let detectedFormat;
+
+  if (overrideFormat) {
+    detectedFormat = overrideFormat;
+    console.log(`   Using forced date format: ${detectedFormat}`);
+  } else {
+    detectedFormat = detectYouTubeDateFormat(cachedStart) || detectYouTubeDateFormat(cachedEnd);
+
+    // If we couldn't detect from cached values, default to DD/MM/YYYY
+    if (!detectedFormat) {
+      detectedFormat = 'DD/MM/YYYY';
+      console.log(`   Could not detect format from cached dates, defaulting to DD/MM/YYYY`);
+    } else {
+      console.log(`   Detected YouTube date format from UI: ${detectedFormat}`);
+    }
+  }
+
+  const useDDMMYYYY = detectedFormat === 'DD/MM/YYYY';
 
   const formatDateForInput = (dateStr) => {
     const [year, month, day] = dateStr.split('-');
-    // Use DD/MM/YYYY for India and most non-US countries
-    if (useDDMMYYYY()) {
+    // Use DD/MM/YYYY or MM/DD/YYYY based on detection
+    if (useDDMMYYYY) {
       return `${day}/${month}/${year}`;
     }
-    // Use MM/DD/YYYY for US
     return `${month}/${day}/${year}`;
   };
 
@@ -841,9 +878,7 @@ async function setCustomDateRange(startDate, endDate) {
   const formattedEnd = formatDateForInput(endDate);
 
   // Log format being used for debugging
-  const locale = navigator.language || 'en-US';
-  const format = useDDMMYYYY() ? 'DD/MM/YYYY' : 'MM/DD/YYYY';
-  console.log(`Using date format: ${format} (detected locale: ${locale})`);
+  console.log(`Using date format: ${detectedFormat}`);
   console.log(`Setting dates: ${formattedStart} to ${formattedEnd}`);
 
   // Function to set date input value
@@ -865,55 +900,88 @@ async function setCustomDateRange(startDate, endDate) {
   // SMART ORDERING: Decide which date to set first based on cached vs target values
   // This prevents YouTube's validation from rejecting changes
 
-  // Helper to parse date string to comparable number (day of month)
-  const parseDay = (dateStr) => {
-    if (!dateStr) return 0;
-    // Extract day number from DD/MM/YYYY or MM/DD/YYYY format
-    const parts = dateStr.split('/');
-    if (parts.length >= 2) {
-      // For DD/MM/YYYY, day is first; for MM/DD/YYYY, day is second
-      return useDDMMYYYY() ? parseInt(parts[0]) : parseInt(parts[1]);
+  // Helper to parse date string to comparable timestamp
+  const parseFullDate = (dateStr) => {
+    if (!dateStr) return null;
+
+    // Handle "DD/MM/YYYY" or "MM/DD/YYYY" format
+    if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const part1 = parseInt(parts[0]);
+        const part2 = parseInt(parts[1]);
+        const year = parseInt(parts[2]);
+
+        // Parse based on detected format
+        let month, day;
+        if (useDDMMYYYY) {
+          day = part1;
+          month = part2;
+        } else {
+          month = part1;
+          day = part2;
+        }
+
+        // Create date (month is 0-indexed in Date constructor)
+        return new Date(year, month - 1, day).getTime();
+      }
     }
-    // If format is "16 Oct 2025", extract the number
-    const match = dateStr.match(/\d+/);
-    return match ? parseInt(match[0]) : 0;
+
+    // Handle "1 Nov 2025" or "16 Oct 2025" format
+    const textDateMatch = dateStr.match(/(\d+)\s+(\w+)\s+(\d+)/);
+    if (textDateMatch) {
+      const day = parseInt(textDateMatch[1]);
+      const monthStr = textDateMatch[2];
+      const year = parseInt(textDateMatch[3]);
+
+      // Convert month name to number
+      const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
+                          'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+      const month = monthNames.findIndex(m => monthStr.toLowerCase().startsWith(m));
+
+      if (month >= 0) {
+        return new Date(year, month, day).getTime();
+      }
+    }
+
+    return null;
   };
 
-  const cachedStartDay = parseDay(cachedStart);
-  const cachedEndDay = parseDay(cachedEnd);
-  const targetStartDay = parseDay(formattedStart);
-  const targetEndDay = parseDay(formattedEnd);
+  const cachedStartTime = parseFullDate(cachedStart);
+  const cachedEndTime = parseFullDate(cachedEnd);
+  const targetStartTime = parseFullDate(formattedStart);
+  const targetEndTime = parseFullDate(formattedEnd);
 
-  console.log(`   Cached: START=${cachedStartDay}, END=${cachedEndDay}`);
-  console.log(`   Target: START=${targetStartDay}, END=${targetEndDay}`);
+  console.log(`   Cached: START=${cachedStart} (${cachedStartTime}), END=${cachedEnd} (${cachedEndTime})`);
+  console.log(`   Target: START=${formattedStart} (${targetStartTime}), END=${formattedEnd} (${targetEndTime})`);
 
   // Decide order based on relationship between cached and target values
   let setEndFirst = true; // Default to END first
 
-  if (cachedStartDay > 0 && cachedEndDay > 0) {
+  if (cachedStartTime && cachedEndTime && targetStartTime && targetEndTime) {
     // Strategy: Always set the date that's expanding the range FIRST
     // This prevents YouTube's validation from rejecting the change
 
     // If moving the range forward in time (target START >= cached END)
-    if (targetStartDay >= cachedEndDay) {
+    if (targetStartTime >= cachedEndTime) {
       setEndFirst = true; // Set END first to expand range upward
-      console.log(`   Strategy: END first (expanding forward: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
+      console.log(`   Strategy: END first (expanding forward)`);
     }
     // If moving the range backward in time (target END <= cached START)
-    else if (targetEndDay <= cachedStartDay) {
+    else if (targetEndTime <= cachedStartTime) {
       setEndFirst = false; // Set START first to expand range downward
-      console.log(`   Strategy: START first (expanding backward: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
+      console.log(`   Strategy: START first (expanding backward)`);
     }
     // If ranges overlap, check which direction we're primarily moving
-    else if (targetStartDay > cachedStartDay) {
+    else if (targetStartTime > cachedStartTime) {
       setEndFirst = false; // Moving start forward, set START first
-      console.log(`   Strategy: START first (start moving forward: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
+      console.log(`   Strategy: START first (start moving forward)`);
     } else {
       setEndFirst = true; // Moving end or overlapping, set END first
-      console.log(`   Strategy: END first (default overlap: ${targetStartDay}-${targetEndDay} vs cached ${cachedStartDay}-${cachedEndDay})`);
+      console.log(`   Strategy: END first (default overlap)`);
     }
   } else {
-    console.log(`   Strategy: END first (default - no cached values)`);
+    console.log(`   Strategy: END first (default - couldn't parse dates)`);
   }
 
   if (setEndFirst) {
@@ -1079,6 +1147,59 @@ async function setCustomDateRange(startDate, endDate) {
 
   // Note: Dialog auto-closes after Apply, no need to manually close
   // ESC key was breaking the UI by closing the advanced metrics tab
+}
+
+// Helper: Set Custom Date Range with Auto-Retry on Format Mismatch
+async function setCustomDateRangeWithRetry(startDate, endDate) {
+  try {
+    // First attempt: Use auto-detected format
+    await setCustomDateRange(startDate, endDate);
+  } catch (error) {
+    // Check if this is a YouTube validation error (likely format mismatch)
+    if (error.message && error.message.includes('YouTube validation failed')) {
+      console.log('⚠️ First attempt failed with YouTube validation error, retrying with alternate date format...');
+
+      // Try to intelligently pick the alternate format by looking at the error message
+      // If error says "Enter 05/10/2025", it's expecting a specific format
+      let formatToTry = null;
+      const errorMatch = error.message.match(/Enter (\d+)\/(\d+)\/(\d+)/);
+      if (errorMatch) {
+        const firstNum = parseInt(errorMatch[1]);
+        const secondNum = parseInt(errorMatch[2]);
+
+        // If first number > 12, it's DD/MM/YYYY; if second > 12, it's MM/DD/YYYY
+        if (firstNum > 12) {
+          formatToTry = 'DD/MM/YYYY';
+          console.log(`   Error suggests DD/MM/YYYY format (first part ${firstNum} > 12)`);
+        } else if (secondNum > 12) {
+          formatToTry = 'MM/DD/YYYY';
+          console.log(`   Error suggests MM/DD/YYYY format (second part ${secondNum} > 12)`);
+        } else {
+          // Can't determine from error, try MM/DD/YYYY as alternate (DD/MM/YYYY is default)
+          console.log(`   Cannot determine format from error, trying MM/DD/YYYY as alternate`);
+          formatToTry = 'MM/DD/YYYY';
+        }
+      } else {
+        // No date in error message, try MM/DD/YYYY as alternate (DD/MM/YYYY is default)
+        formatToTry = 'MM/DD/YYYY';
+        console.log(`   No date in error message, trying MM/DD/YYYY as alternate`);
+      }
+
+      try {
+        await setCustomDateRange(startDate, endDate, formatToTry);
+        console.log(`✅ Retry successful with ${formatToTry} format!`);
+      } catch (retryError) {
+        // If both attempts failed, throw the original error with additional context
+        console.error('❌ Both date format attempts failed!');
+        console.error(`   First attempt: auto-detect`);
+        console.error(`   Second attempt: ${formatToTry}`);
+        throw new Error(`Date format mismatch: Both attempts failed. Original error: ${error.message}. Retry error: ${retryError.message}`);
+      }
+    } else {
+      // Not a validation error, re-throw original error
+      throw error;
+    }
+  }
 }
 
 // Helper: Select Metrics
@@ -1748,7 +1869,7 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
     await new Promise(resolve => setTimeout(resolve, 50));
 
     if (statusCallback) statusCallback('📅 Setting PRE period dates...');
-    await setCustomDateRange(preStart, preEnd);
+    await setCustomDateRangeWithRetry(preStart, preEnd);
 
     if (statusCallback) statusCallback('⏳ Waiting for PRE data to load...');
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -1760,7 +1881,7 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
     await new Promise(resolve => setTimeout(resolve, 50));
 
     if (statusCallback) statusCallback('📅 Setting POST period dates...');
-    await setCustomDateRange(postStart, postEnd);
+    await setCustomDateRangeWithRetry(postStart, postEnd);
 
     if (statusCallback) statusCallback('⏳ Waiting for POST data to load...');
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -1784,13 +1905,13 @@ async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statu
         await new Promise(resolve => setTimeout(resolve, 100));
 
         if (statusCallback) statusCallback('📅 Setting PRE dates for retention...');
-        await setCustomDateRange(preStart, preEnd);
+        await setCustomDateRangeWithRetry(preStart, preEnd);
 
         if (statusCallback) statusCallback('📊 Reading PRE retention value...');
         preRetention = await extractRetentionMetric();
 
         if (statusCallback) statusCallback('📅 Setting POST dates for retention...');
-        await setCustomDateRange(postStart, postEnd);
+        await setCustomDateRangeWithRetry(postStart, postEnd);
 
         if (statusCallback) statusCallback('📊 Reading POST retention value...');
         postRetention = await extractRetentionMetric();

@@ -38,10 +38,31 @@
     constructor() {
       this.sessionId = this.generateSessionId();
       this.startTime = Date.now();
+      this.contextInvalid = false; // Track if extension context is invalid
     }
 
     generateSessionId() {
       return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    /**
+     * Check if extension context is valid
+     */
+    isContextValid() {
+      if (this.contextInvalid) {
+        return false; // Already know it's invalid
+      }
+      try {
+        // Check if chrome.runtime is available and has an ID
+        if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.id) {
+          this.contextInvalid = true;
+          return false;
+        }
+        return true;
+      } catch (e) {
+        this.contextInvalid = true;
+        return false;
+      }
     }
 
     /**
@@ -64,6 +85,14 @@
      * Save log to Chrome storage
      */
     async saveLog(logEntry) {
+      // Always log to console first
+      this.consoleLog(logEntry);
+
+      // Skip storage save if context is invalid
+      if (!this.isContextValid()) {
+        return; // Silently fail - context is invalidated, nothing we can do
+      }
+
       try {
         // Get existing logs
         const result = await chrome.storage.local.get([STORAGE_KEY]);
@@ -89,13 +118,15 @@
         // Save to storage
         await chrome.storage.local.set({ [STORAGE_KEY]: logs });
 
-        // Also log to console for immediate debugging
-        this.consoleLog(logEntry);
-
       } catch (error) {
-        // If storage fails, at least log to console
-        console.error('Failed to save log to storage:', error);
-        this.consoleLog(logEntry);
+        // Check if this is a context invalidation error
+        if (error.message && error.message.includes('Extension context invalidated')) {
+          this.contextInvalid = true;
+          // Silently fail - context is invalidated
+        } else {
+          // Other storage errors should still be logged
+          console.error('Failed to save log to storage:', error);
+        }
       }
     }
 
@@ -304,18 +335,21 @@
     });
   });
 
-  // Log when extension context becomes invalid
-  const originalFetch = window.fetch;
+  // Monitor for extension context invalidation
   if (typeof chrome !== 'undefined' && chrome.runtime) {
-    setInterval(() => {
+    const contextCheckInterval = setInterval(() => {
       try {
         if (!chrome.runtime || !chrome.runtime.id) {
-          logger.logWarning('Extension context invalidated', {
-            timeSinceStart: Date.now() - logger.startTime
-          });
+          // Context is invalid - just log to console, don't try to save
+          console.warn('[Extension context invalidated] The extension was reloaded. Logs will only appear in console.');
+          logger.contextInvalid = true;
+          // Stop checking once we know it's invalid
+          clearInterval(contextCheckInterval);
         }
       } catch (e) {
         // Extension context is invalid
+        logger.contextInvalid = true;
+        clearInterval(contextCheckInterval);
       }
     }, 5000);
   }
