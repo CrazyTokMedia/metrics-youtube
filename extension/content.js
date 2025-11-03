@@ -2272,13 +2272,18 @@ function createHelperPanel() {
             </div>
           </div>
 
-          <!-- Copy for Spreadsheet button -->
-          <div style="margin-top: 16px; text-align: center;">
-            <button id="copy-spreadsheet-btn" class="action-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-right: 8px;">
-              <span class="btn-icon">📊</span> Copy for Spreadsheet (Tab)
-            </button>
-            <button id="copy-csv-btn" class="action-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-              <span class="btn-icon">📄</span> Copy for Spreadsheet (CSV)
+          <!-- Copy for Spreadsheet section -->
+          <div style="margin-top: 24px; padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <div style="margin-bottom: 12px; text-align: center;">
+              <div style="font-size: 13px; color: #6b7280; font-weight: 500; margin-bottom: 4px;">
+                📊 Export to Spreadsheet
+              </div>
+              <div style="font-size: 11px; color: #9ca3af; line-height: 1.4;">
+                Copy all metrics ready to paste into Google Sheets. Add video title manually.
+              </div>
+            </div>
+            <button id="copy-spreadsheet-btn" class="action-btn" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #047857 100%); font-size: 14px; padding: 12px 20px; box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);">
+              <span class="btn-icon" style="font-size: 16px;">📋</span> Copy for Spreadsheet
             </button>
           </div>
         </div>
@@ -2718,41 +2723,15 @@ function createHelperPanel() {
 
     navigator.clipboard.writeText(tabFormat).then(() => {
       const btn = e.target.closest('button');
-      const originalText = btn.textContent;
-      btn.textContent = '✓ Copied!';
-      btn.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span class="btn-icon" style="font-size: 16px;">✓</span> Copied!';
+      btn.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 100%)';
+      btn.style.transform = 'scale(0.98)';
 
       setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-      }, 2000);
-    });
-  });
-
-  // Copy for Spreadsheet (CSV)
-  document.getElementById('copy-csv-btn').addEventListener('click', (e) => {
-    const treatmentDate = formatDateRangesForSpreadsheet();
-    const preImpressions = document.getElementById('pre-impressions').textContent;
-    const postImpressions = document.getElementById('post-impressions').textContent;
-    const preCtr = document.getElementById('pre-ctr').textContent;
-    const postCtr = document.getElementById('post-ctr').textContent;
-    const preAwt = document.getElementById('pre-awt').textContent;
-    const postAwt = document.getElementById('post-awt').textContent;
-    const preRetention = document.getElementById('pre-retention').textContent;
-    const postRetention = document.getElementById('post-retention').textContent;
-
-    // Format: empty, treatment date, pre-impressions, post-impressions, empty, pre-ctr, post-ctr, empty, pre-awt, post-awt, pre-retention, post-retention
-    const csvFormat = `,${treatmentDate},${preImpressions},${postImpressions},,${preCtr},${postCtr},,${preAwt},${postAwt},${preRetention},${postRetention}`;
-
-    navigator.clipboard.writeText(csvFormat).then(() => {
-      const btn = e.target.closest('button');
-      const originalText = btn.textContent;
-      btn.textContent = '✓ Copied!';
-      btn.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
-
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        btn.innerHTML = originalText;
+        btn.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+        btn.style.transform = 'scale(1)';
       }, 2000);
     });
   });
