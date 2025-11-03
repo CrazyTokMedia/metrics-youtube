@@ -2748,7 +2748,7 @@ function createHelperPanel() {
   });
 
   // Copy period for Airtable functionality
-  document.querySelectorAll('.copy-btn').forEach(btn => {
+  document.querySelectorAll('.copy-btn[data-period]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const button = e.currentTarget; // Use currentTarget to always get the button, not the clicked span
       const period = button.getAttribute('data-period');
