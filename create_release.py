@@ -18,6 +18,13 @@ import requests
 from pathlib import Path
 from datetime import datetime
 
+# Try to load .env file if python-dotenv is available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed, environment variables must be set manually
+
 
 class GitHubReleaser:
     def __init__(self, token, repo_owner="CrazyTokMedia", repo_name="metrics-youtube"):
