@@ -2048,6 +2048,63 @@ function makePanelDraggable(panel) {
   });
 }
 
+// Helper: Convert YYYY-MM-DD to DD/MM/YYYY
+function formatDateToDDMMYYYY(dateStr) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+// Helper: Convert DD/MM/YYYY to YYYY-MM-DD
+function formatDateToYYYYMMDD(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('/');
+  if (parts.length !== 3) return '';
+  const [day, month, year] = parts;
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
+// Helper: Auto-format date input as user types
+function autoFormatDateInput(input) {
+  // Prevent adding listeners multiple times
+  if (input.dataset.formattingApplied === 'true') {
+    return;
+  }
+  input.dataset.formattingApplied = 'true';
+
+  input.addEventListener('input', (e) => {
+    let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+
+    if (value.length >= 2) {
+      value = value.slice(0, 2) + '/' + value.slice(2);
+    }
+    if (value.length >= 5) {
+      value = value.slice(0, 5) + '/' + value.slice(5, 9);
+    }
+
+    e.target.value = value;
+  });
+
+  // Validate on blur
+  input.addEventListener('blur', (e) => {
+    const value = e.target.value;
+    if (!value) return;
+
+    const parts = value.split('/');
+    if (parts.length !== 3) {
+      e.target.style.borderColor = 'red';
+      return;
+    }
+
+    const [day, month, year] = parts.map(p => parseInt(p));
+    if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2000) {
+      e.target.style.borderColor = 'red';
+    } else {
+      e.target.style.borderColor = '';
+    }
+  });
+}
+
 // UI: Create floating panel
 function createHelperPanel() {
   // Check if panel already exists
@@ -2074,9 +2131,9 @@ function createHelperPanel() {
 
       <!-- Step 1: Treatment Date -->
       <div class="step-container" id="step-1">
-        <div class="step-label">Select treatment date</div>
+        <div class="step-label">Select treatment date (DD/MM/YYYY)</div>
         <div class="input-section">
-          <input type="date" id="treatment-date" class="date-input" max="" />
+          <input type="text" id="treatment-date" class="date-input" placeholder="DD/MM/YYYY" maxlength="10" />
           <button id="calculate-btn" class="action-btn calculate-btn">Calculate</button>
         </div>
       </div>
@@ -2100,11 +2157,11 @@ function createHelperPanel() {
             <div class="period-dates-vertical">
               <div class="date-row">
                 <label class="date-label">Start</label>
-                <input type="date" id="pre-start" class="date-edit" disabled />
+                <input type="text" id="pre-start" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" disabled />
               </div>
               <div class="date-row">
                 <label class="date-label">End</label>
-                <input type="date" id="pre-end" class="date-edit" disabled />
+                <input type="text" id="pre-end" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" disabled />
               </div>
             </div>
           </div>
@@ -2117,11 +2174,11 @@ function createHelperPanel() {
             <div class="period-dates-vertical">
               <div class="date-row">
                 <label class="date-label">Start</label>
-                <input type="date" id="post-start" class="date-edit" disabled />
+                <input type="text" id="post-start" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" disabled />
               </div>
               <div class="date-row">
                 <label class="date-label">End</label>
-                <input type="date" id="post-end" class="date-edit" disabled />
+                <input type="text" id="post-end" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" disabled />
               </div>
             </div>
           </div>
@@ -2210,13 +2267,9 @@ function createHelperPanel() {
 
   document.body.appendChild(panel);
 
-  // Set max date to 2 days ago (YouTube doesn't have today's or yesterday's data)
-  // This accounts for timezone differences and YouTube's data processing delay
-  const today = new Date();
-  const maxYouTubeDate = new Date(today);
-  maxYouTubeDate.setDate(maxYouTubeDate.getDate() - 2);
-  const maxDate = maxYouTubeDate.toISOString().split('T')[0];
-  document.getElementById('treatment-date').setAttribute('max', maxDate);
+  // Setup auto-formatting for date inputs
+  const treatmentDateInput = document.getElementById('treatment-date');
+  autoFormatDateInput(treatmentDateInput);
 
   // Make panel draggable
   makePanelDraggable(panel);
@@ -2236,18 +2289,25 @@ function createHelperPanel() {
   });
 
   document.getElementById('calculate-btn').addEventListener('click', async () => {
-    const treatmentDate = document.getElementById('treatment-date').value;
+    const treatmentDateDDMMYYYY = document.getElementById('treatment-date').value;
 
     // Log user action
     if (window.ExtensionLogger) {
-      window.ExtensionLogger.logUserAction('Calculate button clicked', { treatmentDate });
+      window.ExtensionLogger.logUserAction('Calculate button clicked', { treatmentDate: treatmentDateDDMMYYYY });
     }
 
-    if (!treatmentDate) {
-      alert('Please select a treatment date');
+    if (!treatmentDateDDMMYYYY) {
+      alert('Please enter a treatment date (DD/MM/YYYY)');
       if (window.ExtensionLogger) {
         window.ExtensionLogger.logWarning('Calculate clicked without treatment date');
       }
+      return;
+    }
+
+    // Convert DD/MM/YYYY to YYYY-MM-DD for internal calculations
+    const treatmentDate = formatDateToYYYYMMDD(treatmentDateDDMMYYYY);
+    if (!treatmentDate) {
+      alert('Invalid date format. Please use DD/MM/YYYY');
       return;
     }
 
@@ -2307,7 +2367,9 @@ function createHelperPanel() {
         document.getElementById('pre-end').value = '';
         document.getElementById('pre-days').textContent = '—';
 
-        document.getElementById('post-start').value = treatmentDate;
+        // Convert treatment date to DD/MM/YYYY for display
+        document.getElementById('post-start').value = formatDateToDDMMYYYY(treatmentDate);
+        document.getElementById('post-start').dataset.original = treatmentDate;
         document.getElementById('post-end').value = '';
         document.getElementById('post-days').textContent = '—';
 
@@ -2331,16 +2393,16 @@ function createHelperPanel() {
       return;
     }
 
-    // Display results (use YYYY-MM-DD for date inputs)
-    document.getElementById('pre-start').value = ranges.pre.start;
-    document.getElementById('pre-start').dataset.original = ranges.pre.start;
-    document.getElementById('pre-end').value = ranges.pre.end;
+    // Display results (convert YYYY-MM-DD to DD/MM/YYYY for display)
+    document.getElementById('pre-start').value = formatDateToDDMMYYYY(ranges.pre.start);
+    document.getElementById('pre-start').dataset.original = ranges.pre.start; // Keep YYYY-MM-DD for calculations
+    document.getElementById('pre-end').value = formatDateToDDMMYYYY(ranges.pre.end);
     document.getElementById('pre-end').dataset.original = ranges.pre.end;
     document.getElementById('pre-days').textContent = ranges.pre.days;
 
-    document.getElementById('post-start').value = ranges.post.start;
+    document.getElementById('post-start').value = formatDateToDDMMYYYY(ranges.post.start);
     document.getElementById('post-start').dataset.original = ranges.post.start;
-    document.getElementById('post-end').value = ranges.post.end;
+    document.getElementById('post-end').value = formatDateToDDMMYYYY(ranges.post.end);
     document.getElementById('post-end').dataset.original = ranges.post.end;
     document.getElementById('post-days').textContent = ranges.post.days;
 
@@ -2378,9 +2440,9 @@ function createHelperPanel() {
     // Scroll to results
     document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    // Save to storage for future use
+    // Save to storage for future use (save in DD/MM/YYYY format for UI compatibility)
     safeStorage.set({
-      lastTreatmentDate: treatmentDate,
+      lastTreatmentDate: treatmentDateDDMMYYYY,
       lastCalculatedRanges: ranges,
       videoPublishDate: videoPublishDate ? formatDate(videoPublishDate) : null
     });
@@ -2399,18 +2461,35 @@ function createHelperPanel() {
 
   // Helper: Validate and update date ranges after manual edit
   function validateAndUpdateDateRanges() {
-    const preStart = document.getElementById('pre-start').value;
-    const preEnd = document.getElementById('pre-end').value;
-    const postStart = document.getElementById('post-start').value;
-    const postEnd = document.getElementById('post-end').value;
+    const preStartDD = document.getElementById('pre-start').value;
+    const preEndDD = document.getElementById('pre-end').value;
+    const postStartDD = document.getElementById('post-start').value;
+    const postEndDD = document.getElementById('post-end').value;
     const warningEl = document.getElementById('period-warning');
     const extractBtn = document.getElementById('auto-extract-btn');
 
     // Check all dates are filled
-    if (!preStart || !preEnd || !postStart || !postEnd) {
+    if (!preStartDD || !preEndDD || !postStartDD || !postEndDD) {
       console.warn('Not all dates filled');
       return;
     }
+
+    // Convert DD/MM/YYYY to YYYY-MM-DD for calculations
+    const preStart = formatDateToYYYYMMDD(preStartDD);
+    const preEnd = formatDateToYYYYMMDD(preEndDD);
+    const postStart = formatDateToYYYYMMDD(postStartDD);
+    const postEnd = formatDateToYYYYMMDD(postEndDD);
+
+    if (!preStart || !preEnd || !postStart || !postEnd) {
+      console.warn('Invalid date format');
+      return;
+    }
+
+    // Update dataset.original with converted dates for extraction
+    document.getElementById('pre-start').dataset.original = preStart;
+    document.getElementById('pre-end').dataset.original = preEnd;
+    document.getElementById('post-start').dataset.original = postStart;
+    document.getElementById('post-end').dataset.original = postEnd;
 
     // Calculate days for each period
     const preDays = calculateDaysBetween(preStart, preEnd);
@@ -2531,10 +2610,12 @@ function createHelperPanel() {
         dateInputs.forEach(input => {
           input.disabled = false;
           input.classList.add('editable');
+          // Add auto-formatting to each date input
+          autoFormatDateInput(input);
         });
         editBtn.textContent = 'Done';
         editBtn.classList.add('editing');
-        console.log('Dates now editable - you can click to open calendar');
+        console.log('Dates now editable - enter dates in DD/MM/YYYY format');
 
         // Log user action
         if (window.ExtensionLogger) {
@@ -2605,10 +2686,11 @@ function createHelperPanel() {
   });
 
   const runExtraction = async (isRetry = false) => {
-    const preStart = document.getElementById('pre-start').value;
-    const preEnd = document.getElementById('pre-end').value;
-    const postStart = document.getElementById('post-start').value;
-    const postEnd = document.getElementById('post-end').value;
+    // Use dataset.original which stores YYYY-MM-DD format for internal use
+    const preStart = document.getElementById('pre-start').dataset.original;
+    const preEnd = document.getElementById('pre-end').dataset.original;
+    const postStart = document.getElementById('post-start').dataset.original;
+    const postEnd = document.getElementById('post-end').dataset.original;
 
     const statusEl = document.getElementById('extraction-status');
     const autoExtractBtn = document.getElementById('auto-extract-btn');
@@ -2859,7 +2941,14 @@ function createHelperPanel() {
   // Load last used treatment date if available
   safeStorage.get(['lastTreatmentDate']).then((result) => {
     if (result.lastTreatmentDate) {
-      document.getElementById('treatment-date').value = result.lastTreatmentDate;
+      let dateToDisplay = result.lastTreatmentDate;
+
+      // Handle backward compatibility: if stored date is YYYY-MM-DD, convert to DD/MM/YYYY
+      if (dateToDisplay.includes('-')) {
+        dateToDisplay = formatDateToDDMMYYYY(dateToDisplay);
+      }
+
+      document.getElementById('treatment-date').value = dateToDisplay;
     }
   });
 }

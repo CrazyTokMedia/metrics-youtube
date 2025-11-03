@@ -100,4 +100,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       toggleText.textContent = 'Show Panel';
     }
   }
+
+  // Set version dynamically from manifest
+  const versionInfo = document.getElementById('version-info');
+  if (versionInfo) {
+    const manifest = chrome.runtime.getManifest();
+    versionInfo.textContent = `Version ${manifest.version}`;
+  }
 });
