@@ -1678,55 +1678,66 @@ async function navigateBackToMetrics() {
   // Wait for dropdown menu to appear
   await new Promise(resolve => setTimeout(resolve, 800));
 
-  // Find the VISIBLE report menu dialog (not other dropdowns on the page)
-  const dialogs = document.querySelectorAll('tp-yt-paper-dialog[role="dialog"]');
+  // Find the menu - it might be inside the dropdown trigger itself or nearby
   let reportMenu = null;
 
-  for (const dialog of dialogs) {
-    // Check if this dialog is visible
-    if (dialog.offsetParent !== null) {
-      // Check if it contains a listbox with role="menu" (reports menu)
-      const listbox = dialog.querySelector('tp-yt-paper-listbox[role="menu"]');
-      if (listbox) {
-        reportMenu = listbox;
-        console.log('Found visible report menu');
-        break;
+  // Strategy 1: Look for the menu inside the dropdown trigger
+  reportMenu = reportDropdown.querySelector('tp-yt-paper-listbox[role="menu"]');
+  if (reportMenu && reportMenu.offsetParent !== null) {
+    console.log('Found report menu inside dropdown trigger');
+  } else {
+    reportMenu = null;
+  }
+
+  // Strategy 2: Look for any visible listbox with role="menu" (globally)
+  if (!reportMenu) {
+    const allListboxes = document.querySelectorAll('tp-yt-paper-listbox[role="menu"]');
+    console.log(`Found ${allListboxes.length} listboxes with role="menu"`);
+
+    for (const listbox of allListboxes) {
+      if (listbox.offsetParent !== null) {
+        // Check if this is the Report menu by looking for "Popular" or "Top content"
+        const items = listbox.querySelectorAll('tp-yt-paper-item');
+        for (const item of items) {
+          if (item.textContent.includes('Top content') || item.textContent.includes('Popular')) {
+            reportMenu = listbox;
+            console.log('Found visible report menu (contains Top content/Popular)');
+            break;
+          }
+        }
+        if (reportMenu) break;
+      }
+    }
+  }
+
+  // Strategy 3: Look inside dialogs (fallback)
+  if (!reportMenu) {
+    const dialogs = document.querySelectorAll('tp-yt-paper-dialog[role="dialog"]');
+    for (const dialog of dialogs) {
+      if (dialog.offsetParent !== null) {
+        const listbox = dialog.querySelector('tp-yt-paper-listbox[role="menu"]');
+        if (listbox) {
+          reportMenu = listbox;
+          console.log('Found report menu inside dialog');
+          break;
+        }
       }
     }
   }
 
   if (!reportMenu) {
-    console.error('Report menu not found. Found dialogs:', dialogs.length);
+    console.error('Report menu not found after trying all strategies');
 
-    // Debug: Log info about visible dialogs
-    const visibleDialogs = Array.from(dialogs).filter(d => d.offsetParent !== null);
-    console.log('Visible dialogs:', visibleDialogs.length);
-    visibleDialogs.forEach((d, i) => {
-      const hasListbox = d.querySelector('tp-yt-paper-listbox');
-      const listboxRole = hasListbox ? hasListbox.getAttribute('role') : 'none';
-      console.log(`  Dialog ${i}: has listbox=${!!hasListbox}, role=${listboxRole}`);
+    // Debug: Show what we can find
+    const allListboxes = document.querySelectorAll('tp-yt-paper-listbox');
+    console.log('All listboxes on page:', allListboxes.length);
+    const visibleListboxes = Array.from(allListboxes).filter(l => l.offsetParent !== null);
+    console.log('Visible listboxes:', visibleListboxes.length);
+    visibleListboxes.forEach((lb, i) => {
+      console.log(`  Listbox ${i}: role=${lb.getAttribute('role')}, parent=${lb.parentElement?.tagName}`);
     });
 
-    // Try waiting a bit longer and retry once
-    console.log('Retrying after 1 second...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Retry finding the menu
-    const dialogsRetry = document.querySelectorAll('tp-yt-paper-dialog[role="dialog"]');
-    for (const dialog of dialogsRetry) {
-      if (dialog.offsetParent !== null) {
-        const listbox = dialog.querySelector('tp-yt-paper-listbox[role="menu"]');
-        if (listbox) {
-          reportMenu = listbox;
-          console.log('Found report menu on retry');
-          break;
-        }
-      }
-    }
-
-    if (!reportMenu) {
-      throw new Error('Report menu dialog not found after retry');
-    }
+    throw new Error('Report menu not found after trying all strategies');
   }
 
   // Find and click "Top content in the past 28 days" option (default metrics view)
