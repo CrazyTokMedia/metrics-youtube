@@ -1,4 +1,8 @@
 # YouTube Metrics to Airtable Integration
+## 📥 Download
+
+[Download v1.0.3](https://github.com/CrazyTokMedia/metrics-youtube/releases/download/v1.0.3/youtube-treatment-helper-v1.0.3.zip)
+
 
 ## Overview
 
