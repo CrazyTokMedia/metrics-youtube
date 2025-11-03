@@ -2272,18 +2272,17 @@ function createHelperPanel() {
             </div>
           </div>
 
-          <!-- Copy for Spreadsheet section -->
-          <div style="margin-top: 24px; padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
-            <div style="margin-bottom: 12px; text-align: center;">
-              <div style="font-size: 13px; color: #6b7280; font-weight: 500; margin-bottom: 4px;">
-                📊 Export to Spreadsheet
-              </div>
-              <div style="font-size: 11px; color: #9ca3af; line-height: 1.4;">
-                Copy all metrics ready to paste into Google Sheets. Add video title manually.
+          <!-- Export section -->
+          <div class="export-section">
+            <div class="export-helper">
+              <span class="export-icon">📊</span>
+              <div class="export-text">
+                <div class="export-title">Export to Spreadsheet</div>
+                <div class="export-subtitle">Paste into Google Sheets next to video title</div>
               </div>
             </div>
-            <button id="copy-spreadsheet-btn" class="action-btn" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #047857 100%); font-size: 14px; padding: 12px 20px; box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);">
-              <span class="btn-icon" style="font-size: 16px;">📋</span> Copy for Spreadsheet
+            <button id="copy-spreadsheet-btn" class="copy-btn export-btn">
+              <span class="btn-icon">📋</span> Copy for Spreadsheet
             </button>
           </div>
         </div>
@@ -2725,15 +2724,13 @@ function createHelperPanel() {
     navigator.clipboard.writeText(tabFormat).then(() => {
       const btn = e.target.closest('button');
       const originalText = btn.innerHTML;
-      btn.innerHTML = '<span class="btn-icon" style="font-size: 16px;">✓</span> Copied!';
-      btn.style.background = 'linear-gradient(135deg, #047857 0%, #065f46 100%)';
-      btn.style.transform = 'scale(0.98)';
+      btn.innerHTML = '<span class="btn-icon">✓</span> Copied!';
+      btn.classList.add('copied');
 
       setTimeout(() => {
         btn.innerHTML = originalText;
-        btn.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
-        btn.style.transform = 'scale(1)';
-      }, 2000);
+        btn.classList.remove('copied');
+      }, 1500);
     });
   });
 

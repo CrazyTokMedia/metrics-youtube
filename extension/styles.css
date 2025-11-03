@@ -633,6 +633,51 @@
   50% { transform: scale(1.02); }
 }
 
+/* Export Section */
+.export-section {
+  margin-top: 20px;
+  padding: 16px;
+  background: linear-gradient(to bottom, #fafafa 0%, #f5f5f5 100%);
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.export-helper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+}
+
+.export-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.export-text {
+  flex: 1;
+}
+
+.export-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 2px;
+}
+
+.export-subtitle {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.export-btn {
+  width: 100%;
+}
+
 /* ============================================================
    PERIOD WARNING
    ============================================================ */
