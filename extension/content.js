@@ -1207,6 +1207,7 @@ async function selectMetrics() {
   console.log('Selecting metrics...');
 
   const metricsToSelect = [
+    'VIDEO_THUMBNAIL_IMPRESSIONS',
     'EXTERNAL_VIEWS',
     'AVERAGE_WATCH_TIME',
     'AVERAGE_WATCH_PERCENTAGE',
@@ -1330,6 +1331,7 @@ async function extractValues() {
   );
 
   const metrics = {
+    impressions: null,
     views: null,
     awt: null,
     consumption: null,
@@ -1344,7 +1346,9 @@ async function extractValues() {
 
     const headerLower = headerText.toLowerCase();
 
-    if (headerLower === 'views') {
+    if (headerLower.includes('impressions') && !headerLower.includes('rate')) {
+      metrics.impressions = value;
+    } else if (headerLower === 'views') {
       metrics.views = value;
     } else if (headerLower.includes('average view duration') || headerLower.includes('average watch time')) {
       metrics.awt = value;
@@ -2220,6 +2224,10 @@ function createHelperPanel() {
             <div class="metrics-column pre-column">
               <div class="column-header">PRE</div>
               <div class="metric-row">
+                <span class="metric-label">Impressions</span>
+                <span id="pre-impressions" class="metric-value">—</span>
+              </div>
+              <div class="metric-row">
                 <span class="metric-label">CTR</span>
                 <span id="pre-ctr" class="metric-value">—</span>
               </div>
@@ -2241,6 +2249,10 @@ function createHelperPanel() {
             <div class="metrics-column post-column">
               <div class="column-header">POST</div>
               <div class="metric-row">
+                <span class="metric-label">Impressions</span>
+                <span id="post-impressions" class="metric-value">—</span>
+              </div>
+              <div class="metric-row">
                 <span class="metric-label">CTR</span>
                 <span id="post-ctr" class="metric-value">—</span>
               </div>
@@ -2258,6 +2270,16 @@ function createHelperPanel() {
               </div>
               <button class="copy-btn" data-period="post"><span class="btn-icon">📋</span> Copy Post</button>
             </div>
+          </div>
+
+          <!-- Copy for Spreadsheet button -->
+          <div style="margin-top: 16px; text-align: center;">
+            <button id="copy-spreadsheet-btn" class="action-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-right: 8px;">
+              <span class="btn-icon">📊</span> Copy for Spreadsheet (Tab)
+            </button>
+            <button id="copy-csv-btn" class="action-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+              <span class="btn-icon">📄</span> Copy for Spreadsheet (CSV)
+            </button>
           </div>
         </div>
 
@@ -2652,6 +2674,89 @@ function createHelperPanel() {
     });
   });
 
+  // Helper: Format date ranges for spreadsheet
+  const formatDateRangesForSpreadsheet = () => {
+    // Get dates in YYYY-MM-DD format from dataset.original
+    const preStart = document.getElementById('pre-start').dataset.original;
+    const preEnd = document.getElementById('pre-end').dataset.original;
+    const postStart = document.getElementById('post-start').dataset.original;
+    const postEnd = document.getElementById('post-end').dataset.original;
+
+    if (!preStart || !preEnd || !postStart || !postEnd) {
+      return '';
+    }
+
+    // Convert YYYY-MM-DD to DD.MM.YYYY
+    const formatDateDDMMYYYY = (dateStr) => {
+      const [year, month, day] = dateStr.split('-');
+      return `${day}.${month}.${year}`;
+    };
+
+    const preStartFormatted = formatDateDDMMYYYY(preStart);
+    const preEndFormatted = formatDateDDMMYYYY(preEnd);
+    const postStartFormatted = formatDateDDMMYYYY(postStart);
+    const postEndFormatted = formatDateDDMMYYYY(postEnd);
+
+    // Format as: "Pre - DD.MM.YYYY-DD.MM.YYYY Post- DD.MM.YYYY-DD.MM.YYYY"
+    return `Pre - ${preStartFormatted}-${preEndFormatted} Post- ${postStartFormatted}-${postEndFormatted}`;
+  };
+
+  // Copy for Spreadsheet (Tab-separated)
+  document.getElementById('copy-spreadsheet-btn').addEventListener('click', (e) => {
+    const treatmentDate = formatDateRangesForSpreadsheet();
+    const preImpressions = document.getElementById('pre-impressions').textContent;
+    const postImpressions = document.getElementById('post-impressions').textContent;
+    const preCtr = document.getElementById('pre-ctr').textContent;
+    const postCtr = document.getElementById('post-ctr').textContent;
+    const preAwt = document.getElementById('pre-awt').textContent;
+    const postAwt = document.getElementById('post-awt').textContent;
+    const preRetention = document.getElementById('pre-retention').textContent;
+    const postRetention = document.getElementById('post-retention').textContent;
+
+    // Format: empty, treatment date, pre-impressions, post-impressions, empty, pre-ctr, post-ctr, empty, pre-awt, post-awt, pre-retention, post-retention
+    const tabFormat = `\t${treatmentDate}\t${preImpressions}\t${postImpressions}\t\t${preCtr}\t${postCtr}\t\t${preAwt}\t${postAwt}\t${preRetention}\t${postRetention}`;
+
+    navigator.clipboard.writeText(tabFormat).then(() => {
+      const btn = e.target.closest('button');
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      btn.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      }, 2000);
+    });
+  });
+
+  // Copy for Spreadsheet (CSV)
+  document.getElementById('copy-csv-btn').addEventListener('click', (e) => {
+    const treatmentDate = formatDateRangesForSpreadsheet();
+    const preImpressions = document.getElementById('pre-impressions').textContent;
+    const postImpressions = document.getElementById('post-impressions').textContent;
+    const preCtr = document.getElementById('pre-ctr').textContent;
+    const postCtr = document.getElementById('post-ctr').textContent;
+    const preAwt = document.getElementById('pre-awt').textContent;
+    const postAwt = document.getElementById('post-awt').textContent;
+    const preRetention = document.getElementById('pre-retention').textContent;
+    const postRetention = document.getElementById('post-retention').textContent;
+
+    // Format: empty, treatment date, pre-impressions, post-impressions, empty, pre-ctr, post-ctr, empty, pre-awt, post-awt, pre-retention, post-retention
+    const csvFormat = `,${treatmentDate},${preImpressions},${postImpressions},,${preCtr},${postCtr},,${preAwt},${postAwt},${preRetention},${postRetention}`;
+
+    navigator.clipboard.writeText(csvFormat).then(() => {
+      const btn = e.target.closest('button');
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      btn.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+      }, 2000);
+    });
+  });
+
   // Auto-Extract button functionality with retry logic
   let extractionAttempts = 0;
   const maxAttempts = 2;
@@ -2784,11 +2889,13 @@ function createHelperPanel() {
       );
 
       // Display results
+      document.getElementById('pre-impressions').textContent = result.pre.impressions || '—';
       document.getElementById('pre-views').textContent = result.pre.views || '—';
       document.getElementById('pre-ctr').textContent = result.pre.ctr || '—';
       document.getElementById('pre-awt').textContent = result.pre.awt || '—';
       document.getElementById('pre-retention').textContent = result.pre.retention?.value || 'N/A';
 
+      document.getElementById('post-impressions').textContent = result.post.impressions || '—';
       document.getElementById('post-views').textContent = result.post.views || '—';
       document.getElementById('post-ctr').textContent = result.post.ctr || '—';
       document.getElementById('post-awt').textContent = result.post.awt || '—';
