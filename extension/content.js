@@ -1619,6 +1619,25 @@ async function navigateToAudienceRetention() {
 async function navigateBackToMetrics() {
   console.log('Navigating back to metrics table...');
 
+  // First, close any open dialogs/dropdowns from previous operations
+  const openDialogs = document.querySelectorAll('tp-yt-paper-dialog[role="dialog"]');
+  for (const dialog of openDialogs) {
+    if (dialog.offsetParent !== null) {
+      // Dialog is visible, try to close it
+      const closeBtn = dialog.querySelector('button[aria-label*="lose"], button[aria-label*="ancel"]');
+      if (closeBtn) {
+        closeBtn.click();
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      // Also try clicking backdrop to close
+      const backdrop = document.querySelector('tp-yt-iron-overlay-backdrop');
+      if (backdrop && backdrop.offsetParent !== null) {
+        backdrop.click();
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+  }
+
   // Find and click Report dropdown
   const reportTriggers = Array.from(document.querySelectorAll('ytcp-dropdown-trigger'));
   console.log(`Found ${reportTriggers.length} dropdown triggers`);
@@ -1644,10 +1663,20 @@ async function navigateBackToMetrics() {
     throw new Error('Report dropdown not found');
   }
 
+  // Check if dropdown is already open, close it first
+  const existingMenu = reportDropdown.querySelector('tp-yt-paper-listbox[role="menu"]');
+  if (existingMenu && existingMenu.offsetParent !== null) {
+    console.log('Report dropdown already open, closing first...');
+    reportDropdown.click();
+    await new Promise(resolve => setTimeout(resolve, 300));
+  }
+
+  // Now open the dropdown
   reportDropdown.click();
+  console.log('Clicked Report dropdown, waiting for menu...');
 
   // Wait for dropdown menu to appear
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 800));
 
   // Find the VISIBLE report menu dialog (not other dropdowns on the page)
   const dialogs = document.querySelectorAll('tp-yt-paper-dialog[role="dialog"]');
@@ -1668,7 +1697,36 @@ async function navigateBackToMetrics() {
 
   if (!reportMenu) {
     console.error('Report menu not found. Found dialogs:', dialogs.length);
-    throw new Error('Report menu dialog not found');
+
+    // Debug: Log info about visible dialogs
+    const visibleDialogs = Array.from(dialogs).filter(d => d.offsetParent !== null);
+    console.log('Visible dialogs:', visibleDialogs.length);
+    visibleDialogs.forEach((d, i) => {
+      const hasListbox = d.querySelector('tp-yt-paper-listbox');
+      const listboxRole = hasListbox ? hasListbox.getAttribute('role') : 'none';
+      console.log(`  Dialog ${i}: has listbox=${!!hasListbox}, role=${listboxRole}`);
+    });
+
+    // Try waiting a bit longer and retry once
+    console.log('Retrying after 1 second...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Retry finding the menu
+    const dialogsRetry = document.querySelectorAll('tp-yt-paper-dialog[role="dialog"]');
+    for (const dialog of dialogsRetry) {
+      if (dialog.offsetParent !== null) {
+        const listbox = dialog.querySelector('tp-yt-paper-listbox[role="menu"]');
+        if (listbox) {
+          reportMenu = listbox;
+          console.log('Found report menu on retry');
+          break;
+        }
+      }
+    }
+
+    if (!reportMenu) {
+      throw new Error('Report menu dialog not found after retry');
+    }
   }
 
   // Find and click "Top content in the past 28 days" option (default metrics view)
