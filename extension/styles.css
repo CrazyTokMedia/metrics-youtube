@@ -378,7 +378,67 @@
 }
 
 /* ============================================================
-   STEP 3: EXTRACT BUTTON
+   STEP 3: EXTRACTION MODE SELECTION
+   ============================================================ */
+.extraction-mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: flex-start;
+  padding: 14px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.radio-option:hover {
+  border-color: #667eea;
+  background: #f9fafb;
+}
+
+.radio-option input[type="radio"] {
+  margin-top: 2px;
+  margin-right: 12px;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: #667eea;
+}
+
+.radio-option input[type="radio"]:checked + .radio-content {
+  color: #667eea;
+}
+
+.radio-option:has(input:checked) {
+  border-color: #667eea;
+  background: #f0f4ff;
+}
+
+.radio-content {
+  flex: 1;
+}
+
+.radio-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 3px;
+}
+
+.radio-description {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   STEP 4: EXTRACT BUTTON
    ============================================================ */
 .extract-btn {
   width: 100%;

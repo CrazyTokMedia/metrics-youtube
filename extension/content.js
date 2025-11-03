@@ -2198,7 +2198,28 @@ function createHelperPanel() {
           ❌ Treatment date cannot be before the video was published!
         </div>
 
-        <!-- Step 3: Extract -->
+        <!-- Step 3: Extraction Mode Selection -->
+        <div class="step-container" id="extraction-mode-section" style="display: none;">
+          <div class="step-label">Choose extraction type</div>
+          <div class="extraction-mode-options">
+            <label class="radio-option">
+              <input type="radio" name="extraction-mode" value="equal-periods" checked>
+              <div class="radio-content">
+                <div class="radio-title">Equal Periods</div>
+                <div class="radio-description">For treatment comparison (spreadsheet)</div>
+              </div>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="extraction-mode" value="lifetime">
+              <div class="radio-content">
+                <div class="radio-title">Lifetime</div>
+                <div class="radio-description">For Airtable (publish to treatment, publish to today)</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Step 4: Extract -->
         <div class="extract-controls">
           <button id="auto-extract-btn" class="action-btn extract-btn">
             <span class="btn-icon">📊</span> Extract Metrics
@@ -2243,7 +2264,7 @@ function createHelperPanel() {
                 <span class="metric-label">Retention</span>
                 <span id="pre-retention" class="metric-value">—</span>
               </div>
-              <button class="copy-btn" data-period="pre"><span class="btn-icon">📋</span> Copy Pre</button>
+              <button id="copy-pre-btn" class="copy-btn" data-period="pre"><span class="btn-icon">📋</span> Copy Pre</button>
             </div>
 
             <div class="metrics-column post-column">
@@ -2268,7 +2289,7 @@ function createHelperPanel() {
                 <span class="metric-label">Retention</span>
                 <span id="post-retention" class="metric-value">—</span>
               </div>
-              <button class="copy-btn" data-period="post"><span class="btn-icon">📋</span> Copy Post</button>
+              <button id="copy-post-btn" class="copy-btn" data-period="post"><span class="btn-icon">📋</span> Copy Post</button>
             </div>
           </div>
 
@@ -2432,6 +2453,11 @@ function createHelperPanel() {
     document.getElementById('post-end').dataset.original = ranges.post.end;
     document.getElementById('post-days').textContent = ranges.post.days;
 
+    // Store video publish date for lifetime mode extraction
+    if (videoPublishDate) {
+      document.getElementById('pre-start').dataset.videoPublishDate = formatDate(videoPublishDate);
+    }
+
     // Check if period was limited by publish date or available data
     const maxPossiblePostDays = ranges.daysSince + 1;
     const maxPossiblePreDays = ranges.videoPublishDate ?
@@ -2462,6 +2488,7 @@ function createHelperPanel() {
     }
 
     document.getElementById('results-section').style.display = 'block';
+    document.getElementById('extraction-mode-section').style.display = 'block';
 
     // Scroll to results
     document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2654,7 +2681,8 @@ function createHelperPanel() {
   // Copy period for Airtable functionality
   document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const period = e.target.getAttribute('data-period');
+      const button = e.currentTarget; // Use currentTarget to always get the button, not the clicked span
+      const period = button.getAttribute('data-period');
 
       // Get metrics in order: CTR, Views, AWT, Retention
       const ctr = document.getElementById(`${period}-ctr`).textContent;
@@ -2666,13 +2694,13 @@ function createHelperPanel() {
       const airtableFormat = `${ctr}\t${views}\t${awt}\t${retention}`;
 
       navigator.clipboard.writeText(airtableFormat).then(() => {
-        const originalText = e.target.textContent;
-        e.target.textContent = 'Copied!';
-        e.target.classList.add('copied');
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.classList.add('copied');
 
         setTimeout(() => {
-          e.target.textContent = originalText;
-          e.target.classList.remove('copied');
+          button.textContent = originalText;
+          button.classList.remove('copied');
         }, 1500);
       });
     });
@@ -2880,6 +2908,32 @@ function createHelperPanel() {
       document.getElementById('post-awt').textContent = result.post.awt || '—';
       document.getElementById('post-retention').textContent = result.post.retention?.value || 'N/A';
 
+      // Update displayed date ranges based on extraction mode
+      if (window.currentExtractionMode === 'lifetime') {
+        // For lifetime mode, update the displayed dates to show the actual ranges used
+        // PRE: publish → treatment
+        document.getElementById('pre-start').value = formatDateToDDMMYYYY(preStart);
+        document.getElementById('pre-end').value = formatDateToDDMMYYYY(preEnd);
+        const preDays = calculateDaysBetween(preStart, preEnd);
+        document.getElementById('pre-days').textContent = preDays;
+
+        // POST: publish → today
+        document.getElementById('post-start').value = formatDateToDDMMYYYY(postStart);
+        document.getElementById('post-end').value = formatDateToDDMMYYYY(postEnd);
+        const postDays = calculateDaysBetween(postStart, postEnd);
+        document.getElementById('post-days').textContent = postDays;
+
+        // Show Copy Pre/Post buttons for Airtable, hide spreadsheet button
+        document.getElementById('copy-pre-btn').style.display = 'inline-flex';
+        document.getElementById('copy-post-btn').style.display = 'inline-flex';
+        document.getElementById('copy-spreadsheet-btn').parentElement.style.display = 'none';
+      } else {
+        // Equal periods mode: show spreadsheet button, hide individual copy buttons
+        document.getElementById('copy-pre-btn').style.display = 'none';
+        document.getElementById('copy-post-btn').style.display = 'none';
+        document.getElementById('copy-spreadsheet-btn').parentElement.style.display = 'block';
+      }
+
       document.getElementById('metrics-results').style.display = 'block';
 
       // Scroll to bottom to show results
@@ -2997,27 +3051,70 @@ function createHelperPanel() {
 
   // Extract button click handler
   document.getElementById('auto-extract-btn').addEventListener('click', async () => {
-    const preStart = document.getElementById('pre-start').value;
-    const preEnd = document.getElementById('pre-end').value;
-    const postStart = document.getElementById('post-start').value;
-    const postEnd = document.getElementById('post-end').value;
+    // Check which extraction mode is selected
+    const extractionMode = document.querySelector('input[name="extraction-mode"]:checked').value;
 
-    // Log user action
-    if (window.ExtensionLogger) {
-      window.ExtensionLogger.logUserAction('Extract button clicked', {
-        preStart,
-        preEnd,
-        postStart,
-        postEnd
-      });
-    }
+    // Store extraction mode globally so copy buttons know which format to use
+    window.currentExtractionMode = extractionMode;
 
-    if (!preStart || !preEnd || !postStart || !postEnd) {
-      alert('Please calculate date ranges first');
-      if (window.ExtensionLogger) {
-        window.ExtensionLogger.logWarning('Extract clicked without date ranges');
+    if (extractionMode === 'lifetime') {
+      // Calculate lifetime ranges: publish → treatment, publish → today
+      const treatmentDate = document.getElementById('treatment-date').value;
+      const treatmentDateYYYYMMDD = formatDateToYYYYMMDD(treatmentDate);
+
+      // Get video publish date (stored during calculate)
+      const videoPublishDateStr = document.getElementById('pre-start').dataset.videoPublishDate;
+
+      if (!videoPublishDateStr || !treatmentDateYYYYMMDD) {
+        alert('Please calculate date ranges first');
+        return;
       }
-      return;
+
+      // Calculate today (or yesterday, as YouTube data is typically 2 days behind)
+      const today = new Date();
+      today.setDate(today.getDate() - 2); // YouTube data is ~2 days behind
+      const todayStr = formatDate(today);
+
+      // Set lifetime ranges in dataset.original for extraction
+      // PRE: publish → treatment
+      document.getElementById('pre-start').dataset.original = videoPublishDateStr;
+      document.getElementById('pre-end').dataset.original = treatmentDateYYYYMMDD;
+
+      // POST: publish → today
+      document.getElementById('post-start').dataset.original = videoPublishDateStr;
+      document.getElementById('post-end').dataset.original = todayStr;
+
+      // Log user action
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logUserAction('Extract button clicked (Lifetime mode)', {
+          prePeriod: `${videoPublishDateStr} to ${treatmentDateYYYYMMDD}`,
+          postPeriod: `${videoPublishDateStr} to ${todayStr}`
+        });
+      }
+    } else {
+      // Equal periods mode - use existing calculated ranges
+      const preStart = document.getElementById('pre-start').value;
+      const preEnd = document.getElementById('pre-end').value;
+      const postStart = document.getElementById('post-start').value;
+      const postEnd = document.getElementById('post-end').value;
+
+      // Log user action
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logUserAction('Extract button clicked (Equal Periods mode)', {
+          preStart,
+          preEnd,
+          postStart,
+          postEnd
+        });
+      }
+
+      if (!preStart || !preEnd || !postStart || !postEnd) {
+        alert('Please calculate date ranges first');
+        if (window.ExtensionLogger) {
+          window.ExtensionLogger.logWarning('Extract clicked without date ranges');
+        }
+        return;
+      }
     }
 
     await runExtraction(false);
