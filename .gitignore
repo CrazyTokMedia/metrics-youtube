@@ -96,3 +96,8 @@ temp_*.md
 
 # Release packages
 releases/
+*.zip
+
+# Development tools
+dev-tools/
+logs/
