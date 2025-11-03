@@ -2,6 +2,41 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [1.0.4] - 2025-11-03
+
+### Added
+- **Impressions Extraction**: Now captures video thumbnail impressions metric
+- **Spreadsheet Export**: One-click copy button to export all metrics in spreadsheet-ready format
+  - Formats dates as "Pre - DD.MM.YYYY-DD.MM.YYYY Post- DD.MM.YYYY-DD.MM.YYYY"
+  - Tab-separated format for easy paste into Google Sheets
+  - Includes all metrics: impressions, CTR, AWT, retention
+  - Smart layout: paste next to video title without overwriting
+
+### Changed
+- Added impressions to metrics display (PRE and POST columns)
+- Improved export section design to match existing UI patterns
+- Simplified helper text for better user guidance
+
+## [1.0.3] - 2025-11-03
+
+### Added
+- **DD/MM/YYYY Date Format**: All date inputs now use international date format
+  - Auto-formatting as you type (25122024 → 25/12/2024)
+  - Date validation on blur
+  - Backward compatibility with old YYYY-MM-DD stored dates
+
+### Changed
+- Converted all date inputs from HTML5 date pickers to text inputs with DD/MM/YYYY format
+- Treatment date input now accepts DD/MM/YYYY format
+- All calculated dates display in DD/MM/YYYY format
+- Internal calculations still use YYYY-MM-DD for compatibility
+
+### Fixed
+- Date ordering logic now compares full timestamps instead of just day numbers
+- Prevents YouTube validation errors when setting date ranges
+- Logger no longer creates error loops when extension context is invalidated
+- Dynamic version display in popup now reads from manifest.json
+
 ## [1.0.2] - 2024-10-28
 
 ### Fixed
