@@ -2716,10 +2716,12 @@ function createHelperPanel() {
     const postAwt = document.getElementById('post-awt').textContent;
     const preRetention = document.getElementById('pre-retention').textContent;
     const postRetention = document.getElementById('post-retention').textContent;
+    const preViews = document.getElementById('pre-views').textContent;
+    const postViews = document.getElementById('post-views').textContent;
 
-    // Format: treatment date, pre-impressions, post-impressions, empty, pre-ctr, post-ctr, empty, pre-awt, post-awt, pre-retention, post-retention
+    // Format: treatment date, pre-impressions, post-impressions, empty, pre-ctr, post-ctr, empty, pre-awt, post-awt, pre-retention, post-retention, pre-views, post-views
     // No leading tab so user can paste one column to the right of video title without overwriting it
-    const tabFormat = `${treatmentDate}\t${preImpressions}\t${postImpressions}\t\t${preCtr}\t${postCtr}\t\t${preAwt}\t${postAwt}\t${preRetention}\t${postRetention}`;
+    const tabFormat = `${treatmentDate}\t${preImpressions}\t${postImpressions}\t\t${preCtr}\t${postCtr}\t\t${preAwt}\t${postAwt}\t${preRetention}\t${postRetention}\t${preViews}\t${postViews}`;
 
     navigator.clipboard.writeText(tabFormat).then(() => {
       const btn = e.target.closest('button');
