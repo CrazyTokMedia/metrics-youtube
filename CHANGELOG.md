@@ -2,6 +2,28 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [1.1.0] - 2025-11-03
+
+### Added
+- **Extraction Mode Selection**: Choose between two extraction modes before extracting metrics
+  - **Equal Periods**: For treatment comparison with balanced PRE/POST periods (spreadsheet export)
+  - **Lifetime**: For Airtable with full video performance (publish→treatment, publish→today)
+  - Radio button interface appears after calculating date ranges
+  - Copy buttons adapt based on selected mode
+
+### Fixed
+- **Report Menu Navigation**: Fixed issue where extension couldn't find "Top content" option after lifetime extraction
+  - Improved menu detection with multiple fallback strategies
+  - Properly closes leftover dialogs from previous operations
+  - More reliable navigation between Audience Retention and Top Content tabs
+- **Copy for Spreadsheet Error**: Fixed "Cannot read properties of null" error when clicking copy button
+  - Event handler now correctly excludes spreadsheet button from period-based copy logic
+
+### Changed
+- Date ranges update in UI after extraction to reflect actual periods used in lifetime mode
+- Copy Pre/Post buttons only visible in Lifetime mode
+- Copy for Spreadsheet button only visible in Equal Periods mode
+
 ## [1.0.5] - 2025-11-03
 
 ### Added
