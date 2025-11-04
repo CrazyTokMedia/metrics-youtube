@@ -2272,7 +2272,14 @@ function createHelperPanel() {
           <div class="step-label">Choose extraction type</div>
           <div class="extraction-mode-options">
             <label class="radio-option">
-              <input type="radio" name="extraction-mode" value="equal-periods" checked>
+              <input type="radio" name="extraction-mode" value="complete" checked>
+              <div class="radio-content">
+                <div class="radio-title">Complete Analysis</div>
+                <div class="radio-description">Both equal periods and lifetime in one extraction</div>
+              </div>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="extraction-mode" value="equal-periods">
               <div class="radio-content">
                 <div class="radio-title">Equal Periods</div>
                 <div class="radio-description">For treatment comparison (spreadsheet)</div>
@@ -2283,13 +2290,6 @@ function createHelperPanel() {
               <div class="radio-content">
                 <div class="radio-title">Lifetime</div>
                 <div class="radio-description">For Airtable (publish to treatment, publish to today)</div>
-              </div>
-            </label>
-            <label class="radio-option">
-              <input type="radio" name="extraction-mode" value="complete">
-              <div class="radio-content">
-                <div class="radio-title">Complete Analysis</div>
-                <div class="radio-description">Both equal periods and lifetime in one extraction</div>
               </div>
             </label>
           </div>
