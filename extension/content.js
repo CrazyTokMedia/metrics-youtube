@@ -316,6 +316,10 @@ const autoFormatDateInput = (input) => YTTreatmentHelper.Utils.autoFormatDateInp
 // Video ID
 const getVideoIdFromUrl = () => YTTreatmentHelper.Utils.getVideoIdFromUrl();
 
+// YouTube API functions
+const getVideoPublishDate = () => YTTreatmentHelper.API.getVideoPublishDate();
+const calculateDateRanges = (treatmentDate, videoPublishDate) => YTTreatmentHelper.API.calculateDateRanges(treatmentDate, videoPublishDate);
+
 // ============================================================
 // LEGACY FUNCTION DECLARATIONS (to be removed in Phase 5)
 // ============================================================
@@ -338,200 +342,15 @@ const getVideoIdFromUrl = () => YTTreatmentHelper.Utils.getVideoIdFromUrl();
 //   return `${day}/${month}/${shortYear}`;
 // }
 
-// Helper: Get video publish date from page
-function getVideoPublishDate() {
-  // Try multiple methods to find the publish date
+// // Helper: Get video publish date from page
+// function getVideoPublishDate() {
+//   // Implementation moved to content-youtube-api.js
+// }
 
-  // Method 1 (BEST): Extract from Analytics page date selector
-  // When on Analytics tab, the default "Since published" shows the exact publish date
-  // Look for: <div class="label-text">21 Oct 2025 – Now</div>
-  //           <span class="dropdown-trigger-text">Since published</span>
-
-  const dateSelectors = document.querySelectorAll('ytcp-dropdown-trigger');
-  for (const selector of dateSelectors) {
-    const triggerText = selector.querySelector('.dropdown-trigger-text');
-    const labelText = selector.querySelector('.label-text');
-
-    if (triggerText && labelText) {
-      const triggerContent = triggerText.textContent.trim();
-      const labelContent = labelText.textContent.trim();
-
-      // Check if this is the "Since published" selector
-      if (triggerContent.toLowerCase().includes('since published') ||
-          triggerContent.toLowerCase().includes('published')) {
-
-        // Extract start date from label like "21 Oct 2025 – Now"
-        // Match patterns: "21 Oct 2025", "21 October 2025", etc.
-        const dateMatch = labelContent.match(/(\d{1,2}\s+\w{3,9}\s+\d{4})/);
-        if (dateMatch) {
-          const publishDate = new Date(dateMatch[1]);
-          if (!isNaN(publishDate.getTime())) {
-            console.log(`✅ Found publish date from Analytics date selector: ${formatDate(publishDate)}`);
-            return publishDate;
-          }
-        }
-      }
-    }
-  }
-
-  // Method 2: Check yta-time-picker (another common location on Analytics page)
-  const timePicker = document.querySelector('yta-time-picker ytcp-dropdown-trigger');
-  if (timePicker) {
-    const labelText = timePicker.querySelector('.label-text');
-    const triggerText = timePicker.querySelector('.dropdown-trigger-text');
-
-    if (labelText && triggerText && triggerText.textContent.toLowerCase().includes('published')) {
-      const dateMatch = labelText.textContent.match(/(\d{1,2}\s+\w{3,9}\s+\d{4})/);
-      if (dateMatch) {
-        const publishDate = new Date(dateMatch[1]);
-        if (!isNaN(publishDate.getTime())) {
-          console.log(`✅ Found publish date from time picker: ${formatDate(publishDate)}`);
-          return publishDate;
-        }
-      }
-    }
-  }
-
-  // Method 3: Check URL for video ID and use ytInitialData
-  if (window.ytInitialData) {
-    try {
-      const videoDetails = window.ytInitialData?.videoDetails;
-      if (videoDetails?.publishDate) {
-        const publishDate = new Date(videoDetails.publishDate);
-        console.log(`✅ Found publish date from ytInitialData: ${formatDate(publishDate)}`);
-        return publishDate;
-      }
-    } catch (e) {
-      console.log('Could not extract publish date from ytInitialData');
-    }
-  }
-
-  // Method 4: Look for publish date in the Details tab metadata
-  const metaElements = document.querySelectorAll('ytcp-video-metadata-editor-sidepanel [class*="metadata"], [class*="published"]');
-  for (const el of metaElements) {
-    const text = el.textContent;
-    const dateMatch = text.match(/(?:Published|Uploaded).*?(\w{3}\s+\d{1,2},?\s+\d{4})/i);
-    if (dateMatch) {
-      const publishDate = new Date(dateMatch[1]);
-      if (!isNaN(publishDate.getTime())) {
-        console.log(`✅ Found publish date from metadata: ${formatDate(publishDate)}`);
-        return publishDate;
-      }
-    }
-  }
-
-  console.warn('⚠️ Could not detect video publish date from any source');
-  return null;
-}
-
-// Core Logic: Calculate PRE and POST date ranges
-function calculateDateRanges(treatmentDate, videoPublishDate = null) {
-  const treatment = new Date(treatmentDate);
-  const today = new Date();
-
-  // YouTube Analytics only has data up to 2 days ago (not today or yesterday)
-  // This accounts for:
-  // 1. Timezone differences (you might be ahead of YouTube's servers)
-  // 2. YouTube's data processing delay
-  // We use 2 days ago to be safe and avoid validation errors
-  const maxYouTubeDate = new Date(today);
-  maxYouTubeDate.setDate(maxYouTubeDate.getDate() - 2);
-  const yesterday = maxYouTubeDate; // Rename for backward compatibility
-
-  // Set to start of day to avoid timezone issues
-  yesterday.setHours(0, 0, 0, 0);
-  treatment.setHours(0, 0, 0, 0);
-
-  // Calculate days since treatment (up to yesterday)
-  const daysSince = Math.floor((yesterday - treatment) / (1000 * 60 * 60 * 24));
-
-  // Validate that treatment date is not in the future
-  if (daysSince < 0) {
-    throw new Error('Treatment date cannot be in the future. Please select a date at least 1 day ago.');
-  }
-
-  // Validate that treatment date is not too recent (need at least 2 full days of data)
-  if (daysSince < 2) {
-    throw new Error('Treatment date must be at least 3 days ago to have enough data for analysis. YouTube data has a 2-day delay.');
-  }
-
-  // Calculate available POST days: from treatment to yesterday
-  const maxPostDays = daysSince + 1; // Including treatment day
-
-  // Calculate available PRE days: from publish date to day before treatment
-  let maxPreDays;
-  let publishDate;
-
-  if (videoPublishDate) {
-    publishDate = new Date(videoPublishDate);
-    publishDate.setHours(0, 0, 0, 0);
-
-    // Calculate days between publish and treatment
-    const daysBetween = Math.floor((treatment - publishDate) / (1000 * 60 * 60 * 24));
-    maxPreDays = daysBetween; // Days available for PRE period
-
-    console.log(`   Available PRE days: ${maxPreDays} (from ${formatDate(publishDate)} to day before treatment)`);
-    console.log(`   Available POST days: ${maxPostDays} (from treatment to ${formatDate(yesterday)})`);
-  } else {
-    // If no publish date, assume PRE can be as long as POST
-    maxPreDays = maxPostDays;
-    console.warn(`   No publish date - assuming equal periods are available`);
-  }
-
-  // Use the SHORTER of the two periods for fair comparison
-  const periodLength = Math.min(maxPreDays, maxPostDays);
-
-  console.log(`   Using period length: ${periodLength} days (shorter of PRE: ${maxPreDays}, POST: ${maxPostDays})`);
-
-  // PRE period: {periodLength} days ending the day before treatment
-  const preEnd = new Date(treatment);
-  preEnd.setDate(preEnd.getDate() - 1); // Day before treatment
-  const preStart = new Date(preEnd);
-  preStart.setDate(preStart.getDate() - periodLength + 1); // Go back {periodLength} days
-  const preDays = periodLength;
-
-  // POST period: {periodLength} days starting from treatment
-  const postStart = new Date(treatment);
-  const postEnd = new Date(postStart);
-  postEnd.setDate(postEnd.getDate() + periodLength - 1); // Forward {periodLength} days
-  const postDays = periodLength;
-
-  // Validate: Ensure periods don't exceed available data
-  if (videoPublishDate && preStart < publishDate) {
-    console.error(`❌ Error: Calculated PRE start ${formatDate(preStart)} is before publish ${formatDate(publishDate)}`);
-    throw new Error('Internal error: PRE period calculation error. Please report this bug.');
-  }
-
-  if (postEnd > yesterday) {
-    console.error(`❌ Error: Calculated POST end ${formatDate(postEnd)} is after yesterday ${formatDate(yesterday)}`);
-    throw new Error('Internal error: POST period calculation error. Please report this bug.');
-  }
-
-  console.log(`Date calculation:
-    Today: ${formatDate(today)}
-    Yesterday (YouTube max): ${formatDate(yesterday)}
-    Treatment: ${formatDate(treatment)}
-    Video published: ${videoPublishDate ? formatDate(videoPublishDate) : 'Unknown'}
-    Days since: ${daysSince}
-    POST: ${formatDate(postStart)} to ${formatDate(postEnd)} (${postDays} days)
-    PRE: ${formatDate(preStart)} to ${formatDate(preEnd)} (${preDays} days)
-  `);
-
-  return {
-    daysSince: daysSince,
-    videoPublishDate: videoPublishDate ? formatDate(videoPublishDate) : null,
-    pre: {
-      start: formatDate(preStart),
-      end: formatDate(preEnd),
-      days: preDays
-    },
-    post: {
-      start: formatDate(postStart),
-      end: formatDate(postEnd),
-      days: postDays
-    }
-  };
-}
+// // Core Logic: Calculate PRE and POST date ranges
+// function calculateDateRanges(treatmentDate, videoPublishDate = null) {
+//   // Implementation moved to content-youtube-api.js
+// }
 
 // ============================================================
 // PHASE 2: AUTOMATIC METRICS EXTRACTION
