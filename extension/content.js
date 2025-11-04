@@ -3362,6 +3362,13 @@ function createHelperPanel() {
       // Hide existing single-mode results
       document.getElementById('metrics-results').style.display = 'none';
 
+      // Navigate to Advanced Mode if not already there
+      if (!window.location.href.includes('/explore?')) {
+        statusEl.textContent = '🔄 Navigating to Advanced Mode...';
+        statusEl.className = 'extraction-status info';
+        await navigateToAdvancedMode();
+      }
+
       // Step 1: Extract Equal Periods data
       statusEl.textContent = '📊 Extracting equal periods data...';
       statusEl.className = 'extraction-status info';
