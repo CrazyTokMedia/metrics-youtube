@@ -281,22 +281,19 @@ YTTreatmentHelper.API = {
 
   navigateToAnalyticsTab: async function() {
     const waitForUrlChange = YTTreatmentHelper.Utils.waitForUrlChange;
-    const isOnAdvancedMode = this.isOnAdvancedMode;
-    const isOnAnalyticsTab = this.isOnAnalyticsTab;
-    const closeAdvancedMode = this.closeAdvancedMode;
 
     console.log('Checking if on Analytics tab...');
 
-    if (isOnAdvancedMode()) {
+    if (this.isOnAdvancedMode()) {
       console.log('Currently on Advanced Mode, closing it first...');
-      const closed = await closeAdvancedMode();
+      const closed = await this.closeAdvancedMode();
       if (closed) {
         console.log('Advanced Mode closed, now on regular Analytics');
         return;
       }
     }
 
-    if (isOnAnalyticsTab()) {
+    if (this.isOnAnalyticsTab()) {
       console.log('Already on Analytics tab');
       return;
     }
@@ -342,11 +339,10 @@ YTTreatmentHelper.API = {
   navigateToAdvancedMode: async function() {
     const waitForElement = YTTreatmentHelper.Utils.waitForElement;
     const waitForUrlChange = YTTreatmentHelper.Utils.waitForUrlChange;
-    const navigateToAnalyticsTab = this.navigateToAnalyticsTab;
 
     console.log('Navigating to Advanced Mode...');
 
-    await navigateToAnalyticsTab();
+    await this.navigateToAnalyticsTab();
 
     const advancedButton = document.querySelector('#advanced-analytics button');
 
