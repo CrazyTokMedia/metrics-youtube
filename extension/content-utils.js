@@ -41,40 +41,89 @@ YTTreatmentHelper.Utils = {
   /**
    * Date formatting utilities
    */
+
+  // Format date as DD/MM/YYYY
   formatDateToDDMMYYYY: function(dateStr) {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
   },
 
+  // Convert DD/MM/YYYY to YYYY-MM-DD
   formatDateToYYYYMMDD: function(dateStr) {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    if (!dateStr) return '';
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return '';
+    const [day, month, year] = parts;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   },
 
+  // Format Date object as YYYY-MM-DD
   formatDate: function(date) {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   },
 
+  // Format date as DD/MM/YY (for display)
   formatDateDisplay: function(dateStr) {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    // Input: "2025-10-24" (YYYY-MM-DD)
+    // Output: "24/10/25" (DD/MM/YY)
+    const [year, month, day] = dateStr.split('-');
+    const shortYear = year.slice(-2);
+    return `${day}/${month}/${shortYear}`;
   },
 
   /**
    * Auto-format date input as user types
    */
   autoFormatDateInput: function(input) {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    // Prevent adding listeners multiple times
+    if (input.dataset.formattingApplied === 'true') {
+      return;
+    }
+    input.dataset.formattingApplied = 'true';
+
+    input.addEventListener('input', (e) => {
+      let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+
+      if (value.length >= 2) {
+        value = value.slice(0, 2) + '/' + value.slice(2);
+      }
+      if (value.length >= 5) {
+        value = value.slice(0, 5) + '/' + value.slice(5, 9);
+      }
+
+      e.target.value = value;
+    });
+
+    // Validate on blur
+    input.addEventListener('blur', (e) => {
+      const value = e.target.value;
+      if (!value) return;
+
+      const parts = value.split('/');
+      if (parts.length !== 3) {
+        e.target.style.borderColor = 'red';
+        return;
+      }
+
+      const [day, month, year] = parts.map(p => parseInt(p));
+      if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2000) {
+        e.target.style.borderColor = 'red';
+      } else {
+        e.target.style.borderColor = '';
+      }
+    });
   },
 
   /**
    * Get video ID from current URL
    */
   getVideoIdFromUrl: function() {
-    // Implementation will be migrated from content.js
-    return null;
+    const match = window.location.pathname.match(/\/video\/([^\/]+)\//);
+    return match ? match[1] : null;
   },
 
   /**

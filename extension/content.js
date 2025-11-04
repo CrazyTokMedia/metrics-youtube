@@ -296,22 +296,39 @@ const safeStorage = {
   }
 };
 
-// Utility: Format date as YYYY-MM-DD (for internal use)
-function formatDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+// ============================================================
+// UTILITY FUNCTION ALIASES (use namespace implementations)
+// ============================================================
+// These aliases allow existing code to work while using the modular implementations
 
-// Utility: Format date as DD/MM/YY (for display)
-function formatDateDisplay(dateStr) {
-  // Input: "2025-10-24" (YYYY-MM-DD)
-  // Output: "24/10/25" (DD/MM/YY)
-  const [year, month, day] = dateStr.split('-');
-  const shortYear = year.slice(-2);
-  return `${day}/${month}/${shortYear}`;
-}
+const formatDate = (date) => YTTreatmentHelper.Utils.formatDate(date);
+const formatDateDisplay = (dateStr) => YTTreatmentHelper.Utils.formatDateDisplay(dateStr);
+const formatDateToDDMMYYYY = (dateStr) => YTTreatmentHelper.Utils.formatDateToDDMMYYYY(dateStr);
+const formatDateToYYYYMMDD = (dateStr) => YTTreatmentHelper.Utils.formatDateToYYYYMMDD(dateStr);
+const autoFormatDateInput = (input) => YTTreatmentHelper.Utils.autoFormatDateInput(input);
+const getVideoIdFromUrl = () => YTTreatmentHelper.Utils.getVideoIdFromUrl();
+
+// ============================================================
+// LEGACY FUNCTION DECLARATIONS (to be removed in Phase 5)
+// ============================================================
+// Keeping these commented out for now - using aliases above instead
+
+// // Utility: Format date as YYYY-MM-DD (for internal use)
+// function formatDate(date) {
+//   const year = date.getFullYear();
+//   const month = String(date.getMonth() + 1).padStart(2, '0');
+//   const day = String(date.getDate()).padStart(2, '0');
+//   return `${year}-${month}-${day}`;
+// }
+
+// // Utility: Format date as DD/MM/YY (for display)
+// function formatDateDisplay(dateStr) {
+//   // Input: "2025-10-24" (YYYY-MM-DD)
+//   // Output: "24/10/25" (DD/MM/YY)
+//   const [year, month, day] = dateStr.split('-');
+//   const shortYear = year.slice(-2);
+//   return `${day}/${month}/${shortYear}`;
+// }
 
 // Helper: Get video publish date from page
 function getVideoPublishDate() {
@@ -2121,62 +2138,62 @@ function makePanelDraggable(panel) {
   });
 }
 
-// Helper: Convert YYYY-MM-DD to DD/MM/YYYY
-function formatDateToDDMMYYYY(dateStr) {
-  if (!dateStr) return '';
-  const [year, month, day] = dateStr.split('-');
-  return `${day}/${month}/${year}`;
-}
+// // Helper: Convert YYYY-MM-DD to DD/MM/YYYY
+// function formatDateToDDMMYYYY(dateStr) {
+//   if (!dateStr) return '';
+//   const [year, month, day] = dateStr.split('-');
+//   return `${day}/${month}/${year}`;
+// }
 
-// Helper: Convert DD/MM/YYYY to YYYY-MM-DD
-function formatDateToYYYYMMDD(dateStr) {
-  if (!dateStr) return '';
-  const parts = dateStr.split('/');
-  if (parts.length !== 3) return '';
-  const [day, month, year] = parts;
-  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-}
+// // Helper: Convert DD/MM/YYYY to YYYY-MM-DD
+// function formatDateToYYYYMMDD(dateStr) {
+//   if (!dateStr) return '';
+//   const parts = dateStr.split('/');
+//   if (parts.length !== 3) return '';
+//   const [day, month, year] = parts;
+//   return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+// }
 
-// Helper: Auto-format date input as user types
-function autoFormatDateInput(input) {
-  // Prevent adding listeners multiple times
-  if (input.dataset.formattingApplied === 'true') {
-    return;
-  }
-  input.dataset.formattingApplied = 'true';
+// // Helper: Auto-format date input as user types
+// function autoFormatDateInput(input) {
+//   // Prevent adding listeners multiple times
+//   if (input.dataset.formattingApplied === 'true') {
+//     return;
+//   }
+//   input.dataset.formattingApplied = 'true';
 
-  input.addEventListener('input', (e) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+//   input.addEventListener('input', (e) => {
+//     let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
 
-    if (value.length >= 2) {
-      value = value.slice(0, 2) + '/' + value.slice(2);
-    }
-    if (value.length >= 5) {
-      value = value.slice(0, 5) + '/' + value.slice(5, 9);
-    }
+//     if (value.length >= 2) {
+//       value = value.slice(0, 2) + '/' + value.slice(2);
+//     }
+//     if (value.length >= 5) {
+//       value = value.slice(0, 5) + '/' + value.slice(5, 9);
+//     }
 
-    e.target.value = value;
-  });
+//     e.target.value = value;
+//   });
 
-  // Validate on blur
-  input.addEventListener('blur', (e) => {
-    const value = e.target.value;
-    if (!value) return;
+//   // Validate on blur
+//   input.addEventListener('blur', (e) => {
+//     const value = e.target.value;
+//     if (!value) return;
 
-    const parts = value.split('/');
-    if (parts.length !== 3) {
-      e.target.style.borderColor = 'red';
-      return;
-    }
+//     const parts = value.split('/');
+//     if (parts.length !== 3) {
+//       e.target.style.borderColor = 'red';
+//       return;
+//     }
 
-    const [day, month, year] = parts.map(p => parseInt(p));
-    if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2000) {
-      e.target.style.borderColor = 'red';
-    } else {
-      e.target.style.borderColor = '';
-    }
-  });
-}
+//     const [day, month, year] = parts.map(p => parseInt(p));
+//     if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2000) {
+//       e.target.style.borderColor = 'red';
+//     } else {
+//       e.target.style.borderColor = '';
+//     }
+//   });
+// }
 
 // UI: Create floating panel
 function createHelperPanel() {
@@ -3631,11 +3648,11 @@ function addToggleButton() {
   setTimeout(() => clearInterval(checkHeader), 10000);
 }
 
-// Helper: Extract video ID from URL
-function getVideoIdFromUrl() {
-  const match = window.location.pathname.match(/\/video\/([^\/]+)\//);
-  return match ? match[1] : null;
-}
+// // Helper: Extract video ID from URL
+// function getVideoIdFromUrl() {
+//   const match = window.location.pathname.match(/\/video\/([^\/]+)\//);
+//   return match ? match[1] : null;
+// }
 
 // Helper: Reset form when video changes
 function resetFormForNewVideo() {
