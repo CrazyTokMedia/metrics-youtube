@@ -3021,33 +3021,46 @@ function createHelperPanel() {
     const lifePostAwt = data.lifetime.post.awt || '';
     const lifePostRet = data.lifetime.post.retention?.value || '';
 
-    // Format: PublishDate | TreatmentDate | ExtractionDate | Equal PRE (5) | Equal POST (5) | [empty] | [empty] | Lifetime PRE (5) | Lifetime POST (5)
+    // Format: Dates (3) | Equal Periods with Change columns (15) | Separators (2) | Lifetime with Change columns (15)
+    // Total: 35 columns
     const tabFormat = [
       publishDate,
       treatmentDate,
       extractionDate,
+      // Equal Periods: PRE | POST | Change (empty) for each metric
       equalPreImpr,
-      equalPreViews,
-      equalPreCtr,
-      equalPreAwt,
-      equalPreRet,
       equalPostImpr,
+      '', // Change
+      equalPreViews,
       equalPostViews,
+      '', // Change
+      equalPreCtr,
       equalPostCtr,
+      '', // Change
+      equalPreAwt,
       equalPostAwt,
+      '', // Change
+      equalPreRet,
       equalPostRet,
-      '', // empty separator
-      '', // empty separator
+      '', // Change
+      '', // separator
+      '', // separator
+      // Lifetime: PRE | POST | Change (empty) for each metric
       lifePreImpr,
-      lifePreViews,
-      lifePreCtr,
-      lifePreAwt,
-      lifePreRet,
       lifePostImpr,
+      '', // Change
+      lifePreViews,
       lifePostViews,
+      '', // Change
+      lifePreCtr,
       lifePostCtr,
+      '', // Change
+      lifePreAwt,
       lifePostAwt,
-      lifePostRet
+      '', // Change
+      lifePreRet,
+      lifePostRet,
+      '' // Change
     ].join('\t');
 
     navigator.clipboard.writeText(tabFormat).then(() => {
