@@ -329,6 +329,10 @@ const navigateToAdvancedMode = () => YTTreatmentHelper.API.navigateToAdvancedMod
 const navigateToAudienceRetention = () => YTTreatmentHelper.API.navigateToAudienceRetention();
 const navigateBackToMetrics = () => YTTreatmentHelper.API.navigateBackToMetrics();
 
+// Date setting functions
+const setCustomDateRange = (startDate, endDate, overrideFormat) => YTTreatmentHelper.API.setCustomDateRange(startDate, endDate, overrideFormat);
+const setCustomDateRangeWithRetry = (startDate, endDate) => YTTreatmentHelper.API.setCustomDateRangeWithRetry(startDate, endDate);
+
 // ============================================================
 // LEGACY FUNCTION DECLARATIONS (to be removed in Phase 5)
 // ============================================================
@@ -366,7 +370,10 @@ const navigateBackToMetrics = () => YTTreatmentHelper.API.navigateBackToMetrics(
 // ============================================================
 
 // Helper: Set Custom Date Range
-async function setCustomDateRange(startDate, endDate, overrideFormat = null) {
+// async function setCustomDateRange(startDate, endDate, overrideFormat = null) {
+//   // Implementation moved to content-youtube-api.js
+// }
+async function setCustomDateRange_MIGRATED_TO_API(startDate, endDate, overrideFormat = null) {
   console.log(`Setting date range: ${startDate} to ${endDate}${overrideFormat ? ` (forced format: ${overrideFormat})` : ''}`);
 
   const sidebar = document.querySelector('yta-explore-sidebar');
@@ -1003,7 +1010,10 @@ async function setCustomDateRange(startDate, endDate, overrideFormat = null) {
 }
 
 // Helper: Set Custom Date Range with Auto-Retry on Format Mismatch
-async function setCustomDateRangeWithRetry(startDate, endDate) {
+// async function setCustomDateRangeWithRetry(startDate, endDate) {
+//   // Implementation moved to content-youtube-api.js
+// }
+async function setCustomDateRangeWithRetry_MIGRATED_TO_API(startDate, endDate) {
   try {
     // First attempt: Use auto-detected format
     await setCustomDateRange(startDate, endDate);
