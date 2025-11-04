@@ -319,6 +319,8 @@ const getVideoIdFromUrl = () => YTTreatmentHelper.Utils.getVideoIdFromUrl();
 // YouTube API functions
 const getVideoPublishDate = () => YTTreatmentHelper.API.getVideoPublishDate();
 const calculateDateRanges = (treatmentDate, videoPublishDate) => YTTreatmentHelper.API.calculateDateRanges(treatmentDate, videoPublishDate);
+const isOnAnalyticsTab = () => YTTreatmentHelper.API.isOnAnalyticsTab();
+const isOnAdvancedMode = () => YTTreatmentHelper.API.isOnAdvancedMode();
 
 // ============================================================
 // LEGACY FUNCTION DECLARATIONS (to be removed in Phase 5)
@@ -1208,16 +1210,14 @@ async function extractValues() {
 }
 
 // Helper: Check if on Analytics tab
-function isOnAnalyticsTab() {
-  // Check URL pattern - Analytics tab URLs contain /analytics/
-  const urlPattern = /\/video\/[^\/]+\/analytics\//;
-  return urlPattern.test(window.location.href);
-}
+// function isOnAnalyticsTab() {
+//   // Implementation moved to content-youtube-api.js
+// }
 
-// Helper: Check if on Advanced Mode (explore page)
-function isOnAdvancedMode() {
-  return window.location.href.includes('/explore?');
-}
+// // Helper: Check if on Advanced Mode (explore page)
+// function isOnAdvancedMode() {
+//   // Implementation moved to content-youtube-api.js
+// }
 
 // Helper: Close Advanced Mode and return to regular Analytics
 async function closeAdvancedMode() {

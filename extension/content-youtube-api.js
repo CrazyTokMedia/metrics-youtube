@@ -227,16 +227,16 @@ YTTreatmentHelper.API = {
   },
 
   /**
-   * Navigation functions
+   * Navigation functions - State checks
    */
   isOnAnalyticsTab: function() {
-    // Implementation will be migrated from content.js
-    return false;
+    // Check URL pattern - Analytics tab URLs contain /analytics/
+    const urlPattern = /\/video\/[^\/]+\/analytics\//;
+    return urlPattern.test(window.location.href);
   },
 
   isOnAdvancedMode: function() {
-    // Implementation will be migrated from content.js
-    return false;
+    return window.location.href.includes('/explore?');
   },
 
   closeAdvancedMode: async function() {
