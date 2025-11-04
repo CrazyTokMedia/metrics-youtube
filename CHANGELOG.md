@@ -2,6 +2,32 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [1.2.0] - 2025-11-04
+
+### Added
+- **Complete Analysis Mode**: New extraction mode that combines both Equal Periods and Lifetime data in one operation
+  - Extracts equal periods comparison data (balanced PRE/POST)
+  - Extracts lifetime performance data (publish→treatment, publish→today)
+  - Displays results in two organized sections
+  - Single "Copy Complete Data" button exports all metrics at once
+  - Now set as default extraction mode
+- **Enhanced Export Format**: 35-column tab-separated output with Change columns
+  - Publish Date, Treatment Date, Extraction Date (DD.MM.YYYY format)
+  - Equal Periods: 5 metrics × (PRE, POST, Change) = 15 columns
+  - 2 separator columns
+  - Lifetime: 5 metrics × (PRE, POST, Change) = 15 columns
+  - Ready for Google Sheets with formula columns
+  - Includes complete_analysis_headers.txt for easy spreadsheet setup
+
+### Fixed
+- **Advanced Mode Navigation**: Complete Analysis now properly navigates to Advanced Mode before extraction
+  - Matches behavior of Equal Periods and Lifetime modes
+  - Ensures consistent extraction flow
+
+### Changed
+- Complete Analysis is now the default and top option in extraction mode selection
+- Reordered radio buttons: Complete Analysis, Equal Periods, Lifetime
+
 ## [1.1.0] - 2025-11-03
 
 ### Added
