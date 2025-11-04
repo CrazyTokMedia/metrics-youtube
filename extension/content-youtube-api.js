@@ -240,28 +240,364 @@ YTTreatmentHelper.API = {
   },
 
   closeAdvancedMode: async function() {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    const waitForUrlChange = YTTreatmentHelper.Utils.waitForUrlChange;
+
+    console.log('Closing Advanced Mode...');
+
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logInfo('Closing Advanced Mode to fetch publish date');
+    }
+
+    const closeButton = document.querySelector('yta-explore-page #close-button');
+
+    if (!closeButton) {
+      console.warn('Close button not found in Advanced Mode');
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logWarning('Close button not found in Advanced Mode');
+      }
+      return false;
+    }
+
+    closeButton.click();
+
+    try {
+      await waitForUrlChange('/analytics/tab-', 5000);
+    } catch (error) {
+      console.error('Timeout waiting for Advanced Mode to close');
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logError('Timeout closing Advanced Mode', error);
+      }
+      return false;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log('Closed Advanced Mode, back to regular Analytics');
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logInfo('Successfully closed Advanced Mode');
+    }
+    return true;
   },
 
   navigateToAnalyticsTab: async function() {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    const waitForUrlChange = YTTreatmentHelper.Utils.waitForUrlChange;
+    const isOnAdvancedMode = this.isOnAdvancedMode;
+    const isOnAnalyticsTab = this.isOnAnalyticsTab;
+    const closeAdvancedMode = this.closeAdvancedMode;
+
+    console.log('Checking if on Analytics tab...');
+
+    if (isOnAdvancedMode()) {
+      console.log('Currently on Advanced Mode, closing it first...');
+      const closed = await closeAdvancedMode();
+      if (closed) {
+        console.log('Advanced Mode closed, now on regular Analytics');
+        return;
+      }
+    }
+
+    if (isOnAnalyticsTab()) {
+      console.log('Already on Analytics tab');
+      return;
+    }
+
+    console.log('Not on Analytics tab, navigating there...');
+
+    const navLinks = Array.from(document.querySelectorAll('a.menu-item-link'));
+    let analyticsLink = null;
+
+    for (const link of navLinks) {
+      const linkText = link.textContent.toLowerCase();
+      const href = link.getAttribute('href') || '';
+
+      if (linkText.includes('analytics') && href.includes('/analytics/')) {
+        analyticsLink = link;
+        console.log(`Found Analytics link with href: ${href}`);
+        break;
+      }
+    }
+
+    if (!analyticsLink) {
+      const analyticsItem = document.querySelector('tp-yt-paper-icon-item.analytics');
+      if (analyticsItem) {
+        const parentLink = analyticsItem.closest('a.menu-item-link');
+        if (parentLink) {
+          analyticsLink = parentLink;
+          console.log('Found Analytics link via icon item');
+        }
+      }
+    }
+
+    if (!analyticsLink) {
+      throw new Error('Analytics navigation link not found. Please navigate to a video page first.');
+    }
+
+    analyticsLink.click();
+    await waitForUrlChange('/analytics/', 10000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log('Navigated to Analytics tab');
   },
 
   navigateToAdvancedMode: async function() {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    const waitForElement = YTTreatmentHelper.Utils.waitForElement;
+    const waitForUrlChange = YTTreatmentHelper.Utils.waitForUrlChange;
+    const navigateToAnalyticsTab = this.navigateToAnalyticsTab;
+
+    console.log('Navigating to Advanced Mode...');
+
+    await navigateToAnalyticsTab();
+
+    const advancedButton = document.querySelector('#advanced-analytics button');
+
+    if (!advancedButton) {
+      throw new Error('Advanced mode button not found. Please navigate to a video analytics page first.');
+    }
+
+    advancedButton.click();
+    await waitForUrlChange('/explore?', 10000);
+    await waitForElement('yta-explore-table.data-container', 10000);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Ensure progress bar state persists after navigation
+    const progressContainer = document.getElementById('progress-container');
+    if (progressContainer && progressContainer.dataset.currentStep) {
+      const progressFill = document.getElementById('progress-fill');
+      const progressPercent = document.getElementById('progress-percent');
+      const savedPercentage = progressContainer.dataset.currentPercentage;
+      if (progressFill && progressPercent) {
+        progressFill.style.width = `${savedPercentage}%`;
+        progressPercent.textContent = `${savedPercentage}%`;
+      }
+    }
+
+    console.log('Navigated to Advanced Mode');
   },
 
   navigateToAudienceRetention: async function() {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    const waitForElement = YTTreatmentHelper.Utils.waitForElement;
+
+    console.log('Navigating to Audience Retention...');
+
+    const reportTriggers = Array.from(document.querySelectorAll('ytcp-dropdown-trigger'));
+    let reportDropdown = null;
+
+    for (const trigger of reportTriggers) {
+      const labelText = trigger.querySelector('.label-text');
+      if (labelText && labelText.textContent.trim() === 'Report') {
+        reportDropdown = trigger;
+        break;
+      }
+    }
+
+    if (!reportDropdown) {
+      throw new Error('Report dropdown not found');
+    }
+
+    reportDropdown.click();
+
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Timeout waiting for Audience retention option')), 5000);
+      const checkInterval = setInterval(() => {
+        const items = document.querySelectorAll('tp-yt-paper-item');
+        for (const item of items) {
+          if (item.textContent.toLowerCase().includes('audience retention')) {
+            clearTimeout(timeout);
+            clearInterval(checkInterval);
+            resolve();
+            return;
+          }
+        }
+      }, 100);
+    });
+
+    const menuItems = Array.from(document.querySelectorAll('tp-yt-paper-item'));
+    console.log(`Found ${menuItems.length} menu items`);
+
+    let retentionOption = null;
+
+    for (const item of menuItems) {
+      const text = item.textContent.toLowerCase();
+      console.log(`Checking menu item: "${text.substring(0, 50)}..."`);
+      if (text.includes('audience retention')) {
+        retentionOption = item;
+        console.log('Found Audience retention option!');
+        break;
+      }
+    }
+
+    if (!retentionOption) {
+      console.error('Available menu items:', menuItems.map(i => i.textContent.substring(0, 50)));
+      throw new Error('Audience retention option not found');
+    }
+
+    retentionOption.click();
+
+    console.log('Waiting for tab to switch...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Ensure progress bar state persists
+    const progressContainer = document.getElementById('progress-container');
+    if (progressContainer && progressContainer.dataset.currentStep) {
+      const progressFill = document.getElementById('progress-fill');
+      const progressPercent = document.getElementById('progress-percent');
+      const savedPercentage = progressContainer.dataset.currentPercentage;
+      if (progressFill && progressPercent) {
+        progressFill.style.width = `${savedPercentage}%`;
+        progressPercent.textContent = `${savedPercentage}%`;
+      }
+    }
+
+    await waitForElement('yta-line-chart-base svg', 10000);
+
+    console.log('Navigated to Audience Retention');
   },
 
   navigateBackToMetrics: async function() {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    const waitForElement = YTTreatmentHelper.Utils.waitForElement;
+
+    console.log('Navigating back to metrics table...');
+
+    // Close any open dialogs
+    const openDialogs = document.querySelectorAll('tp-yt-paper-dialog[role="dialog"]');
+    for (const dialog of openDialogs) {
+      if (dialog.offsetParent !== null) {
+        const closeBtn = dialog.querySelector('button[aria-label*="lose"], button[aria-label*="ancel"]');
+        if (closeBtn) {
+          closeBtn.click();
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        const backdrop = document.querySelector('tp-yt-iron-overlay-backdrop');
+        if (backdrop && backdrop.offsetParent !== null) {
+          backdrop.click();
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+    }
+
+    const reportTriggers = Array.from(document.querySelectorAll('ytcp-dropdown-trigger'));
+    console.log(`Found ${reportTriggers.length} dropdown triggers`);
+
+    let reportDropdown = null;
+
+    for (const trigger of reportTriggers) {
+      const labelText = trigger.querySelector('.label-text');
+      const text = labelText ? labelText.textContent.trim() : '';
+      if (text === 'Report') {
+        reportDropdown = trigger;
+        console.log('Found Report dropdown trigger');
+        break;
+      }
+    }
+
+    if (!reportDropdown) {
+      const availableLabels = reportTriggers
+        .map(t => t.querySelector('.label-text')?.textContent.trim())
+        .filter(Boolean)
+        .slice(0, 5);
+      console.error('Report dropdown not found. Available labels:', availableLabels);
+      throw new Error('Report dropdown not found');
+    }
+
+    const existingMenu = reportDropdown.querySelector('tp-yt-paper-listbox[role="menu"]');
+    if (existingMenu && existingMenu.offsetParent !== null) {
+      console.log('Report dropdown already open, closing first...');
+      reportDropdown.click();
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    reportDropdown.click();
+    console.log('Clicked Report dropdown, waiting for menu...');
+
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    let reportMenu = null;
+
+    reportMenu = reportDropdown.querySelector('tp-yt-paper-listbox[role="menu"]');
+    if (reportMenu && reportMenu.offsetParent !== null) {
+      console.log('Found report menu inside dropdown trigger');
+    } else {
+      reportMenu = null;
+    }
+
+    if (!reportMenu) {
+      const allListboxes = document.querySelectorAll('tp-yt-paper-listbox[role="menu"]');
+      console.log(`Found ${allListboxes.length} listboxes with role="menu"`);
+
+      for (const listbox of allListboxes) {
+        if (listbox.offsetParent !== null) {
+          const items = listbox.querySelectorAll('tp-yt-paper-item');
+          for (const item of items) {
+            if (item.textContent.includes('Top content') || item.textContent.includes('Popular')) {
+              reportMenu = listbox;
+              console.log('Found visible report menu (contains Top content/Popular)');
+              break;
+            }
+          }
+          if (reportMenu) break;
+        }
+      }
+    }
+
+    if (!reportMenu) {
+      const dialogs = document.querySelectorAll('tp-yt-paper-dialog[role="dialog"]');
+      for (const dialog of dialogs) {
+        if (dialog.offsetParent !== null) {
+          const listbox = dialog.querySelector('tp-yt-paper-listbox[role="menu"]');
+          if (listbox) {
+            reportMenu = listbox;
+            console.log('Found report menu inside dialog');
+            break;
+          }
+        }
+      }
+    }
+
+    if (!reportMenu) {
+      console.error('Report menu not found after trying all strategies');
+      throw new Error('Report menu not found after trying all strategies');
+    }
+
+    const menuItems = Array.from(reportMenu.querySelectorAll('tp-yt-paper-item'));
+    console.log(`Found ${menuItems.length} items in report menu`);
+
+    let topContentOption = null;
+
+    for (const item of menuItems) {
+      const text = item.textContent.trim();
+      if (text.includes('Top content') && text.includes('past 28') && text.includes('days')) {
+        topContentOption = item;
+        console.log('Found "Top content in the past 28 days" option');
+        break;
+      }
+    }
+
+    if (!topContentOption) {
+      console.error('Top content option not found. Available options:',
+        menuItems.slice(0, 10).map(i => i.textContent.trim().substring(0, 50)));
+      throw new Error('Top content in the past 28 days option not found');
+    }
+
+    topContentOption.click();
+
+    console.log('Waiting for tab to switch...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await waitForElement('yta-explore-table.data-container', 10000);
+
+    // Ensure progress bar state persists
+    const progressContainer = document.getElementById('progress-container');
+    if (progressContainer && progressContainer.dataset.currentStep) {
+      const progressFill = document.getElementById('progress-fill');
+      const progressPercent = document.getElementById('progress-percent');
+      const savedPercentage = progressContainer.dataset.currentPercentage;
+      if (progressFill && progressPercent) {
+        progressFill.style.width = `${savedPercentage}%`;
+        progressPercent.textContent = `${savedPercentage}%`;
+      }
+    }
+
+    console.log('Navigated back to metrics table');
   },
 
   /**
