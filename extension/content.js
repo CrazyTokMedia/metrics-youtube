@@ -133,119 +133,119 @@ function isExtensionContextValid() {
   }
 }
 
-// Helper: Wait for element to appear in DOM
-function waitForElement(selector, timeout = 10000) {
-  return new Promise((resolve, reject) => {
-    const startTime = Date.now();
+// // Helper: Wait for element to appear in DOM
+// function waitForElement(selector, timeout = 10000) {
+//   return new Promise((resolve, reject) => {
+//     const startTime = Date.now();
 
-    // Check if element already exists
-    const existing = document.querySelector(selector);
-    if (existing) {
-      resolve(existing);
-      return;
-    }
+//     // Check if element already exists
+//     const existing = document.querySelector(selector);
+//     if (existing) {
+//       resolve(existing);
+//       return;
+//     }
 
-    // Set up MutationObserver to watch for element
-    const observer = new MutationObserver((mutations, obs) => {
-      const element = document.querySelector(selector);
-      if (element) {
-        obs.disconnect();
-        resolve(element);
-      } else if (Date.now() - startTime > timeout) {
-        obs.disconnect();
-        reject(new Error(`Timeout waiting for element: ${selector}`));
-      }
-    });
+//     // Set up MutationObserver to watch for element
+//     const observer = new MutationObserver((mutations, obs) => {
+//       const element = document.querySelector(selector);
+//       if (element) {
+//         obs.disconnect();
+//         resolve(element);
+//       } else if (Date.now() - startTime > timeout) {
+//         obs.disconnect();
+//         reject(new Error(`Timeout waiting for element: ${selector}`));
+//       }
+//     });
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
+//     observer.observe(document.body, {
+//       childList: true,
+//       subtree: true
+//     });
 
-    // Also poll as backup (some changes might not trigger mutations)
-    const pollInterval = setInterval(() => {
-      const element = document.querySelector(selector);
-      if (element) {
-        clearInterval(pollInterval);
-        observer.disconnect();
-        resolve(element);
-      } else if (Date.now() - startTime > timeout) {
-        clearInterval(pollInterval);
-        observer.disconnect();
-        reject(new Error(`Timeout waiting for element: ${selector}`));
-      }
-    }, 100);
-  });
-}
+//     // Also poll as backup (some changes might not trigger mutations)
+//     const pollInterval = setInterval(() => {
+//       const element = document.querySelector(selector);
+//       if (element) {
+//         clearInterval(pollInterval);
+//         observer.disconnect();
+//         resolve(element);
+//       } else if (Date.now() - startTime > timeout) {
+//         clearInterval(pollInterval);
+//         observer.disconnect();
+//         reject(new Error(`Timeout waiting for element: ${selector}`));
+//       }
+//     }, 100);
+//   });
+// }
 
-// Helper: Wait for element to disappear from DOM
-function waitForElementRemoval(selector, timeout = 5000) {
-  return new Promise((resolve, reject) => {
-    const startTime = Date.now();
+// // Helper: Wait for element to disappear from DOM
+// function waitForElementRemoval(selector, timeout = 5000) {
+//   return new Promise((resolve, reject) => {
+//     const startTime = Date.now();
 
-    // Check if element already gone
-    const existing = document.querySelector(selector);
-    if (!existing) {
-      resolve();
-      return;
-    }
+//     // Check if element already gone
+//     const existing = document.querySelector(selector);
+//     if (!existing) {
+//       resolve();
+//       return;
+//     }
 
-    // Set up MutationObserver to watch for removal
-    const observer = new MutationObserver((mutations, obs) => {
-      const element = document.querySelector(selector);
-      if (!element) {
-        obs.disconnect();
-        resolve();
-      } else if (Date.now() - startTime > timeout) {
-        obs.disconnect();
-        reject(new Error(`Timeout waiting for element removal: ${selector}`));
-      }
-    });
+//     // Set up MutationObserver to watch for removal
+//     const observer = new MutationObserver((mutations, obs) => {
+//       const element = document.querySelector(selector);
+//       if (!element) {
+//         obs.disconnect();
+//         resolve();
+//       } else if (Date.now() - startTime > timeout) {
+//         obs.disconnect();
+//         reject(new Error(`Timeout waiting for element removal: ${selector}`));
+//       }
+//     });
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
+//     observer.observe(document.body, {
+//       childList: true,
+//       subtree: true
+//     });
 
-    // Also poll as backup
-    const pollInterval = setInterval(() => {
-      const element = document.querySelector(selector);
-      if (!element) {
-        clearInterval(pollInterval);
-        observer.disconnect();
-        resolve();
-      } else if (Date.now() - startTime > timeout) {
-        clearInterval(pollInterval);
-        observer.disconnect();
-        reject(new Error(`Timeout waiting for element removal: ${selector}`));
-      }
-    }, 100);
-  });
-}
+//     // Also poll as backup
+//     const pollInterval = setInterval(() => {
+//       const element = document.querySelector(selector);
+//       if (!element) {
+//         clearInterval(pollInterval);
+//         observer.disconnect();
+//         resolve();
+//       } else if (Date.now() - startTime > timeout) {
+//         clearInterval(pollInterval);
+//         observer.disconnect();
+//         reject(new Error(`Timeout waiting for element removal: ${selector}`));
+//       }
+//     }, 100);
+//   });
+// }
 
-// Helper: Wait for URL to match pattern
-function waitForUrlChange(urlPattern, timeout = 10000) {
-  return new Promise((resolve, reject) => {
-    const startTime = Date.now();
+// // Helper: Wait for URL to match pattern
+// function waitForUrlChange(urlPattern, timeout = 10000) {
+//   return new Promise((resolve, reject) => {
+//     const startTime = Date.now();
 
-    // Check if URL already matches
-    if (window.location.href.includes(urlPattern)) {
-      resolve();
-      return;
-    }
+//     // Check if URL already matches
+//     if (window.location.href.includes(urlPattern)) {
+//       resolve();
+//       return;
+//     }
 
-    // Poll for URL change
-    const pollInterval = setInterval(() => {
-      if (window.location.href.includes(urlPattern)) {
-        clearInterval(pollInterval);
-        resolve();
-      } else if (Date.now() - startTime > timeout) {
-        clearInterval(pollInterval);
-        reject(new Error(`Timeout waiting for URL pattern: ${urlPattern}`));
-      }
-    }, 100);
-  });
-}
+//     // Poll for URL change
+//     const pollInterval = setInterval(() => {
+//       if (window.location.href.includes(urlPattern)) {
+//         clearInterval(pollInterval);
+//         resolve();
+//       } else if (Date.now() - startTime > timeout) {
+//         clearInterval(pollInterval);
+//         reject(new Error(`Timeout waiting for URL pattern: ${urlPattern}`));
+//       }
+//     }, 100);
+//   });
+// }
 
 // Safe chrome.storage wrapper with error handling
 const safeStorage = {
@@ -301,11 +301,19 @@ const safeStorage = {
 // ============================================================
 // These aliases allow existing code to work while using the modular implementations
 
+// DOM utilities
+const waitForElement = (selector, timeout) => YTTreatmentHelper.Utils.waitForElement(selector, timeout);
+const waitForElementRemoval = (selector, timeout) => YTTreatmentHelper.Utils.waitForElementRemoval(selector, timeout);
+const waitForUrlChange = (urlPattern, timeout) => YTTreatmentHelper.Utils.waitForUrlChange(urlPattern, timeout);
+
+// Date formatting
 const formatDate = (date) => YTTreatmentHelper.Utils.formatDate(date);
 const formatDateDisplay = (dateStr) => YTTreatmentHelper.Utils.formatDateDisplay(dateStr);
 const formatDateToDDMMYYYY = (dateStr) => YTTreatmentHelper.Utils.formatDateToDDMMYYYY(dateStr);
 const formatDateToYYYYMMDD = (dateStr) => YTTreatmentHelper.Utils.formatDateToYYYYMMDD(dateStr);
 const autoFormatDateInput = (input) => YTTreatmentHelper.Utils.autoFormatDateInput(input);
+
+// Video ID
 const getVideoIdFromUrl = () => YTTreatmentHelper.Utils.getVideoIdFromUrl();
 
 // ============================================================

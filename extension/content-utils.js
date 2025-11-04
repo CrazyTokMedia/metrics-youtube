@@ -12,9 +12,46 @@ YTTreatmentHelper.Utils = {
    * Wait for element to appear in DOM
    */
   waitForElement: function(selector, timeout = 10000) {
-    // Implementation will be migrated from content.js
     return new Promise((resolve, reject) => {
-      reject(new Error('Not yet implemented - to be migrated'));
+      const startTime = Date.now();
+
+      // Check if element already exists
+      const existing = document.querySelector(selector);
+      if (existing) {
+        resolve(existing);
+        return;
+      }
+
+      // Set up MutationObserver to watch for element
+      const observer = new MutationObserver((mutations, obs) => {
+        const element = document.querySelector(selector);
+        if (element) {
+          obs.disconnect();
+          resolve(element);
+        } else if (Date.now() - startTime > timeout) {
+          obs.disconnect();
+          reject(new Error(`Timeout waiting for element: ${selector}`));
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+
+      // Also poll as backup (some changes might not trigger mutations)
+      const pollInterval = setInterval(() => {
+        const element = document.querySelector(selector);
+        if (element) {
+          clearInterval(pollInterval);
+          observer.disconnect();
+          resolve(element);
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(pollInterval);
+          observer.disconnect();
+          reject(new Error(`Timeout waiting for element: ${selector}`));
+        }
+      }, 100);
     });
   },
 
@@ -22,9 +59,46 @@ YTTreatmentHelper.Utils = {
    * Wait for element to disappear from DOM
    */
   waitForElementRemoval: function(selector, timeout = 5000) {
-    // Implementation will be migrated from content.js
     return new Promise((resolve, reject) => {
-      reject(new Error('Not yet implemented - to be migrated'));
+      const startTime = Date.now();
+
+      // Check if element already gone
+      const existing = document.querySelector(selector);
+      if (!existing) {
+        resolve();
+        return;
+      }
+
+      // Set up MutationObserver to watch for removal
+      const observer = new MutationObserver((mutations, obs) => {
+        const element = document.querySelector(selector);
+        if (!element) {
+          obs.disconnect();
+          resolve();
+        } else if (Date.now() - startTime > timeout) {
+          obs.disconnect();
+          reject(new Error(`Timeout waiting for element removal: ${selector}`));
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+
+      // Also poll as backup
+      const pollInterval = setInterval(() => {
+        const element = document.querySelector(selector);
+        if (!element) {
+          clearInterval(pollInterval);
+          observer.disconnect();
+          resolve();
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(pollInterval);
+          observer.disconnect();
+          reject(new Error(`Timeout waiting for element removal: ${selector}`));
+        }
+      }, 100);
     });
   },
 
@@ -32,9 +106,25 @@ YTTreatmentHelper.Utils = {
    * Wait for URL to change
    */
   waitForUrlChange: function(urlPattern, timeout = 10000) {
-    // Implementation will be migrated from content.js
     return new Promise((resolve, reject) => {
-      reject(new Error('Not yet implemented - to be migrated'));
+      const startTime = Date.now();
+
+      // Check if URL already matches
+      if (window.location.href.includes(urlPattern)) {
+        resolve();
+        return;
+      }
+
+      // Poll for URL change
+      const pollInterval = setInterval(() => {
+        if (window.location.href.includes(urlPattern)) {
+          clearInterval(pollInterval);
+          resolve();
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(pollInterval);
+          reject(new Error(`Timeout waiting for URL pattern: ${urlPattern}`));
+        }
+      }, 100);
     });
   },
 
