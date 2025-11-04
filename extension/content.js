@@ -2285,6 +2285,13 @@ function createHelperPanel() {
                 <div class="radio-description">For Airtable (publish to treatment, publish to today)</div>
               </div>
             </label>
+            <label class="radio-option">
+              <input type="radio" name="extraction-mode" value="complete">
+              <div class="radio-content">
+                <div class="radio-title">Complete Analysis</div>
+                <div class="radio-description">Both equal periods and lifetime in one extraction</div>
+              </div>
+            </label>
           </div>
         </div>
 
@@ -2373,6 +2380,132 @@ function createHelperPanel() {
             </div>
             <button id="copy-spreadsheet-btn" class="copy-btn export-btn">
               <span class="btn-icon">📋</span> Copy for Spreadsheet
+            </button>
+          </div>
+        </div>
+
+        <!-- Complete Analysis Results -->
+        <div id="complete-results" class="complete-results" style="display: none;">
+
+          <!-- Equal Periods Section -->
+          <div class="complete-section">
+            <div class="section-title">Equal Periods Comparison</div>
+            <div class="metrics-grid">
+              <div class="metrics-column pre-column">
+                <div class="column-header">PRE</div>
+                <div class="metric-row">
+                  <span class="metric-label">Impressions</span>
+                  <span id="complete-equal-pre-impressions" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">CTR</span>
+                  <span id="complete-equal-pre-ctr" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Views</span>
+                  <span id="complete-equal-pre-views" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">AWT</span>
+                  <span id="complete-equal-pre-awt" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Retention</span>
+                  <span id="complete-equal-pre-retention" class="metric-value">—</span>
+                </div>
+              </div>
+
+              <div class="metrics-column post-column">
+                <div class="column-header">POST</div>
+                <div class="metric-row">
+                  <span class="metric-label">Impressions</span>
+                  <span id="complete-equal-post-impressions" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">CTR</span>
+                  <span id="complete-equal-post-ctr" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Views</span>
+                  <span id="complete-equal-post-views" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">AWT</span>
+                  <span id="complete-equal-post-awt" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Retention</span>
+                  <span id="complete-equal-post-retention" class="metric-value">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lifetime Performance Section -->
+          <div class="complete-section">
+            <div class="section-title">Lifetime Performance</div>
+            <div class="metrics-grid">
+              <div class="metrics-column pre-column">
+                <div class="column-header">PRE (Publish→Treatment)</div>
+                <div class="metric-row">
+                  <span class="metric-label">Impressions</span>
+                  <span id="complete-lifetime-pre-impressions" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">CTR</span>
+                  <span id="complete-lifetime-pre-ctr" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Views</span>
+                  <span id="complete-lifetime-pre-views" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">AWT</span>
+                  <span id="complete-lifetime-pre-awt" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Retention</span>
+                  <span id="complete-lifetime-pre-retention" class="metric-value">—</span>
+                </div>
+              </div>
+
+              <div class="metrics-column post-column">
+                <div class="column-header">POST (Publish→Today)</div>
+                <div class="metric-row">
+                  <span class="metric-label">Impressions</span>
+                  <span id="complete-lifetime-post-impressions" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">CTR</span>
+                  <span id="complete-lifetime-post-ctr" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Views</span>
+                  <span id="complete-lifetime-post-views" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">AWT</span>
+                  <span id="complete-lifetime-post-awt" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Retention</span>
+                  <span id="complete-lifetime-post-retention" class="metric-value">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Complete Export Section -->
+          <div class="export-section">
+            <div class="export-helper">
+              <span class="export-icon">📊</span>
+              <div class="export-text">
+                <div class="export-title">Export Complete Analysis</div>
+                <div class="export-subtitle">All data in one row for spreadsheet</div>
+              </div>
+            </div>
+            <button id="copy-complete-btn" class="copy-btn export-btn">
+              <span class="btn-icon">📋</span> Copy Complete Data
             </button>
           </div>
         </div>
@@ -2802,6 +2935,21 @@ function createHelperPanel() {
     return `Pre - ${preStartFormatted}-${preEndFormatted} Post- ${postStartFormatted}-${postEndFormatted}`;
   };
 
+  // Helper: Convert YYYY-MM-DD to DD.MM.YYYY
+  const formatDateToDDMMYYYYWithDots = (dateStr) => {
+    if (!dateStr) return '';
+    // Handle YYYY-MM-DD format
+    if (dateStr.includes('-')) {
+      const [year, month, day] = dateStr.split('-');
+      return `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`;
+    }
+    // Handle DD/MM/YYYY format - convert to DD.MM.YYYY
+    if (dateStr.includes('/')) {
+      return dateStr.replace(/\//g, '.');
+    }
+    return dateStr;
+  };
+
   // Copy for Spreadsheet (Tab-separated)
   document.getElementById('copy-spreadsheet-btn').addEventListener('click', (e) => {
     const treatmentDate = formatDateRangesForSpreadsheet();
@@ -2819,6 +2967,88 @@ function createHelperPanel() {
     // Format: treatment date, pre-impressions, post-impressions, empty, pre-ctr, post-ctr, empty, pre-awt, post-awt, pre-retention, post-retention, pre-views, post-views
     // No leading tab so user can paste one column to the right of video title without overwriting it
     const tabFormat = `${treatmentDate}\t${preImpressions}\t${postImpressions}\t\t${preCtr}\t${postCtr}\t\t${preAwt}\t${postAwt}\t${preRetention}\t${postRetention}\t${preViews}\t${postViews}`;
+
+    navigator.clipboard.writeText(tabFormat).then(() => {
+      const btn = e.target.closest('button');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span class="btn-icon">✓</span> Copied!';
+      btn.classList.add('copied');
+
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('copied');
+      }, 1500);
+    });
+  });
+
+  // Copy Complete Analysis (Tab-separated with all data)
+  document.getElementById('copy-complete-btn').addEventListener('click', (e) => {
+    if (!window.completeAnalysisData) {
+      alert('No data available. Please extract metrics first.');
+      return;
+    }
+
+    const data = window.completeAnalysisData;
+
+    // Format dates as DD.MM.YYYY
+    const publishDate = formatDateToDDMMYYYYWithDots(data.dates.publishDate);
+    const treatmentDate = formatDateToDDMMYYYYWithDots(data.dates.treatmentDate);
+    const extractionDate = formatDateToDDMMYYYYWithDots(data.dates.extractionDate);
+
+    // Equal Periods metrics
+    const equalPreImpr = data.equal.pre.impressions || '';
+    const equalPreViews = data.equal.pre.views || '';
+    const equalPreCtr = data.equal.pre.ctr || '';
+    const equalPreAwt = data.equal.pre.awt || '';
+    const equalPreRet = data.equal.pre.retention?.value || '';
+
+    const equalPostImpr = data.equal.post.impressions || '';
+    const equalPostViews = data.equal.post.views || '';
+    const equalPostCtr = data.equal.post.ctr || '';
+    const equalPostAwt = data.equal.post.awt || '';
+    const equalPostRet = data.equal.post.retention?.value || '';
+
+    // Lifetime metrics
+    const lifePreImpr = data.lifetime.pre.impressions || '';
+    const lifePreViews = data.lifetime.pre.views || '';
+    const lifePreCtr = data.lifetime.pre.ctr || '';
+    const lifePreAwt = data.lifetime.pre.awt || '';
+    const lifePreRet = data.lifetime.pre.retention?.value || '';
+
+    const lifePostImpr = data.lifetime.post.impressions || '';
+    const lifePostViews = data.lifetime.post.views || '';
+    const lifePostCtr = data.lifetime.post.ctr || '';
+    const lifePostAwt = data.lifetime.post.awt || '';
+    const lifePostRet = data.lifetime.post.retention?.value || '';
+
+    // Format: PublishDate | TreatmentDate | ExtractionDate | Equal PRE (5) | Equal POST (5) | [empty] | [empty] | Lifetime PRE (5) | Lifetime POST (5)
+    const tabFormat = [
+      publishDate,
+      treatmentDate,
+      extractionDate,
+      equalPreImpr,
+      equalPreViews,
+      equalPreCtr,
+      equalPreAwt,
+      equalPreRet,
+      equalPostImpr,
+      equalPostViews,
+      equalPostCtr,
+      equalPostAwt,
+      equalPostRet,
+      '', // empty separator
+      '', // empty separator
+      lifePreImpr,
+      lifePreViews,
+      lifePreCtr,
+      lifePreAwt,
+      lifePreRet,
+      lifePostImpr,
+      lifePostViews,
+      lifePostCtr,
+      lifePostAwt,
+      lifePostRet
+    ].join('\t');
 
     navigator.clipboard.writeText(tabFormat).then(() => {
       const btn = e.target.closest('button');
@@ -3118,6 +3348,106 @@ function createHelperPanel() {
     }
   };
 
+  // Complete Analysis function
+  const runCompleteAnalysis = async (ranges) => {
+    const autoExtractBtn = document.getElementById('auto-extract-btn');
+    const statusEl = document.getElementById('extraction-status');
+    const cancelBtn = document.getElementById('cancel-extract-btn');
+
+    autoExtractBtn.disabled = true;
+    statusEl.style.display = 'block';
+    cancelBtn.style.display = 'inline-block';
+
+    try {
+      // Hide existing single-mode results
+      document.getElementById('metrics-results').style.display = 'none';
+
+      // Step 1: Extract Equal Periods data
+      statusEl.textContent = '📊 Extracting equal periods data...';
+      statusEl.className = 'extraction-status info';
+
+      const equalResult = await extractPrePostMetrics(
+        ranges.equalPreStart, ranges.equalPreEnd,
+        ranges.equalPostStart, ranges.equalPostEnd,
+        (msg) => { statusEl.textContent = msg; },
+        true
+      );
+
+      // Step 2: Extract Lifetime data
+      statusEl.textContent = '📊 Extracting lifetime data...';
+
+      const lifetimeResult = await extractPrePostMetrics(
+        ranges.lifetimePreStart, ranges.lifetimePreEnd,
+        ranges.lifetimePostStart, ranges.lifetimePostEnd,
+        (msg) => { statusEl.textContent = msg; },
+        true
+      );
+
+      // Store both results globally
+      window.completeAnalysisData = {
+        equal: equalResult,
+        lifetime: lifetimeResult,
+        dates: {
+          publishDate: ranges.lifetimePreStart,
+          treatmentDate: ranges.lifetimePreEnd,
+          extractionDate: formatDate(new Date())
+        }
+      };
+
+      // Display Equal Periods results
+      document.getElementById('complete-equal-pre-impressions').textContent = equalResult.pre.impressions || '—';
+      document.getElementById('complete-equal-pre-views').textContent = equalResult.pre.views || '—';
+      document.getElementById('complete-equal-pre-ctr').textContent = equalResult.pre.ctr || '—';
+      document.getElementById('complete-equal-pre-awt').textContent = equalResult.pre.awt || '—';
+      document.getElementById('complete-equal-pre-retention').textContent = equalResult.pre.retention?.value || 'N/A';
+
+      document.getElementById('complete-equal-post-impressions').textContent = equalResult.post.impressions || '—';
+      document.getElementById('complete-equal-post-views').textContent = equalResult.post.views || '—';
+      document.getElementById('complete-equal-post-ctr').textContent = equalResult.post.ctr || '—';
+      document.getElementById('complete-equal-post-awt').textContent = equalResult.post.awt || '—';
+      document.getElementById('complete-equal-post-retention').textContent = equalResult.post.retention?.value || 'N/A';
+
+      // Display Lifetime results
+      document.getElementById('complete-lifetime-pre-impressions').textContent = lifetimeResult.pre.impressions || '—';
+      document.getElementById('complete-lifetime-pre-views').textContent = lifetimeResult.pre.views || '—';
+      document.getElementById('complete-lifetime-pre-ctr').textContent = lifetimeResult.pre.ctr || '—';
+      document.getElementById('complete-lifetime-pre-awt').textContent = lifetimeResult.pre.awt || '—';
+      document.getElementById('complete-lifetime-pre-retention').textContent = lifetimeResult.pre.retention?.value || 'N/A';
+
+      document.getElementById('complete-lifetime-post-impressions').textContent = lifetimeResult.post.impressions || '—';
+      document.getElementById('complete-lifetime-post-views').textContent = lifetimeResult.post.views || '—';
+      document.getElementById('complete-lifetime-post-ctr').textContent = lifetimeResult.post.ctr || '—';
+      document.getElementById('complete-lifetime-post-awt').textContent = lifetimeResult.post.awt || '—';
+      document.getElementById('complete-lifetime-post-retention').textContent = lifetimeResult.post.retention?.value || 'N/A';
+
+      // Show complete results section
+      document.getElementById('complete-results').style.display = 'block';
+
+      // Scroll to bottom
+      const helperBody = document.querySelector('.helper-body');
+      if (helperBody) {
+        setTimeout(() => {
+          helperBody.scrollTo({
+            top: helperBody.scrollHeight,
+            behavior: 'smooth'
+          });
+        }, 100);
+      }
+
+      statusEl.textContent = '✅ Complete analysis extracted successfully!';
+      statusEl.className = 'extraction-status success';
+      cancelBtn.style.display = 'none';
+
+    } catch (error) {
+      console.error('Complete analysis failed:', error);
+      statusEl.textContent = `❌ Failed: ${error.message}`;
+      statusEl.className = 'extraction-status error';
+      cancelBtn.style.display = 'none';
+    } finally {
+      autoExtractBtn.disabled = false;
+    }
+  };
+
   // Extract button click handler
   document.getElementById('auto-extract-btn').addEventListener('click', async () => {
     // Check which extraction mode is selected
@@ -3126,7 +3456,47 @@ function createHelperPanel() {
     // Store extraction mode globally so copy buttons know which format to use
     window.currentExtractionMode = extractionMode;
 
-    if (extractionMode === 'lifetime') {
+    if (extractionMode === 'complete') {
+      // Complete analysis: Extract both equal periods and lifetime
+      const treatmentDate = document.getElementById('treatment-date').value;
+      const treatmentDateYYYYMMDD = formatDateToYYYYMMDD(treatmentDate);
+      const videoPublishDateStr = document.getElementById('pre-start').dataset.videoPublishDate;
+
+      if (!videoPublishDateStr || !treatmentDateYYYYMMDD) {
+        alert('Please calculate date ranges first');
+        return;
+      }
+
+      // Log user action
+      if (window.ExtensionLogger) {
+        window.ExtensionLogger.logUserAction('Extract button clicked (Complete Analysis mode)');
+      }
+
+      // Store calculated equal periods ranges
+      const equalPreStart = document.getElementById('pre-start').dataset.original;
+      const equalPreEnd = document.getElementById('pre-end').dataset.original;
+      const equalPostStart = document.getElementById('post-start').dataset.original;
+      const equalPostEnd = document.getElementById('post-end').dataset.original;
+
+      // Calculate lifetime ranges
+      const today = new Date();
+      today.setDate(today.getDate() - 2);
+      const todayStr = formatDate(today);
+
+      // Run complete analysis
+      await runCompleteAnalysis({
+        equalPreStart,
+        equalPreEnd,
+        equalPostStart,
+        equalPostEnd,
+        lifetimePreStart: videoPublishDateStr,
+        lifetimePreEnd: treatmentDateYYYYMMDD,
+        lifetimePostStart: videoPublishDateStr,
+        lifetimePostEnd: todayStr
+      });
+
+      return; // Exit early since we have a separate function for complete analysis
+    } else if (extractionMode === 'lifetime') {
       // Calculate lifetime ranges: publish → treatment, publish → today
       const treatmentDate = document.getElementById('treatment-date').value;
       const treatmentDateYYYYMMDD = formatDateToYYYYMMDD(treatmentDate);
