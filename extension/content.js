@@ -338,6 +338,10 @@ const selectMetrics = () => YTTreatmentHelper.API.selectMetrics();
 const extractValues = () => YTTreatmentHelper.API.extractValues();
 const extractRetentionMetric = () => YTTreatmentHelper.API.extractRetentionMetric();
 
+// Orchestration function
+const extractPrePostMetrics = (preStart, preEnd, postStart, postEnd, statusCallback, includeRetention) =>
+  YTTreatmentHelper.API.extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention);
+
 // ============================================================
 // LEGACY FUNCTION DECLARATIONS (to be removed in Phase 5)
 // ============================================================
@@ -1409,7 +1413,7 @@ async function extractRetentionMetric_MIGRATED_TO_API() {
 }
 
 // Main: Extract PRE/POST Metrics
-async function extractPrePostMetrics(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention = false) {
+async function extractPrePostMetrics_MIGRATED_TO_API(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention = false) {
   try {
     if (statusCallback) statusCallback('🔧 Opening metrics picker...');
     await new Promise(resolve => setTimeout(resolve, 50));

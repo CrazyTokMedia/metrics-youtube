@@ -1563,8 +1563,108 @@ YTTreatmentHelper.API = {
    * Main extraction orchestration
    */
   extractPrePostMetrics: async function(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention = false) {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    try {
+      if (statusCallback) statusCallback('🔧 Opening metrics picker...');
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      if (statusCallback) statusCallback('🔧 Selecting required metrics...');
+      await this.selectMetrics();
+
+      if (statusCallback) statusCallback('📅 Opening date picker for PRE...');
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      if (statusCallback) statusCallback('📅 Setting PRE period dates...');
+      await this.setCustomDateRangeWithRetry(preStart, preEnd);
+
+      if (statusCallback) statusCallback('⏳ Waiting for PRE data to load...');
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (statusCallback) statusCallback('📥 Reading PRE metrics from table...');
+      const preMetrics = await this.extractValues();
+
+      if (statusCallback) statusCallback('📅 Opening date picker for POST...');
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      if (statusCallback) statusCallback('📅 Setting POST period dates...');
+      await this.setCustomDateRangeWithRetry(postStart, postEnd);
+
+      if (statusCallback) statusCallback('⏳ Waiting for POST data to load...');
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (statusCallback) statusCallback('📥 Reading POST metrics from table...');
+      const postMetrics = await this.extractValues();
+
+      // Extract retention if enabled
+      let preRetention = null;
+      let postRetention = null;
+
+      if (includeRetention) {
+        try {
+          if (statusCallback) statusCallback('📊 Opening report menu...');
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          if (statusCallback) statusCallback('📊 Switching to Audience Retention...');
+          await this.navigateToAudienceRetention();
+
+          if (statusCallback) statusCallback('⏳ Waiting for retention chart...');
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          if (statusCallback) statusCallback('📅 Setting PRE dates for retention...');
+          await this.setCustomDateRangeWithRetry(preStart, preEnd);
+
+          if (statusCallback) statusCallback('📊 Reading PRE retention value...');
+          preRetention = await this.extractRetentionMetric();
+
+          if (statusCallback) statusCallback('📅 Setting POST dates for retention...');
+          await this.setCustomDateRangeWithRetry(postStart, postEnd);
+
+          if (statusCallback) statusCallback('📊 Reading POST retention value...');
+          postRetention = await this.extractRetentionMetric();
+
+          // All data has been extracted successfully!
+          // Note: We could navigate back to the metrics table here for UX,
+          // but it's not necessary and can fail if the page structure has changed.
+          // Keeping the user on the Audience Retention page is fine.
+          if (statusCallback) statusCallback('✅ All data extracted!');
+
+          // Uncomment below if you want to try navigating back (optional, for UX only)
+          /*
+          try {
+            await this.navigateBackToMetrics();
+          } catch (navError) {
+            console.log('Staying on Audience Retention page (all data already extracted)');
+          }
+          */
+
+        } catch (error) {
+          console.warn('Retention extraction failed:', error);
+          // Continue without retention data
+          preRetention = { value: 'N/A', error: error.message };
+          postRetention = { value: 'N/A', error: error.message };
+        }
+      }
+
+      if (statusCallback) statusCallback('✅ Extraction complete!');
+
+      return {
+        pre: {
+          ...preMetrics,
+          retention: preRetention
+        },
+        post: {
+          ...postMetrics,
+          retention: postRetention
+        },
+        periods: {
+          pre: { start: preStart, end: preEnd },
+          post: { start: postStart, end: postEnd }
+        }
+      };
+
+    } catch (error) {
+      console.error('Extraction error:', error);
+      throw error;
+    }
   }
 };
 
