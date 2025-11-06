@@ -2,6 +2,19 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [1.2.1] - 2025-11-06
+
+### Added
+- **"Stayed to watch" metric for YouTube Shorts**: New metric extraction specifically for Shorts videos
+  - Extracts SHORTS_FEED_IMPRESSIONS_VTR from YouTube Analytics
+  - Displays in all extraction modes (Equal Periods, Lifetime, Complete Analysis)
+  - Included in both spreadsheet export and complete analysis export
+  - Shows percentage of viewers who stayed to watch the Short
+  - Column headers updated in complete_analysis_headers.txt
+
+### Note
+- "Stayed to watch" metric will only display values for Shorts videos; regular videos show "—" or "N/A"
+
 ## [1.2.0] - 2025-11-04
 
 ### Added
