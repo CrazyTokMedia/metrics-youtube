@@ -333,6 +333,11 @@ const navigateBackToMetrics = () => YTTreatmentHelper.API.navigateBackToMetrics(
 const setCustomDateRange = (startDate, endDate, overrideFormat) => YTTreatmentHelper.API.setCustomDateRange(startDate, endDate, overrideFormat);
 const setCustomDateRangeWithRetry = (startDate, endDate) => YTTreatmentHelper.API.setCustomDateRangeWithRetry(startDate, endDate);
 
+// Extraction functions
+const selectMetrics = () => YTTreatmentHelper.API.selectMetrics();
+const extractValues = () => YTTreatmentHelper.API.extractValues();
+const extractRetentionMetric = () => YTTreatmentHelper.API.extractRetentionMetric();
+
 // ============================================================
 // LEGACY FUNCTION DECLARATIONS (to be removed in Phase 5)
 // ============================================================
@@ -1066,7 +1071,7 @@ async function setCustomDateRangeWithRetry_MIGRATED_TO_API(startDate, endDate) {
 }
 
 // Helper: Select Metrics
-async function selectMetrics() {
+async function selectMetrics_MIGRATED_TO_API() {
   console.log('Selecting metrics...');
 
   const metricsToSelect = [
@@ -1149,7 +1154,7 @@ async function selectMetrics() {
 }
 
 // Helper: Extract Values
-async function extractValues() {
+async function extractValues_MIGRATED_TO_API() {
   console.log('Extracting values...');
 
   // Wait for table to load AND have data rows
@@ -1262,7 +1267,7 @@ async function extractValues() {
 // }
 
 // Helper: Extract Retention Metric (30s/3s)
-async function extractRetentionMetric() {
+async function extractRetentionMetric_MIGRATED_TO_API() {
   console.log('Extracting retention metric...');
 
   // Find the audience retention chart

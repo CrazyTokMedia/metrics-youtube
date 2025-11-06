@@ -884,24 +884,309 @@ YTTreatmentHelper.API = {
    * Select metrics to display in YouTube Studio
    */
   selectMetrics: async function() {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    console.log('Selecting metrics...');
+
+    const metricsToSelect = [
+      'VIDEO_THUMBNAIL_IMPRESSIONS',
+      'EXTERNAL_VIEWS',
+      'AVERAGE_WATCH_TIME',
+      'AVERAGE_WATCH_PERCENTAGE',
+      'VIDEO_THUMBNAIL_IMPRESSIONS_VTR'
+    ];
+
+    // Check if metric picker exists - if not, we might be on wrong tab
+    let metricPicker = document.querySelector('#metric-picker');
+    if (!metricPicker) {
+      console.log('Metric picker not found, checking current tab...');
+
+      // Check if we're on Audience Retention or another tab without metric picker
+      const reportTriggers = Array.from(document.querySelectorAll('ytcp-dropdown-trigger'));
+      let currentTab = 'unknown';
+
+      for (const trigger of reportTriggers) {
+        const labelText = trigger.querySelector('.label-text');
+        if (labelText && labelText.textContent.trim() === 'Report') {
+          const dropdownText = trigger.querySelector('.dropdown-trigger-text');
+          if (dropdownText) {
+            currentTab = dropdownText.textContent.trim();
+          }
+          break;
+        }
+      }
+
+      console.log(`Current tab: "${currentTab}"`);
+
+      // If not on Top content tab, navigate there
+      if (!currentTab.toLowerCase().includes('top content')) {
+        console.log('Not on Top content tab, navigating there...');
+        await this.navigateBackToMetrics();
+
+        // Try to find metric picker again
+        metricPicker = document.querySelector('#metric-picker');
+        if (!metricPicker) throw new Error('Metric picker not found even after navigating to Top content');
+      } else {
+        throw new Error('Metric picker not found on Top content tab');
+      }
+    }
+
+    const trigger = metricPicker.querySelector('ytcp-dropdown-trigger');
+    if (!trigger) throw new Error('Metric trigger not found');
+
+    trigger.click();
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const dialog = document.querySelector('tp-yt-paper-dialog[aria-label="Metrics"]');
+    if (!dialog) throw new Error('Metrics dialog not found');
+
+    const deselectButton = dialog.querySelector('#deselect-all-button');
+    if (deselectButton) {
+      deselectButton.click();
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    for (const metricId of metricsToSelect) {
+      const checkbox = dialog.querySelector(`ytcp-checkbox-lit#${metricId}`);
+      if (!checkbox) continue;
+
+      const checkboxDiv = checkbox.querySelector('[role="checkbox"]');
+      if (checkboxDiv && checkboxDiv.getAttribute('aria-checked') === 'false') {
+        checkboxDiv.click();
+      }
+    }
+
+    const applyButton = dialog.querySelector('#apply-button');
+    if (!applyButton) throw new Error('Apply button not found');
+
+    applyButton.click();
+
+    // Wait for dialog to close
+    await YTTreatmentHelper.Utils.waitForElementRemoval('.metric-dialog-contents', 5000);
+
+    console.log('Metrics selected');
   },
 
   /**
    * Extract metric values from the table
    */
   extractValues: async function() {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    console.log('Extracting values...');
+
+    // Wait for table to load AND have data rows
+    console.log('Waiting for table with data to load...');
+    await YTTreatmentHelper.Utils.waitForElement('yta-explore-table.data-container', 10000);
+
+    // Wait for actual data rows to appear (table might exist but be empty)
+    const startTime = Date.now();
+    const maxWait = 10000;
+    let table, row;
+
+    while (Date.now() - startTime < maxWait) {
+      table = document.querySelector('yta-explore-table.data-container');
+      if (table) {
+        row = table.querySelector('yta-explore-table-row');
+        if (row) {
+          console.log('Table with data rows found');
+          break;
+        }
+      }
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
+    if (!table) throw new Error('Table not found');
+    if (!row) throw new Error('No row found - table may still be loading data');
+
+    const headers = table.querySelectorAll('yta-explore-table-header-cell.metric-column');
+    const headerOrder = [];
+    headers.forEach(header => {
+      const titleEl = header.querySelector('#header-title, .debug-metric-title');
+      if (titleEl) {
+        headerOrder.push(titleEl.textContent.trim());
+      }
+    });
+
+    const container = row.querySelector('.layout.horizontal');
+    if (!container) throw new Error('Row container not found');
+
+    const metricColumns = Array.from(container.children).filter(child =>
+      child.className.includes('metric-column') &&
+      child.textContent.trim() !== ''
+    );
+
+    const metrics = {
+      impressions: null,
+      views: null,
+      awt: null,
+      consumption: null,
+      ctr: null
+    };
+
+    metricColumns.forEach((cell, index) => {
+      const value = cell.textContent.trim();
+      const headerText = headerOrder[index];
+
+      if (!headerText) return;
+
+      const headerLower = headerText.toLowerCase();
+
+      if (headerLower.includes('impressions') && !headerLower.includes('rate')) {
+        metrics.impressions = value;
+      } else if (headerLower === 'views') {
+        metrics.views = value;
+      } else if (headerLower.includes('average view duration') || headerLower.includes('average watch time')) {
+        metrics.awt = value;
+      } else if (headerLower.includes('average percentage')) {
+        metrics.consumption = value;
+      } else if (headerLower.includes('click-through rate')) {
+        metrics.ctr = value;
+      }
+    });
+
+    console.log('Values extracted');
+    return metrics;
   },
 
   /**
    * Extract retention metric from audience retention tab
    */
   extractRetentionMetric: async function() {
-    // Implementation will be migrated from content.js
-    throw new Error('Not yet implemented - to be migrated');
+    console.log('Extracting retention metric...');
+
+    // Find the audience retention chart
+    const chartContainers = Array.from(document.querySelectorAll('yta-line-chart-base'));
+    let svg = null;
+
+    for (const container of chartContainers) {
+      const parent = container.closest('yta-explore-chart-with-player');
+      if (parent) {
+        svg = container.querySelector('svg');
+        if (svg) break;
+      }
+    }
+
+    if (!svg) {
+      svg = document.querySelector('yta-line-chart-base svg');
+    }
+
+    if (!svg) {
+      throw new Error('Retention chart not found');
+    }
+
+    // Extract path data
+    const pathElement = svg.querySelector('path.line-series');
+    if (!pathElement) {
+      throw new Error('Retention path not found');
+    }
+
+    const pathData = pathElement.getAttribute('d');
+    const points = [];
+    const commands = pathData.replace('M', 'L').split('L').filter(cmd => cmd.trim());
+
+    commands.forEach(cmd => {
+      const [x, y] = cmd.split(',').map(Number);
+      if (!isNaN(x) && !isNaN(y)) {
+        points.push({ x, y });
+      }
+    });
+
+    // Extract Y-axis scale (retention percentage)
+    const yAxisTicks = Array.from(svg.querySelectorAll('.y2.axis .tick text tspan'));
+    const yAxisValues = yAxisTicks.map(tick => {
+      const text = tick.textContent.trim();
+      return parseFloat(text.replace('%', ''));
+    }).filter(val => !isNaN(val));
+
+    const maxY = Math.max(...yAxisValues);
+    const minY = Math.min(...yAxisValues);
+
+    const yAxisTickElements = Array.from(svg.querySelectorAll('.y2.axis .tick'));
+    const yPixels = yAxisTickElements.map(tick => {
+      const transform = tick.getAttribute('transform');
+      const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
+      return match ? parseFloat(match[2]) : null;
+    }).filter(val => val !== null);
+
+    const minYPixel = Math.min(...yPixels);
+    const maxYPixel = Math.max(...yPixels);
+    const chartHeight = maxYPixel - minYPixel;
+
+    // Validate Y-axis
+    if (maxY > 150) {
+      throw new Error(`Invalid retention chart (Y-axis: ${maxY}%)`);
+    }
+
+    // Extract X-axis scale (time)
+    const xAxisTicks = Array.from(svg.querySelectorAll('.x.axis .tick text tspan'));
+    const xAxisValues = xAxisTicks.map(tick => {
+      const text = tick.textContent.trim();
+      const parts = text.split(':').map(Number);
+      return parts[0] * 60 + (parts[1] || 0);
+    }).filter(val => !isNaN(val));
+
+    const minTime = Math.min(...xAxisValues);
+    const maxTime = Math.max(...xAxisValues);
+
+    const xAxisTickElements = Array.from(svg.querySelectorAll('.x.axis .tick'));
+    const xPixels = xAxisTickElements.map(tick => {
+      const transform = tick.getAttribute('transform');
+      const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
+      return match ? parseFloat(match[1]) : null;
+    }).filter(val => val !== null);
+
+    const minXPixel = Math.min(...xPixels);
+    const maxXPixel = Math.max(...xPixels);
+    const chartWidth = maxXPixel - minXPixel;
+
+    // Validate X-axis
+    if (maxTime > 7200 || maxTime < 1) {
+      throw new Error(`Invalid video duration (${maxTime}s)`);
+    }
+
+    // Conversion functions
+    const pixelToTime = (x) => {
+      return minTime + (x - minXPixel) * (maxTime - minTime) / chartWidth;
+    };
+
+    const pixelToRetention = (y) => {
+      const percentageRange = maxY - minY;
+      return maxY - ((y - minYPixel) * percentageRange / chartHeight);
+    };
+
+    // Get retention at specific time
+    function getRetentionAtTime(targetSeconds) {
+      const targetX = minXPixel + (targetSeconds - minTime) * chartWidth / (maxTime - minTime);
+
+      let closest = points[0];
+      let minDistance = Math.abs(points[0].x - targetX);
+
+      for (const point of points) {
+        const distance = Math.abs(point.x - targetX);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closest = point;
+        }
+      }
+
+      const retention = pixelToRetention(closest.y);
+      return Math.round(retention * 10) / 10;
+    }
+
+    // Determine video type and get metric
+    const isShort = maxTime < 60;
+    const targetTime = isShort ? 3 : 30;
+
+    let retentionValue = null;
+    if (targetTime <= maxTime) {
+      retentionValue = getRetentionAtTime(targetTime);
+    }
+
+    console.log(`Retention extracted: ${retentionValue}% at ${targetTime}s`);
+
+    return {
+      value: retentionValue ? `${retentionValue}%` : 'N/A',
+      targetTime: targetTime,
+      isShort: isShort,
+      videoDuration: maxTime
+    };
   },
 
   /**
