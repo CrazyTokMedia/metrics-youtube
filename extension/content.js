@@ -1083,7 +1083,8 @@ async function selectMetrics_MIGRATED_TO_API() {
     'EXTERNAL_VIEWS',
     'AVERAGE_WATCH_TIME',
     'AVERAGE_WATCH_PERCENTAGE',
-    'VIDEO_THUMBNAIL_IMPRESSIONS_VTR'
+    'VIDEO_THUMBNAIL_IMPRESSIONS_VTR',
+    'SHORTS_FEED_IMPRESSIONS_VTR'
   ];
 
   // Check if metric picker exists - if not, we might be on wrong tab
@@ -1207,7 +1208,8 @@ async function extractValues_MIGRATED_TO_API() {
     views: null,
     awt: null,
     consumption: null,
-    ctr: null
+    ctr: null,
+    stayedToWatch: null
   };
 
   metricColumns.forEach((cell, index) => {
@@ -1228,6 +1230,8 @@ async function extractValues_MIGRATED_TO_API() {
       metrics.consumption = value;
     } else if (headerLower.includes('click-through rate')) {
       metrics.ctr = value;
+    } else if (headerLower.includes('stayed to watch')) {
+      metrics.stayedToWatch = value;
     }
   });
 
@@ -1823,6 +1827,10 @@ function createHelperPanel() {
                 <span class="metric-label">Retention</span>
                 <span id="pre-retention" class="metric-value">—</span>
               </div>
+              <div class="metric-row">
+                <span class="metric-label">Stayed to watch</span>
+                <span id="pre-stayed-to-watch" class="metric-value">—</span>
+              </div>
               <button id="copy-pre-btn" class="copy-btn" data-period="pre"><span class="btn-icon">📋</span> Copy Pre</button>
             </div>
 
@@ -1847,6 +1855,10 @@ function createHelperPanel() {
               <div class="metric-row">
                 <span class="metric-label">Retention</span>
                 <span id="post-retention" class="metric-value">—</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">Stayed to watch</span>
+                <span id="post-stayed-to-watch" class="metric-value">—</span>
               </div>
               <button id="copy-post-btn" class="copy-btn" data-period="post"><span class="btn-icon">📋</span> Copy Post</button>
             </div>
@@ -1896,6 +1908,10 @@ function createHelperPanel() {
                   <span class="metric-label">Retention</span>
                   <span id="complete-equal-pre-retention" class="metric-value">—</span>
                 </div>
+                <div class="metric-row">
+                  <span class="metric-label">Stayed to watch</span>
+                  <span id="complete-equal-pre-stayed-to-watch" class="metric-value">—</span>
+                </div>
               </div>
 
               <div class="metrics-column post-column">
@@ -1919,6 +1935,10 @@ function createHelperPanel() {
                 <div class="metric-row">
                   <span class="metric-label">Retention</span>
                   <span id="complete-equal-post-retention" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Stayed to watch</span>
+                  <span id="complete-equal-post-stayed-to-watch" class="metric-value">—</span>
                 </div>
               </div>
             </div>
@@ -1950,6 +1970,10 @@ function createHelperPanel() {
                   <span class="metric-label">Retention</span>
                   <span id="complete-lifetime-pre-retention" class="metric-value">—</span>
                 </div>
+                <div class="metric-row">
+                  <span class="metric-label">Stayed to watch</span>
+                  <span id="complete-lifetime-pre-stayed-to-watch" class="metric-value">—</span>
+                </div>
               </div>
 
               <div class="metrics-column post-column">
@@ -1973,6 +1997,10 @@ function createHelperPanel() {
                 <div class="metric-row">
                   <span class="metric-label">Retention</span>
                   <span id="complete-lifetime-post-retention" class="metric-value">—</span>
+                </div>
+                <div class="metric-row">
+                  <span class="metric-label">Stayed to watch</span>
+                  <span id="complete-lifetime-post-stayed-to-watch" class="metric-value">—</span>
                 </div>
               </div>
             </div>
@@ -2446,10 +2474,12 @@ function createHelperPanel() {
     const postRetention = document.getElementById('post-retention').textContent;
     const preViews = document.getElementById('pre-views').textContent;
     const postViews = document.getElementById('post-views').textContent;
+    const preStayedToWatch = document.getElementById('pre-stayed-to-watch').textContent;
+    const postStayedToWatch = document.getElementById('post-stayed-to-watch').textContent;
 
-    // Format: treatment date, pre-impressions, post-impressions, empty, pre-ctr, post-ctr, empty, pre-awt, post-awt, pre-retention, post-retention, pre-views, post-views
+    // Format: treatment date, pre-impressions, post-impressions, empty, pre-ctr, post-ctr, empty, pre-awt, post-awt, pre-retention, post-retention, pre-stayed-to-watch, post-stayed-to-watch, pre-views, post-views
     // No leading tab so user can paste one column to the right of video title without overwriting it
-    const tabFormat = `${treatmentDate}\t${preImpressions}\t${postImpressions}\t\t${preCtr}\t${postCtr}\t\t${preAwt}\t${postAwt}\t${preRetention}\t${postRetention}\t${preViews}\t${postViews}`;
+    const tabFormat = `${treatmentDate}\t${preImpressions}\t${postImpressions}\t\t${preCtr}\t${postCtr}\t\t${preAwt}\t${postAwt}\t${preRetention}\t${postRetention}\t${preStayedToWatch}\t${postStayedToWatch}\t${preViews}\t${postViews}`;
 
     navigator.clipboard.writeText(tabFormat).then(() => {
       const btn = e.target.closest('button');
@@ -2484,12 +2514,14 @@ function createHelperPanel() {
     const equalPreCtr = data.equal.pre.ctr || '';
     const equalPreAwt = data.equal.pre.awt || '';
     const equalPreRet = data.equal.pre.retention?.value || '';
+    const equalPreStw = data.equal.pre.stayedToWatch || '';
 
     const equalPostImpr = data.equal.post.impressions || '';
     const equalPostViews = data.equal.post.views || '';
     const equalPostCtr = data.equal.post.ctr || '';
     const equalPostAwt = data.equal.post.awt || '';
     const equalPostRet = data.equal.post.retention?.value || '';
+    const equalPostStw = data.equal.post.stayedToWatch || '';
 
     // Lifetime metrics
     const lifePreImpr = data.lifetime.pre.impressions || '';
@@ -2497,15 +2529,17 @@ function createHelperPanel() {
     const lifePreCtr = data.lifetime.pre.ctr || '';
     const lifePreAwt = data.lifetime.pre.awt || '';
     const lifePreRet = data.lifetime.pre.retention?.value || '';
+    const lifePreStw = data.lifetime.pre.stayedToWatch || '';
 
     const lifePostImpr = data.lifetime.post.impressions || '';
     const lifePostViews = data.lifetime.post.views || '';
     const lifePostCtr = data.lifetime.post.ctr || '';
     const lifePostAwt = data.lifetime.post.awt || '';
     const lifePostRet = data.lifetime.post.retention?.value || '';
+    const lifePostStw = data.lifetime.post.stayedToWatch || '';
 
-    // Format: Dates (3) | Equal Periods with Change columns (15) | Separators (2) | Lifetime with Change columns (15)
-    // Total: 35 columns
+    // Format: Dates (3) | Equal Periods with Change columns (18) | Separators (2) | Lifetime with Change columns (18)
+    // Total: 41 columns
     const tabFormat = [
       publishDate,
       treatmentDate,
@@ -2526,6 +2560,9 @@ function createHelperPanel() {
       equalPreRet,
       equalPostRet,
       '', // Change
+      equalPreStw,
+      equalPostStw,
+      '', // Change
       '', // separator
       '', // separator
       // Lifetime: PRE | POST | Change (empty) for each metric
@@ -2543,6 +2580,9 @@ function createHelperPanel() {
       '', // Change
       lifePreRet,
       lifePostRet,
+      '', // Change
+      lifePreStw,
+      lifePostStw,
       '' // Change
     ].join('\t');
 
@@ -2696,12 +2736,14 @@ function createHelperPanel() {
       document.getElementById('pre-ctr').textContent = result.pre.ctr || '—';
       document.getElementById('pre-awt').textContent = result.pre.awt || '—';
       document.getElementById('pre-retention').textContent = result.pre.retention?.value || 'N/A';
+      document.getElementById('pre-stayed-to-watch').textContent = result.pre.stayedToWatch || '—';
 
       document.getElementById('post-impressions').textContent = result.post.impressions || '—';
       document.getElementById('post-views').textContent = result.post.views || '—';
       document.getElementById('post-ctr').textContent = result.post.ctr || '—';
       document.getElementById('post-awt').textContent = result.post.awt || '—';
       document.getElementById('post-retention').textContent = result.post.retention?.value || 'N/A';
+      document.getElementById('post-stayed-to-watch').textContent = result.post.stayedToWatch || '—';
 
       // Update displayed date ranges based on extraction mode
       if (window.currentExtractionMode === 'lifetime') {
@@ -2903,12 +2945,14 @@ function createHelperPanel() {
       document.getElementById('complete-equal-pre-ctr').textContent = equalResult.pre.ctr || '—';
       document.getElementById('complete-equal-pre-awt').textContent = equalResult.pre.awt || '—';
       document.getElementById('complete-equal-pre-retention').textContent = equalResult.pre.retention?.value || 'N/A';
+      document.getElementById('complete-equal-pre-stayed-to-watch').textContent = equalResult.pre.stayedToWatch || '—';
 
       document.getElementById('complete-equal-post-impressions').textContent = equalResult.post.impressions || '—';
       document.getElementById('complete-equal-post-views').textContent = equalResult.post.views || '—';
       document.getElementById('complete-equal-post-ctr').textContent = equalResult.post.ctr || '—';
       document.getElementById('complete-equal-post-awt').textContent = equalResult.post.awt || '—';
       document.getElementById('complete-equal-post-retention').textContent = equalResult.post.retention?.value || 'N/A';
+      document.getElementById('complete-equal-post-stayed-to-watch').textContent = equalResult.post.stayedToWatch || '—';
 
       // Display Lifetime results
       document.getElementById('complete-lifetime-pre-impressions').textContent = lifetimeResult.pre.impressions || '—';
@@ -2916,12 +2960,14 @@ function createHelperPanel() {
       document.getElementById('complete-lifetime-pre-ctr').textContent = lifetimeResult.pre.ctr || '—';
       document.getElementById('complete-lifetime-pre-awt').textContent = lifetimeResult.pre.awt || '—';
       document.getElementById('complete-lifetime-pre-retention').textContent = lifetimeResult.pre.retention?.value || 'N/A';
+      document.getElementById('complete-lifetime-pre-stayed-to-watch').textContent = lifetimeResult.pre.stayedToWatch || '—';
 
       document.getElementById('complete-lifetime-post-impressions').textContent = lifetimeResult.post.impressions || '—';
       document.getElementById('complete-lifetime-post-views').textContent = lifetimeResult.post.views || '—';
       document.getElementById('complete-lifetime-post-ctr').textContent = lifetimeResult.post.ctr || '—';
       document.getElementById('complete-lifetime-post-awt').textContent = lifetimeResult.post.awt || '—';
       document.getElementById('complete-lifetime-post-retention').textContent = lifetimeResult.post.retention?.value || 'N/A';
+      document.getElementById('complete-lifetime-post-stayed-to-watch').textContent = lifetimeResult.post.stayedToWatch || '—';
 
       // Show complete results section
       document.getElementById('complete-results').style.display = 'block';
