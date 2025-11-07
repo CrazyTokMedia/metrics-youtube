@@ -6,11 +6,14 @@
 /* ============================================================
    TOGGLE BUTTON
    ============================================================ */
-.treatment-helper-toggle {
+#treatment-helper-buttons {
   position: fixed;
   top: 10px;
   right: 20px;
   z-index: 10000;
+}
+
+.treatment-helper-toggle {
   padding: 10px 20px;
   background: #667eea;
   color: white;
@@ -26,6 +29,17 @@
 .treatment-helper-toggle:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.treatment-helper-toggle.history-btn {
+  background: #6b7280;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.treatment-helper-toggle.history-btn:hover {
+  background: #4b5563;
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
 }
 
 /* ============================================================
@@ -104,16 +118,17 @@
 
 /* Body */
 .helper-body {
-  padding: 24px 24px 0 24px; /* Remove bottom padding */
+  padding: 24px;
   max-height: calc(90vh - 76px);
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: 0 0 16px 16px; /* Match parent's bottom rounded corners */
+  padding-bottom: 80px; /* Extra bottom padding for scroll accessibility */
 }
 
-/* Add bottom spacing to last child instead */
+/* Add bottom spacing to last child */
 .helper-body > *:last-child {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 /* Scrollbar */
@@ -942,6 +957,48 @@ textarea.batch-urls-textarea {
   margin-top: 12px;
 }
 
+/* Batch Date Preview */
+.date-preview-info {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 16px;
+}
+
+.preview-row:last-child {
+  border-bottom: none;
+}
+
+.preview-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+.preview-value {
+  font-size: 13px;
+  color: #1f2937;
+  text-align: right;
+  flex-grow: 1;
+}
+
+.preview-note {
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
 /* Batch Results Table */
 .batch-results-table-container {
   margin: 16px 0;
@@ -1043,4 +1100,295 @@ textarea.batch-urls-textarea {
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid #e5e7eb;
+}
+
+/* ============================================================
+   EXTRACTION HISTORY STYLES
+   ============================================================ */
+
+.history-section {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.history-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.history-icon {
+  font-size: 16px;
+}
+
+.toggle-history-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-history-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.history-content {
+  margin-top: 12px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.history-empty {
+  padding: 24px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.history-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s;
+}
+
+.history-item:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.history-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.history-item-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.history-item-mode {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.history-item-toggle {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 12px;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.history-item-toggle:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.history-item-meta {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.history-item-details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.history-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.history-metric-column {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.history-column-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.history-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.history-metric-row:last-child {
+  border-bottom: none;
+}
+
+.history-metric-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.history-metric-value {
+  font-weight: 600;
+  color: #1f2937;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.history-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.history-copy-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.history-copy-btn.copied {
+  background: linear-gradient(135deg, #10b981 0%, #10b981 100%);
+}
+
+.clear-history-btn {
+  margin-top: 12px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ef4444;
+  background: white;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.clear-history-btn:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+/* Scrollbar styling for history list */
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Batch history video list */
+.batch-history-videos {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.batch-history-video {
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.batch-history-video:last-child {
+  border-bottom: none;
+}
+
+.batch-history-video-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.batch-history-video-id {
+  font-size: 11px;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  color: #6b7280;
+}
+
+.batch-history-more {
+  padding: 8px;
+  text-align: center;
+  font-size: 11px;
+  color: #6b7280;
+  font-style: italic;
 }

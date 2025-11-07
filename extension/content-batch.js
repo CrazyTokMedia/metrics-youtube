@@ -26,11 +26,40 @@ YTTreatmentHelper.BatchMode = {
 
         <div class="step-container">
           <div class="step-label">Treatment date (DD/MM/YYYY) - applies to all videos</div>
-          <input type="text" id="batch-treatment-date" class="date-input" placeholder="DD/MM/YYYY" maxlength="10" />
+          <div class="input-section">
+            <input type="text" id="batch-treatment-date" class="date-input" placeholder="DD/MM/YYYY" maxlength="10" />
+            <button id="batch-calculate-btn" class="action-btn calculate-btn">Calculate</button>
+          </div>
         </div>
 
-        <!-- Step 2: Extraction Mode -->
-        <div class="step-container">
+        <!-- Step 2: Date Preview (hidden until Calculate is clicked) -->
+        <div id="batch-date-preview" class="results-section" style="display: none;">
+          <div class="step-container">
+            <div class="step-label">Calculation Preview</div>
+          </div>
+
+          <div class="date-preview-info">
+            <div class="preview-row">
+              <span class="preview-label">Treatment Date:</span>
+              <span id="batch-preview-treatment" class="preview-value"></span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-label">Period Type:</span>
+              <span class="preview-value">Equal PRE/POST periods</span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-label">Calculation:</span>
+              <span class="preview-value preview-note">Periods calculated per video based on publish date</span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-label">YouTube Data:</span>
+              <span id="batch-preview-date-range" class="preview-value"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Extraction Mode -->
+        <div class="step-container" id="batch-extraction-mode-section" style="display: none;">
           <div class="step-label">Choose extraction type</div>
           <div class="extraction-mode-options">
             <label class="radio-option">
@@ -57,10 +86,10 @@ YTTreatmentHelper.BatchMode = {
           </div>
         </div>
 
-        <!-- Step 3: Extract Button -->
-        <div class="extract-controls">
+        <!-- Step 4: Extract Button -->
+        <div class="extract-controls" id="batch-extract-controls" style="display: none;">
           <button id="batch-extract-btn" class="action-btn extract-btn">
-            <span class="btn-icon">📊</span> Extract Batch
+            <span class="btn-icon">📊</span> Extract Metrics
           </button>
           <button id="batch-cancel-btn" class="cancel-btn" style="display: none;">Cancel</button>
         </div>
@@ -108,6 +137,26 @@ YTTreatmentHelper.BatchMode = {
           </div>
         </div>
 
+        <!-- Batch History Section -->
+        <div id="batch-history-section" class="history-section" style="display: none;">
+          <div class="history-header">
+            <div class="history-title">
+              <span class="history-icon">📜</span>
+              <span>Batch History</span>
+            </div>
+            <button id="toggle-batch-history-btn" class="toggle-history-btn">Show History</button>
+          </div>
+
+          <div id="batch-history-content" class="history-content" style="display: none;">
+            <div id="batch-history-list" class="history-list">
+              <!-- History items will be dynamically inserted here -->
+            </div>
+            <div class="history-actions">
+              <button id="clear-batch-history-btn" class="clear-history-btn">Clear History</button>
+            </div>
+          </div>
+        </div>
+
       </div>
     `;
   },
@@ -141,6 +190,14 @@ YTTreatmentHelper.BatchMode = {
     const treatmentDateInput = document.getElementById('batch-treatment-date');
     if (treatmentDateInput) {
       YTTreatmentHelper.Utils.autoFormatDateInput(treatmentDateInput);
+    }
+
+    // Calculate button
+    const calculateBtn = document.getElementById('batch-calculate-btn');
+    if (calculateBtn) {
+      calculateBtn.addEventListener('click', () => {
+        self.showBatchPreview();
+      });
     }
 
     // Extract button
@@ -207,6 +264,9 @@ YTTreatmentHelper.BatchMode = {
         self.downloadResultsAsCSV();
       });
     }
+
+    // Initialize batch history
+    this.initBatchHistory();
   },
 
   /**
@@ -269,6 +329,67 @@ YTTreatmentHelper.BatchMode = {
     const urls = this.parseUrls(urlsInput.value);
     const count = urls.length;
     countDisplay.textContent = `${count} video${count !== 1 ? 's' : ''}`;
+  },
+
+  /**
+   * Show batch date preview after Calculate is clicked
+   */
+  showBatchPreview: function() {
+    // Get inputs
+    const urlsInput = document.getElementById('batch-urls-input');
+    const treatmentDateInput = document.getElementById('batch-treatment-date');
+
+    if (!urlsInput || !treatmentDateInput) {
+      alert('Missing required inputs');
+      return;
+    }
+
+    // Validate URLs
+    const videos = this.parseUrls(urlsInput.value);
+    if (videos.length === 0) {
+      alert('Please paste at least one valid YouTube Studio video URL');
+      return;
+    }
+
+    // Validate treatment date
+    const treatmentDate = treatmentDateInput.value.trim();
+    if (!treatmentDate || treatmentDate.split('/').length !== 3) {
+      alert('Please enter a valid treatment date (DD/MM/YYYY)');
+      return;
+    }
+
+    // Convert to YYYY-MM-DD for date calculations
+    const treatmentDateYYYYMMDD = YTTreatmentHelper.Utils.formatDateToYYYYMMDD(treatmentDate);
+
+    // Validate date is not too recent (YouTube has 3-day data delay)
+    const today = new Date();
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() - 3);
+    const treatment = new Date(treatmentDateYYYYMMDD);
+
+    if (treatment > maxDate) {
+      alert('Treatment date must be at least 4 days ago to account for YouTube data processing delay.');
+      return;
+    }
+
+    // Calculate date range preview
+    const maxYouTubeDate = YTTreatmentHelper.Utils.formatDate(maxDate);
+
+    // Update preview UI
+    document.getElementById('batch-preview-treatment').textContent = treatmentDate;
+    document.getElementById('batch-preview-date-range').textContent = `Available up to ${YTTreatmentHelper.Utils.formatDateToDDMMYYYY(maxYouTubeDate)}`;
+
+    // Show preview section
+    document.getElementById('batch-date-preview').style.display = 'block';
+
+    // Show extraction mode section
+    document.getElementById('batch-extraction-mode-section').style.display = 'block';
+
+    // Show extract button
+    document.getElementById('batch-extract-controls').style.display = 'block';
+
+    // Scroll to preview
+    document.getElementById('batch-date-preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
 
   /**
@@ -401,10 +522,6 @@ YTTreatmentHelper.BatchMode = {
       return;
     }
 
-    // Confirm before starting
-    const confirmed = confirm(`Extract metrics for ${videos.length} video(s) with treatment date ${treatmentDate}?`);
-    if (!confirmed) return;
-
     // Reset state
     this.batchResults = [];
     this.shouldCancel = false;
@@ -526,6 +643,15 @@ YTTreatmentHelper.BatchMode = {
 
     // Complete - clear batch state
     await safeStorage.set({ batchInProgress: null });
+
+    // Save to batch history
+    await YTTreatmentHelper.ExtractionHistory.saveBatchExtraction({
+      treatmentDate: treatmentDate,
+      mode: extractionMode,
+      results: this.batchResults
+    });
+
+    console.log('Batch extraction saved to history');
 
     this.updateProgress(videos.length, videos.length, 'Complete');
     this.updateStatus(`Extracted ${this.batchResults.length} video(s)`, 'success');
@@ -773,19 +899,19 @@ YTTreatmentHelper.BatchMode = {
     const downloadBtn = document.getElementById('batch-download-btn');
     console.log('Export buttons:', { copyBtn: !!copyBtn, downloadBtn: !!downloadBtn });
 
-    // Scroll the helper-body container to show results section
+    // Scroll to bottom to show export buttons
+    // Wait longer to ensure DOM is fully rendered
     setTimeout(() => {
       const helperBody = document.querySelector('.helper-body');
-      if (helperBody && resultsSection) {
-        // Get the position of results section relative to helper-body
-        const resultsTop = resultsSection.offsetTop;
-        // Scroll the helper-body container to show the results
+      if (helperBody) {
+        // Force scroll to absolute bottom
         helperBody.scrollTo({
-          top: resultsTop - 20, // 20px offset for spacing
+          top: helperBody.scrollHeight + 1000, // Add extra to ensure we reach the bottom
           behavior: 'smooth'
         });
+        console.log('Scrolled to bottom. scrollHeight:', helperBody.scrollHeight);
       }
-    }, 100);
+    }, 300);
 
     console.log(`✅ Results displayed: ${this.batchResults.length} videos`);
   },
@@ -1227,6 +1353,178 @@ YTTreatmentHelper.BatchMode = {
         result.publishDate || '',
         result.status,
         result.treatmentDate || ''
+      ];
+      rows.push(row.join('\t'));
+    }
+
+    return rows.join('\n');
+  },
+
+  /**
+   * Initialize batch history UI
+   */
+  initBatchHistory: function() {
+    const toggleBtn = document.getElementById('toggle-batch-history-btn');
+    const historyContent = document.getElementById('batch-history-content');
+    const clearBtn = document.getElementById('clear-batch-history-btn');
+
+    if (!toggleBtn || !historyContent) return;
+
+    // Toggle history visibility
+    toggleBtn.addEventListener('click', async () => {
+      const isVisible = historyContent.style.display !== 'none';
+
+      if (isVisible) {
+        historyContent.style.display = 'none';
+        toggleBtn.textContent = 'Show History';
+      } else {
+        // Load and display history
+        await this.loadAndDisplayBatchHistory();
+        historyContent.style.display = 'block';
+        toggleBtn.textContent = 'Hide History';
+      }
+    });
+
+    // Clear history
+    clearBtn.addEventListener('click', async () => {
+      if (confirm('Clear all batch extraction history?')) {
+        await YTTreatmentHelper.ExtractionHistory.clearHistory({ type: 'batch' });
+        await this.loadAndDisplayBatchHistory();
+      }
+    });
+  },
+
+  /**
+   * Load and display batch history
+   */
+  loadAndDisplayBatchHistory: async function() {
+    const historyList = document.getElementById('batch-history-list');
+    const historySection = document.getElementById('batch-history-section');
+
+    if (!historyList) return;
+
+    // Get batch history
+    const history = await YTTreatmentHelper.ExtractionHistory.getBatchHistory();
+
+    if (history.length === 0) {
+      historyList.innerHTML = '<div class="history-empty">No batch extraction history</div>';
+      return;
+    }
+
+    // Show history section
+    historySection.style.display = 'block';
+
+    // Build history HTML
+    let html = '';
+    history.forEach((entry, index) => {
+      const modeLabel = entry.mode === 'equal-periods' ? 'Equal Periods' :
+                        entry.mode === 'lifetime' ? 'Lifetime' : 'Complete Analysis';
+
+      html += `
+        <div class="history-item" data-entry-id="${entry.id}">
+          <div class="history-item-header">
+            <div class="history-item-info">
+              <span class="history-item-date">${YTTreatmentHelper.ExtractionHistory.formatExtractionDate(entry.extractionDate)}</span>
+              <span class="history-item-mode">${modeLabel} • ${entry.videoCount} videos</span>
+            </div>
+            <button class="history-item-toggle" data-index="${index}">
+              <span class="toggle-icon">▼</span>
+            </button>
+          </div>
+          <div class="history-item-meta">
+            Treatment: ${entry.treatmentDate}
+          </div>
+          <div class="history-item-details" style="display: none;">
+            <div class="batch-history-videos">
+              ${entry.results.slice(0, 5).map(r => `
+                <div class="batch-history-video">
+                  <div class="batch-history-video-title">${r.videoTitle || r.videoId}</div>
+                  <div class="batch-history-video-id">${r.videoId}</div>
+                </div>
+              `).join('')}
+              ${entry.results.length > 5 ? `<div class="batch-history-more">+ ${entry.results.length - 5} more videos</div>` : ''}
+            </div>
+            <div class="history-actions">
+              <button class="history-copy-btn" data-entry-id="${entry.id}">
+                <span class="btn-icon">📋</span> Copy All Data
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    historyList.innerHTML = html;
+
+    // Add toggle event listeners
+    document.querySelectorAll('.history-item-toggle').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const historyItem = e.target.closest('.history-item');
+        const details = historyItem.querySelector('.history-item-details');
+        const icon = btn.querySelector('.toggle-icon');
+
+        if (details.style.display === 'none') {
+          details.style.display = 'block';
+          icon.textContent = '▲';
+        } else {
+          details.style.display = 'none';
+          icon.textContent = '▼';
+        }
+      });
+    });
+
+    // Add copy event listeners
+    document.querySelectorAll('.history-copy-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const entryId = parseInt(btn.dataset.entryId);
+        const entry = history.find(e => e.id === entryId);
+
+        if (entry) {
+          // Use the existing batch export format
+          const tsv = this.formatBatchResultsForExport(entry.results, entry.mode);
+          await navigator.clipboard.writeText(tsv);
+
+          // Visual feedback
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<span class="btn-icon">✓</span> Copied!';
+          btn.classList.add('copied');
+
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('copied');
+          }, 1500);
+        }
+      });
+    });
+  },
+
+  /**
+   * Helper to format batch results for export (used by history too)
+   */
+  formatBatchResultsForExport: function(results, mode) {
+    // This is a simplified version - you can expand based on your export format
+    const rows = [];
+
+    for (const result of results) {
+      if (result.status !== 'success') continue;
+
+      const row = [
+        result.videoTitle || '',
+        result.treatmentDate || '',
+        result.metrics?.pre?.impressions || '',
+        result.metrics?.post?.impressions || '',
+        '',
+        result.metrics?.pre?.ctr || '',
+        result.metrics?.post?.ctr || '',
+        '',
+        result.metrics?.pre?.awt || '',
+        result.metrics?.post?.awt || '',
+        result.metrics?.pre?.retention?.value || result.metrics?.pre?.retention || '',
+        result.metrics?.post?.retention?.value || result.metrics?.post?.retention || '',
+        result.metrics?.pre?.stayedToWatch || '',
+        result.metrics?.post?.stayedToWatch || '',
+        result.metrics?.pre?.views || '',
+        result.metrics?.post?.views || ''
       ];
       rows.push(row.join('\t'));
     }
