@@ -138,16 +138,12 @@ YTTreatmentHelper.BatchMode = {
   initEventListeners: function() {
     const self = this;
 
-    // Force enable all inputs on initialization (clear any stuck disabled state)
-    setTimeout(() => {
-      document.querySelectorAll('#yt-treatment-helper input[type="text"], #yt-treatment-helper textarea').forEach(input => {
-        if (input.disabled || input.readOnly) {
-          console.log('Force-enabling stuck input:', input.id);
-          input.disabled = false;
-          input.readOnly = false;
-        }
-      });
-    }, 500);
+    // Ensure pointer-events are enabled on inputs immediately
+    // (CSS sometimes gets overridden by YouTube Studio's global styles)
+    document.querySelectorAll('#yt-treatment-helper input[type="text"]:not([disabled]), #yt-treatment-helper textarea:not([disabled])').forEach(input => {
+      input.style.pointerEvents = 'auto';
+      input.style.userSelect = 'text';
+    });
 
     // URL count update
     const urlsInput = document.getElementById('batch-urls-input');
@@ -469,7 +465,9 @@ YTTreatmentHelper.BatchMode = {
     this.batchResults = results;
 
     // Calculate total steps for entire batch
-    const stepsPerVideo = extractionMode === 'complete' ? 10 : 8;
+    // Complete: 9 steps per video (analytics, details nav, details extract, return, calc, equal, lifetime, complete)
+    // Equal/Lifetime: 8 steps per video
+    const stepsPerVideo = extractionMode === 'complete' ? 9 : 8;
     const totalBatchSteps = videos.length * stepsPerVideo;
     console.log(`📊 Batch extraction: ${videos.length} videos × ${stepsPerVideo} steps = ${totalBatchSteps} total steps`);
 
@@ -632,7 +630,9 @@ YTTreatmentHelper.BatchMode = {
     console.log(`Treatment Date: ${treatmentDate}, Mode: ${extractionMode}`);
 
     // Calculate total steps based on extraction mode
-    const totalSteps = extractionMode === 'complete' ? 10 : 8;
+    // Complete: 9 steps (analytics, details nav, details extract, return, calc, equal, lifetime, complete)
+    // Equal/Lifetime: 8 steps (analytics, details nav, details extract, return, calc, extract, complete)
+    const totalSteps = extractionMode === 'complete' ? 9 : 8;
     let currentStep = 0;
 
     // Wait for analytics page to load - try multiple selectors
