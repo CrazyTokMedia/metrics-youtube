@@ -2,6 +2,74 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [2.0.0] - 2025-11-08
+
+### 🎉 Major Release - Modular Architecture & Batch Processing
+
+This release represents a complete architectural overhaul with significant new features and improvements.
+
+### Added
+- **Batch Mode**: Process multiple videos in sequence
+  - Extract metrics from multiple videos automatically by pasting YouTube Studio URLs
+  - Support for multiple URL formats (studio URLs, watch URLs, Shorts URLs)
+  - Progress tracking with step-by-step status updates
+  - Cancel functionality to stop batch processing mid-operation
+  - Three export modes: Complete Analysis, Equal Periods, and Lifetime
+- **Batch Extraction History**: Track and review past batch extractions
+  - History viewer in extension popup with dropdown interface
+  - Export historical batch data
+  - Persistent storage of batch results
+- **Granular Progress Tracking**: Step-level and sub-step progress indicators
+  - Real-time status updates during extraction
+  - Visual progress bar for batch operations
+  - Auto-scroll to results when extraction completes
+- **YouTube Shorts Support**: Full compatibility with Shorts videos in batch mode
+  - Automatic Shorts detection and handling
+  - Proper navigation to Advanced Mode for Shorts
+- **Documentation**: Added comprehensive date handling audit and export format documentation
+  - DATE_HANDLING_AUDIT.md: Documents date format consistency improvements
+  - PROPOSED_EXPORT_FORMAT.md: Simplified batch export format design
+
+### Changed
+- **Modular Architecture**: Complete code reorganization for maintainability
+  - `content-utils.js`: Utility functions and date formatting
+  - `content-youtube-api.js`: YouTube Studio DOM interaction and API logic
+  - `content-single-video.js`: Single-video UI and extraction flow
+  - `content-batch.js`: Batch processing logic and UI
+  - `content.js`: Main orchestration and initialization
+- **Batch Export Quality**: Improved title extraction and publish date handling
+- **UI Improvements**: Better spacing, padding, and container structure in batch mode
+- **Drag Behavior**: Remove document-level drag listeners when not actively dragging
+
+### Fixed
+- **Critical Syntax Error**: Fixed error that was preventing extension panel from showing
+- **Progress Bar**: Fixed skipping steps in complete mode
+- **Batch UI Persistence**: Fixed batch mode UI not persisting properly on analytics page
+- **Input Clickability**: Fixed inputs not being clickable due to pointer-events CSS
+- **Scroll Accessibility**: Ensured export buttons are always reachable by scrolling
+- **Zoom Compatibility**: Use flexbox instead of fixed height calculations for better zoom support
+- **Duplicate Padding**: Removed duplicate padding in batch mode interface
+- **Container Display State**: Set explicit display state for single-video-container
+- **Advanced Mode Navigation**: Properly navigate to Advanced Mode before extraction in batch mode
+- **Stayed to Watch Metric**: Properly extract metric from YouTube Analytics in batch mode
+
+### Performance
+- **Drastically Reduced Wait Times**: Batch navigation now 3-5x faster
+  - Reduced Advanced Mode navigation waits
+  - Removed unnecessary waits in batch extraction flow
+  - Optimized retry mechanisms
+
+### Technical Details
+- 47 commits with systematic refactoring across 6 phases
+- Backward compatible with existing single-video extraction workflow
+- Enhanced error handling and logging throughout
+- Improved code organization following separation of concerns principles
+
+### Migration Notes
+- Existing users will see new "Batch Mode" toggle in the extension panel
+- Single-video extraction workflow remains unchanged
+- All existing features continue to work as before
+
 ## [1.2.2] - 2025-11-07
 
 ### Fixed
