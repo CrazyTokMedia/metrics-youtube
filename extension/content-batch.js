@@ -245,18 +245,39 @@ YTTreatmentHelper.BatchMode = {
    * Called on page load to resume interrupted batches
    */
   checkAndResumeBatch: async function() {
+    // Wait a bit for page to be ready
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     const batchState = await safeStorage.get(['batchInProgress']);
 
     if (batchState.batchInProgress) {
-      console.log('Resuming batch extraction...');
+      console.log('🔄 Batch in progress detected - resuming...');
+      console.log('Batch state:', batchState.batchInProgress);
 
       // Restore state
       const state = batchState.batchInProgress;
       this.batchResults = state.results || [];
       this.isRunning = true;
 
+      // Wait for panel to be created
+      let attempts = 0;
+      while (!document.getElementById('batch-mode-container') && attempts < 10) {
+        console.log('Waiting for batch UI to be created...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+
+      if (!document.getElementById('batch-mode-container')) {
+        console.error('Batch UI not found - cannot resume');
+        return;
+      }
+
+      console.log(`Resuming from video ${state.currentIndex + 1} of ${state.videos.length}`);
+
       // Continue extraction
       await this.continueBatchExtraction(state);
+    } else {
+      console.log('No batch in progress');
     }
   },
 
@@ -359,9 +380,15 @@ YTTreatmentHelper.BatchMode = {
         await safeStorage.set({ batchInProgress: state });
 
         console.log(`Navigating to video ${video.videoId}...`);
+
+        // Navigate and wait for page to reload
         window.location.href = `https://studio.youtube.com/video/${video.videoId}/analytics`;
         return; // Navigation will reload page and resume
       }
+
+      // We're on the right page - wait a bit for page to settle after navigation
+      console.log(`On correct video page: ${video.videoId}`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // We're on the right page - extract metrics
       try {
@@ -424,15 +451,32 @@ YTTreatmentHelper.BatchMode = {
   extractVideoMetrics: async function(video, treatmentDate, extractionMode) {
     console.log(`Extracting metrics for ${video.videoId}...`);
 
-    // Wait for analytics page to load
+    // Wait for analytics page to load - try multiple selectors
+    console.log('Waiting for analytics page to load...');
+    let analyticsLoaded = false;
+
     try {
-      await waitForElement('ytcp-analytics-page', 15000);
+      // Try waiting for the analytics page element
+      await waitForElement('ytcp-analytics-page', 20000);
+      analyticsLoaded = true;
+      console.log('Analytics page element found');
     } catch (error) {
-      throw new Error('Analytics page did not load');
+      console.warn('ytcp-analytics-page not found, trying alternate selectors...');
+
+      // Try alternate selector for analytics section
+      try {
+        await waitForElement('[class*="analytics"]', 10000);
+        analyticsLoaded = true;
+        console.log('Analytics section found via alternate selector');
+      } catch (error2) {
+        console.error('Analytics page did not load after 30 seconds');
+        throw new Error('Analytics page did not load - please ensure you are on the Analytics tab');
+      }
     }
 
-    // Wait a bit more for data to populate
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Wait longer for data to populate (analytics can be slow)
+    console.log('Waiting for analytics data to populate...');
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     // Get video title from page
     let videoTitle = 'Unknown Title';

@@ -471,6 +471,18 @@ YTTreatmentHelper.SingleVideo = {
       });
     });
 
+    // Check if batch is in progress and switch to batch mode UI
+    safeStorage.get(['batchInProgress']).then((result) => {
+      if (result.batchInProgress) {
+        console.log('Batch in progress detected - switching to batch mode UI');
+        // Switch to batch mode
+        modeButtons.forEach(b => b.classList.remove('active'));
+        document.querySelector('.mode-toggle-btn[data-mode="batch"]').classList.add('active');
+        singleContainer.style.display = 'none';
+        batchContainer.style.display = 'block';
+      }
+    });
+
     // Make panel draggable
     self.makePanelDraggable(panel);
 
