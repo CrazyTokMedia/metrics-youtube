@@ -589,8 +589,15 @@ YTTreatmentHelper.SingleVideo = {
           document.getElementById('post-end').value = '';
           document.getElementById('post-days').textContent = '—';
 
-          // Scroll to show the error
-          document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          // Scroll helper-body to show the error
+          const helperBody = document.querySelector('.helper-body');
+          const resultsSection = document.getElementById('results-section');
+          if (helperBody && resultsSection) {
+            helperBody.scrollTo({
+              top: resultsSection.offsetTop - 20,
+              behavior: 'smooth'
+            });
+          }
 
           return; // Stop here - don't calculate ranges
         }
@@ -659,8 +666,15 @@ YTTreatmentHelper.SingleVideo = {
       document.getElementById('results-section').style.display = 'block';
       document.getElementById('extraction-mode-section').style.display = 'block';
 
-      // Scroll to results
-      document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // Scroll helper-body to show results
+      const helperBody = document.querySelector('.helper-body');
+      const resultsSection = document.getElementById('results-section');
+      if (helperBody && resultsSection) {
+        helperBody.scrollTo({
+          top: resultsSection.offsetTop - 20,
+          behavior: 'smooth'
+        });
+      }
 
       // Save to storage for future use (save in DD/MM/YYYY format for UI compatibility)
       safeStorage.set({
@@ -1203,12 +1217,58 @@ YTTreatmentHelper.SingleVideo = {
 
         // Run extraction (always include retention)
         currentStep = 'Extracting metrics';
-        const result = await YTTreatmentHelper.API.extractPrePostMetrics(
-          preStart, preEnd,
-          postStart, postEnd,
-          updateStatus,
-          true // Always extract retention
-        );
+        let result;
+        try {
+          result = await YTTreatmentHelper.API.extractPrePostMetrics(
+            preStart, preEnd,
+            postStart, postEnd,
+            updateStatus,
+            true // Always extract retention
+          );
+        } catch (error) {
+          // Check if error contains YouTube max date constraint
+          const maxDateYYYYMMDD = YTTreatmentHelper.Utils.parseMaxDateFromError(error.message);
+
+          if (maxDateYYYYMMDD) {
+            console.log(`⚠️ YouTube date validation error - retrying with actual max date: ${maxDateYYYYMMDD}`);
+
+            // Get treatment date and publish date for recalculation
+            const treatmentDateInput = document.getElementById('treatment-date');
+            const treatmentDateDDMMYYYY = treatmentDateInput ? treatmentDateInput.value : null;
+            const treatmentDateYYYYMMDD = treatmentDateDDMMYYYY ? YTTreatmentHelper.Utils.formatDateToYYYYMMDD(treatmentDateDDMMYYYY) : null;
+            const videoPublishDate = YTTreatmentHelper.API.getVideoPublishDate();
+
+            if (treatmentDateYYYYMMDD && videoPublishDate) {
+              // Recalculate date ranges with YouTube's actual max date
+              const newRanges = YTTreatmentHelper.API.recalculateWithMaxDate(
+                treatmentDateYYYYMMDD,
+                videoPublishDate,
+                maxDateYYYYMMDD
+              );
+
+              console.log('✅ Recalculated date ranges:', {
+                pre: `${newRanges.pre.start} to ${newRanges.pre.end}`,
+                post: `${newRanges.post.start} to ${newRanges.post.end}`
+              });
+
+              // Retry with new dates
+              console.log('🔄 Retrying extraction with corrected dates...');
+              updateStatus('🔄 Retrying with YouTube available dates...');
+              result = await YTTreatmentHelper.API.extractPrePostMetrics(
+                newRanges.pre.start,
+                newRanges.pre.end,
+                newRanges.post.start,
+                newRanges.post.end,
+                updateStatus,
+                true // Always extract retention
+              );
+            } else {
+              throw error; // Re-throw if we can't recalculate
+            }
+          } else {
+            throw error; // Not a max date error
+          }
+        }
 
         // Display results
         document.getElementById('pre-impressions').textContent = result.pre.impressions || '—';
@@ -1291,6 +1351,32 @@ YTTreatmentHelper.SingleVideo = {
           lastExtractedMetrics: result
         });
 
+        // Save to extraction history
+        const treatmentDate = document.getElementById('treatment-date').value;
+        const videoId = YTTreatmentHelper.Utils.getVideoIdFromUrl();
+        const mode = window.currentExtractionMode || 'equal-periods';
+
+        await YTTreatmentHelper.ExtractionHistory.saveSingleExtraction({
+          videoId: videoId,
+          treatmentDate: treatmentDate,
+          mode: mode,
+          dateRanges: {
+            pre: {
+              start: preStart,
+              end: preEnd,
+              days: calculateDaysBetween(preStart, preEnd)
+            },
+            post: {
+              start: postStart,
+              end: postEnd,
+              days: calculateDaysBetween(postStart, postEnd)
+            }
+          },
+          metrics: result
+        });
+
+        console.log('Extraction saved to history');
+
       } catch (error) {
         console.error('Extraction failed:', error);
 
@@ -1366,6 +1452,46 @@ YTTreatmentHelper.SingleVideo = {
       }
     };
 
+    // Helper: Extract with retry for complete analysis
+    const extractWithRetryForComplete = async (preStart, preEnd, postStart, postEnd, statusCallback, includeRetention, treatmentDateYYYYMMDD, videoPublishDate) => {
+      try {
+        return await YTTreatmentHelper.API.extractPrePostMetrics(
+          preStart, preEnd, postStart, postEnd,
+          statusCallback,
+          includeRetention
+        );
+      } catch (error) {
+        const maxDateYYYYMMDD = YTTreatmentHelper.Utils.parseMaxDateFromError(error.message);
+
+        if (maxDateYYYYMMDD && treatmentDateYYYYMMDD && videoPublishDate) {
+          console.log(`⚠️ YouTube date validation error - retrying with actual max date: ${maxDateYYYYMMDD}`);
+
+          const newRanges = YTTreatmentHelper.API.recalculateWithMaxDate(
+            treatmentDateYYYYMMDD,
+            videoPublishDate,
+            maxDateYYYYMMDD
+          );
+
+          console.log('✅ Recalculated date ranges for retry:', {
+            pre: `${newRanges.pre.start} to ${newRanges.pre.end}`,
+            post: `${newRanges.post.start} to ${newRanges.post.end}`
+          });
+
+          statusCallback('🔄 Retrying with YouTube available dates...');
+          return await YTTreatmentHelper.API.extractPrePostMetrics(
+            newRanges.pre.start,
+            newRanges.pre.end,
+            newRanges.post.start,
+            newRanges.post.end,
+            statusCallback,
+            includeRetention
+          );
+        }
+
+        throw error;
+      }
+    };
+
     // Complete Analysis function
     const runCompleteAnalysis = async (ranges) => {
       const autoExtractBtn = document.getElementById('auto-extract-btn');
@@ -1387,25 +1513,35 @@ YTTreatmentHelper.SingleVideo = {
           await YTTreatmentHelper.API.navigateToAdvancedMode();
         }
 
+        // Get treatment date and publish date for potential retry
+        const treatmentDateInput = document.getElementById('treatment-date');
+        const treatmentDateDDMMYYYY = treatmentDateInput ? treatmentDateInput.value : null;
+        const treatmentDateYYYYMMDD = treatmentDateDDMMYYYY ? YTTreatmentHelper.Utils.formatDateToYYYYMMDD(treatmentDateDDMMYYYY) : null;
+        const videoPublishDate = YTTreatmentHelper.API.getVideoPublishDate();
+
         // Step 1: Extract Equal Periods data
         statusEl.textContent = '📊 Extracting equal periods data...';
         statusEl.className = 'extraction-status info';
 
-        const equalResult = await YTTreatmentHelper.API.extractPrePostMetrics(
+        const equalResult = await extractWithRetryForComplete(
           ranges.equalPreStart, ranges.equalPreEnd,
           ranges.equalPostStart, ranges.equalPostEnd,
           (msg) => { statusEl.textContent = msg; },
-          true
+          true,
+          treatmentDateYYYYMMDD,
+          videoPublishDate
         );
 
         // Step 2: Extract Lifetime data
         statusEl.textContent = '📊 Extracting lifetime data...';
 
-        const lifetimeResult = await YTTreatmentHelper.API.extractPrePostMetrics(
+        const lifetimeResult = await extractWithRetryForComplete(
           ranges.lifetimePreStart, ranges.lifetimePreEnd,
           ranges.lifetimePostStart, ranges.lifetimePostEnd,
           (msg) => { statusEl.textContent = msg; },
-          true
+          true,
+          treatmentDateYYYYMMDD,
+          videoPublishDate
         );
 
         // Store both results globally
@@ -1508,9 +1644,16 @@ YTTreatmentHelper.SingleVideo = {
         const equalPostEnd = document.getElementById('post-end').dataset.original;
 
         // Calculate lifetime ranges
-        const today = new Date();
-        today.setDate(today.getDate() - 2);
-        const todayStr = YTTreatmentHelper.Utils.formatDate(today);
+        // Use UTC-based date to match calculateDateRanges logic
+        const todayUTC = new Date();
+        const maxYouTubeDate = new Date(Date.UTC(
+          todayUTC.getUTCFullYear(),
+          todayUTC.getUTCMonth(),
+          todayUTC.getUTCDate(),
+          0, 0, 0, 0
+        ));
+        maxYouTubeDate.setUTCDate(maxYouTubeDate.getUTCDate() - 3);
+        const todayStr = YTTreatmentHelper.Utils.formatDate(maxYouTubeDate);
 
         // Run complete analysis
         await runCompleteAnalysis({
@@ -1538,10 +1681,17 @@ YTTreatmentHelper.SingleVideo = {
           return;
         }
 
-        // Calculate today (or yesterday, as YouTube data is typically 2 days behind)
-        const today = new Date();
-        today.setDate(today.getDate() - 2); // YouTube data is ~2 days behind
-        const todayStr = YTTreatmentHelper.Utils.formatDate(today);
+        // Calculate max YouTube date (UTC-based, 3-day buffer)
+        // Use UTC-based date to match calculateDateRanges logic
+        const todayUTC = new Date();
+        const maxYouTubeDate = new Date(Date.UTC(
+          todayUTC.getUTCFullYear(),
+          todayUTC.getUTCMonth(),
+          todayUTC.getUTCDate(),
+          0, 0, 0, 0
+        ));
+        maxYouTubeDate.setUTCDate(maxYouTubeDate.getUTCDate() - 3);
+        const todayStr = YTTreatmentHelper.Utils.formatDate(maxYouTubeDate);
 
         // Set lifetime ranges in dataset.original for extraction
         // PRE: publish → treatment
@@ -1602,6 +1752,253 @@ YTTreatmentHelper.SingleVideo = {
         document.getElementById('treatment-date').value = dateToDisplay;
       }
     });
+
+    // Initialize extraction history
+    this.initializeHistory();
+  },
+
+  /**
+   * Initialize extraction history UI and event listeners
+   */
+  initializeHistory: function() {
+    const toggleBtn = document.getElementById('toggle-history-btn');
+    const historyContent = document.getElementById('history-content');
+    const clearBtn = document.getElementById('clear-history-btn');
+
+    if (!toggleBtn || !historyContent) return;
+
+    // Toggle history visibility
+    toggleBtn.addEventListener('click', async () => {
+      const isVisible = historyContent.style.display !== 'none';
+
+      if (isVisible) {
+        historyContent.style.display = 'none';
+        toggleBtn.textContent = 'Show History';
+      } else {
+        // Load and display history
+        await this.loadAndDisplayHistory();
+        historyContent.style.display = 'block';
+        toggleBtn.textContent = 'Hide History';
+      }
+    });
+
+    // Clear history
+    clearBtn.addEventListener('click', async () => {
+      if (confirm('Clear all extraction history? This cannot be undone.')) {
+        await YTTreatmentHelper.ExtractionHistory.clearHistory({ type: 'single' });
+        await this.loadAndDisplayHistory();
+      }
+    });
+  },
+
+  /**
+   * Public alias for initializing history event listeners
+   * (Used when history section is dynamically created)
+   */
+  initializeHistoryEventListeners: function() {
+    this.initializeHistory();
+  },
+
+  /**
+   * Load and display extraction history (audit trail)
+   */
+  loadAndDisplayHistory: async function() {
+    const historyList = document.getElementById('history-list');
+    const historySection = document.getElementById('extraction-history-section');
+
+    if (!historyList) return;
+
+    // Get all history (audit trail)
+    const history = await YTTreatmentHelper.ExtractionHistory.getSingleHistory();
+
+    if (history.length === 0) {
+      historyList.innerHTML = '<div class="history-empty">No extraction history</div>';
+      return;
+    }
+
+    // Show history section
+    historySection.style.display = 'block';
+
+    // Build history HTML
+    let html = '';
+    history.forEach((entry, index) => {
+      const modeLabel = entry.mode === 'equal-periods' ? 'Equal Periods' :
+                        entry.mode === 'lifetime' ? 'Lifetime' : 'Complete Analysis';
+
+      html += `
+        <div class="history-item" data-entry-id="${entry.id}">
+          <div class="history-item-header">
+            <div class="history-item-info">
+              <span class="history-item-date">${YTTreatmentHelper.ExtractionHistory.formatExtractionDate(entry.extractionDate)}</span>
+              <span class="history-item-mode">${modeLabel}</span>
+            </div>
+            <button class="history-item-toggle" data-index="${index}">
+              <span class="toggle-icon">▼</span>
+            </button>
+          </div>
+          <div class="history-item-meta">
+            <div class="history-video-title">${entry.videoTitle || 'Unknown Video'}</div>
+            <div class="history-video-id">${entry.videoId}</div>
+            <div class="history-treatment-date">Treatment: ${entry.treatmentDate}</div>
+          </div>
+          <div class="history-item-details" style="display: none;">
+            <div class="history-metrics">
+              <div class="history-metric-column">
+                <div class="history-column-label">PRE</div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">Impressions:</span>
+                  <span class="history-metric-value">${entry.metrics?.pre?.impressions || '—'}</span>
+                </div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">CTR:</span>
+                  <span class="history-metric-value">${entry.metrics?.pre?.ctr || '—'}</span>
+                </div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">Views:</span>
+                  <span class="history-metric-value">${entry.metrics?.pre?.views || '—'}</span>
+                </div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">AWT:</span>
+                  <span class="history-metric-value">${entry.metrics?.pre?.awt || '—'}</span>
+                </div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">Retention:</span>
+                  <span class="history-metric-value">${entry.metrics?.pre?.retention?.value || entry.metrics?.pre?.retention || '—'}</span>
+                </div>
+              </div>
+              <div class="history-metric-column">
+                <div class="history-column-label">POST</div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">Impressions:</span>
+                  <span class="history-metric-value">${entry.metrics?.post?.impressions || '—'}</span>
+                </div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">CTR:</span>
+                  <span class="history-metric-value">${entry.metrics?.post?.ctr || '—'}</span>
+                </div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">Views:</span>
+                  <span class="history-metric-value">${entry.metrics?.post?.views || '—'}</span>
+                </div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">AWT:</span>
+                  <span class="history-metric-value">${entry.metrics?.post?.awt || '—'}</span>
+                </div>
+                <div class="history-metric-row">
+                  <span class="history-metric-label">Retention:</span>
+                  <span class="history-metric-value">${entry.metrics?.post?.retention?.value || entry.metrics?.post?.retention || '—'}</span>
+                </div>
+              </div>
+            </div>
+            <div class="history-actions">
+              <button class="history-copy-btn" data-entry-id="${entry.id}">
+                <span class="btn-icon">📋</span> Copy Data
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    historyList.innerHTML = html;
+
+    // Add toggle event listeners
+    document.querySelectorAll('.history-item-toggle').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const historyItem = e.target.closest('.history-item');
+        const details = historyItem.querySelector('.history-item-details');
+        const icon = btn.querySelector('.toggle-icon');
+
+        if (details.style.display === 'none') {
+          details.style.display = 'block';
+          icon.textContent = '▲';
+        } else {
+          details.style.display = 'none';
+          icon.textContent = '▼';
+        }
+      });
+    });
+
+    // Add copy event listeners
+    document.querySelectorAll('.history-copy-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const entryId = parseInt(btn.dataset.entryId);
+        const entry = history.find(e => e.id === entryId);
+
+        if (entry) {
+          await this.copyHistoryEntry(entry);
+
+          // Visual feedback
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<span class="btn-icon">✓</span> Copied!';
+          btn.classList.add('copied');
+
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('copied');
+          }, 1500);
+        }
+      });
+    });
+  },
+
+  /**
+   * Copy history entry data to clipboard
+   */
+  copyHistoryEntry: async function(entry) {
+    // Helper: Format duration for sheets
+    const formatDurationForSheets = (duration) => {
+      if (!duration || duration === '—' || duration === 'N/A') return duration;
+
+      const parts = duration.split(':');
+      if (parts.length === 2) {
+        const minutes = parts[0].padStart(2, '0');
+        const seconds = parts[1].padStart(2, '0');
+        return `00:${minutes}:${seconds}`;
+      } else if (parts.length === 3) {
+        const hours = parts[0].padStart(2, '0');
+        const minutes = parts[1].padStart(2, '0');
+        const seconds = parts[2].padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+      }
+      return duration;
+    };
+
+    // Helper: Format date ranges
+    const formatDateRanges = () => {
+      if (!entry.dateRanges) return '';
+
+      const formatDateDDMMYYYY = (dateStr) => {
+        const [year, month, day] = dateStr.split('-');
+        return `${day}.${month}.${year}`;
+      };
+
+      const preStart = formatDateDDMMYYYY(entry.dateRanges.pre.start);
+      const preEnd = formatDateDDMMYYYY(entry.dateRanges.pre.end);
+      const postStart = formatDateDDMMYYYY(entry.dateRanges.post.start);
+      const postEnd = formatDateDDMMYYYY(entry.dateRanges.post.end);
+
+      return `Pre - ${preStart}-${preEnd} Post- ${postStart}-${postEnd}`;
+    };
+
+    const treatmentDate = formatDateRanges();
+    const preImpressions = entry.metrics?.pre?.impressions || '';
+    const postImpressions = entry.metrics?.post?.impressions || '';
+    const preCtr = entry.metrics?.pre?.ctr || '';
+    const postCtr = entry.metrics?.post?.ctr || '';
+    const preAwt = formatDurationForSheets(entry.metrics?.pre?.awt || '');
+    const postAwt = formatDurationForSheets(entry.metrics?.post?.awt || '');
+    const preRetention = entry.metrics?.pre?.retention?.value || entry.metrics?.pre?.retention || '';
+    const postRetention = entry.metrics?.post?.retention?.value || entry.metrics?.post?.retention || '';
+    const preViews = entry.metrics?.pre?.views || '';
+    const postViews = entry.metrics?.post?.views || '';
+    const preStayedToWatch = entry.metrics?.pre?.stayedToWatch || '';
+    const postStayedToWatch = entry.metrics?.post?.stayedToWatch || '';
+
+    // Format: same as spreadsheet copy
+    const tabFormat = `${treatmentDate}\t${preImpressions}\t${postImpressions}\t\t${preCtr}\t${postCtr}\t\t${preAwt}\t${postAwt}\t${preRetention}\t${postRetention}\t${preStayedToWatch}\t${postStayedToWatch}\t${preViews}\t${postViews}`;
+
+    await navigator.clipboard.writeText(tabFormat);
   },
 
   /**

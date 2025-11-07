@@ -26,40 +26,11 @@ YTTreatmentHelper.BatchMode = {
 
         <div class="step-container">
           <div class="step-label">Treatment date (DD/MM/YYYY) - applies to all videos</div>
-          <div class="input-section">
-            <input type="text" id="batch-treatment-date" class="date-input" placeholder="DD/MM/YYYY" maxlength="10" />
-            <button id="batch-calculate-btn" class="action-btn calculate-btn">Calculate</button>
-          </div>
+          <input type="text" id="batch-treatment-date" class="date-input" placeholder="DD/MM/YYYY" maxlength="10" />
         </div>
 
-        <!-- Step 2: Date Preview (hidden until Calculate is clicked) -->
-        <div id="batch-date-preview" class="results-section" style="display: none;">
-          <div class="step-container">
-            <div class="step-label">Calculation Preview</div>
-          </div>
-
-          <div class="date-preview-info">
-            <div class="preview-row">
-              <span class="preview-label">Treatment Date:</span>
-              <span id="batch-preview-treatment" class="preview-value"></span>
-            </div>
-            <div class="preview-row">
-              <span class="preview-label">Period Type:</span>
-              <span class="preview-value">Equal PRE/POST periods</span>
-            </div>
-            <div class="preview-row">
-              <span class="preview-label">Calculation:</span>
-              <span class="preview-value preview-note">Periods calculated per video based on publish date</span>
-            </div>
-            <div class="preview-row">
-              <span class="preview-label">YouTube Data:</span>
-              <span id="batch-preview-date-range" class="preview-value"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 3: Extraction Mode -->
-        <div class="step-container" id="batch-extraction-mode-section" style="display: none;">
+        <!-- Step 2: Extraction Mode -->
+        <div class="step-container">
           <div class="step-label">Choose extraction type</div>
           <div class="extraction-mode-options">
             <label class="radio-option">
@@ -86,10 +57,10 @@ YTTreatmentHelper.BatchMode = {
           </div>
         </div>
 
-        <!-- Step 4: Extract Button -->
-        <div class="extract-controls" id="batch-extract-controls" style="display: none;">
+        <!-- Step 3: Extract Button -->
+        <div class="extract-controls">
           <button id="batch-extract-btn" class="action-btn extract-btn">
-            <span class="btn-icon">📊</span> Extract Metrics
+            <span class="btn-icon">📊</span> Extract Batch
           </button>
           <button id="batch-cancel-btn" class="cancel-btn" style="display: none;">Cancel</button>
         </div>
@@ -190,14 +161,6 @@ YTTreatmentHelper.BatchMode = {
     const treatmentDateInput = document.getElementById('batch-treatment-date');
     if (treatmentDateInput) {
       YTTreatmentHelper.Utils.autoFormatDateInput(treatmentDateInput);
-    }
-
-    // Calculate button
-    const calculateBtn = document.getElementById('batch-calculate-btn');
-    if (calculateBtn) {
-      calculateBtn.addEventListener('click', () => {
-        self.showBatchPreview();
-      });
     }
 
     // Extract button
@@ -329,67 +292,6 @@ YTTreatmentHelper.BatchMode = {
     const urls = this.parseUrls(urlsInput.value);
     const count = urls.length;
     countDisplay.textContent = `${count} video${count !== 1 ? 's' : ''}`;
-  },
-
-  /**
-   * Show batch date preview after Calculate is clicked
-   */
-  showBatchPreview: function() {
-    // Get inputs
-    const urlsInput = document.getElementById('batch-urls-input');
-    const treatmentDateInput = document.getElementById('batch-treatment-date');
-
-    if (!urlsInput || !treatmentDateInput) {
-      alert('Missing required inputs');
-      return;
-    }
-
-    // Validate URLs
-    const videos = this.parseUrls(urlsInput.value);
-    if (videos.length === 0) {
-      alert('Please paste at least one valid YouTube Studio video URL');
-      return;
-    }
-
-    // Validate treatment date
-    const treatmentDate = treatmentDateInput.value.trim();
-    if (!treatmentDate || treatmentDate.split('/').length !== 3) {
-      alert('Please enter a valid treatment date (DD/MM/YYYY)');
-      return;
-    }
-
-    // Convert to YYYY-MM-DD for date calculations
-    const treatmentDateYYYYMMDD = YTTreatmentHelper.Utils.formatDateToYYYYMMDD(treatmentDate);
-
-    // Validate date is not too recent (YouTube has 3-day data delay)
-    const today = new Date();
-    const maxDate = new Date(today);
-    maxDate.setDate(maxDate.getDate() - 3);
-    const treatment = new Date(treatmentDateYYYYMMDD);
-
-    if (treatment > maxDate) {
-      alert('Treatment date must be at least 4 days ago to account for YouTube data processing delay.');
-      return;
-    }
-
-    // Calculate date range preview
-    const maxYouTubeDate = YTTreatmentHelper.Utils.formatDate(maxDate);
-
-    // Update preview UI
-    document.getElementById('batch-preview-treatment').textContent = treatmentDate;
-    document.getElementById('batch-preview-date-range').textContent = `Available up to ${YTTreatmentHelper.Utils.formatDateToDDMMYYYY(maxYouTubeDate)}`;
-
-    // Show preview section
-    document.getElementById('batch-date-preview').style.display = 'block';
-
-    // Show extraction mode section
-    document.getElementById('batch-extraction-mode-section').style.display = 'block';
-
-    // Show extract button
-    document.getElementById('batch-extract-controls').style.display = 'block';
-
-    // Scroll to preview
-    document.getElementById('batch-date-preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
 
   /**
@@ -664,6 +566,53 @@ YTTreatmentHelper.BatchMode = {
   },
 
   /**
+   * Helper: Extract with retry on YouTube max date error
+   */
+  extractWithRetry: async function(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention, treatmentDateYYYYMMDD, videoPublishDate) {
+    try {
+      // First attempt
+      return await YTTreatmentHelper.API.extractPrePostMetrics(
+        preStart, preEnd, postStart, postEnd,
+        statusCallback,
+        includeRetention
+      );
+    } catch (error) {
+      // Check if error contains YouTube max date constraint
+      const maxDateYYYYMMDD = YTTreatmentHelper.Utils.parseMaxDateFromError(error.message);
+
+      if (maxDateYYYYMMDD) {
+        console.log(`⚠️ YouTube date validation error - retrying with actual max date: ${maxDateYYYYMMDD}`);
+
+        // Recalculate date ranges with YouTube's actual max date
+        const newRanges = YTTreatmentHelper.API.recalculateWithMaxDate(
+          treatmentDateYYYYMMDD,
+          videoPublishDate,
+          maxDateYYYYMMDD
+        );
+
+        console.log('✅ Recalculated date ranges:', {
+          pre: `${newRanges.pre.start} to ${newRanges.pre.end}`,
+          post: `${newRanges.post.start} to ${newRanges.post.end}`
+        });
+
+        // Retry with new dates
+        console.log('🔄 Retrying extraction with corrected dates...');
+        return await YTTreatmentHelper.API.extractPrePostMetrics(
+          newRanges.pre.start,
+          newRanges.pre.end,
+          newRanges.post.start,
+          newRanges.post.end,
+          statusCallback,
+          includeRetention
+        );
+      }
+
+      // Not a max date error - re-throw
+      throw error;
+    }
+  },
+
+  /**
    * Extract metrics for a single video
    * Returns result object with all metrics
    */
@@ -747,24 +696,28 @@ YTTreatmentHelper.BatchMode = {
     if (extractionMode === 'complete') {
       // Extract both equal periods and lifetime
       console.log('Step 7a: Extracting equal periods...');
-      const equalResult = await YTTreatmentHelper.API.extractPrePostMetrics(
+      const equalResult = await this.extractWithRetry(
         dateRanges.pre.start,
         dateRanges.pre.end,
         dateRanges.post.start,
         dateRanges.post.end,
         (status) => console.log(`  [Equal] ${status}`),
-        true // include retention
+        true, // include retention
+        treatmentDateYYYYMMDD,
+        videoPublishDate
       );
       console.log('✅ Step 7a: Equal periods extracted:', equalResult);
 
       console.log('Step 7b: Extracting lifetime periods...');
-      const lifetimeResult = await YTTreatmentHelper.API.extractPrePostMetrics(
+      const lifetimeResult = await this.extractWithRetry(
         YTTreatmentHelper.Utils.formatDate(videoPublishDate),
         treatmentDateYYYYMMDD,
         treatmentDateYYYYMMDD,
         YTTreatmentHelper.Utils.formatDate(new Date()),
         (status) => console.log(`  [Lifetime] ${status}`),
-        false // no retention for lifetime
+        false, // no retention for lifetime
+        treatmentDateYYYYMMDD,
+        videoPublishDate
       );
       console.log('✅ Step 7b: Lifetime periods extracted:', lifetimeResult);
 
@@ -776,26 +729,30 @@ YTTreatmentHelper.BatchMode = {
     } else if (extractionMode === 'equal-periods') {
       // Extract equal PRE/POST periods
       console.log('Step 7: Extracting equal periods...');
-      const result = await YTTreatmentHelper.API.extractPrePostMetrics(
+      const result = await this.extractWithRetry(
         dateRanges.pre.start,
         dateRanges.pre.end,
         dateRanges.post.start,
         dateRanges.post.end,
         (status) => console.log(`  ${status}`),
-        true // include retention
+        true, // include retention
+        treatmentDateYYYYMMDD,
+        videoPublishDate
       );
       console.log('✅ Step 7: Equal periods extracted:', result);
       metrics = { mode: 'equal-periods', ...result };
     } else if (extractionMode === 'lifetime') {
       // Extract lifetime periods (publish to treatment, treatment to today)
       console.log('Step 7: Extracting lifetime periods...');
-      const result = await YTTreatmentHelper.API.extractPrePostMetrics(
+      const result = await this.extractWithRetry(
         YTTreatmentHelper.Utils.formatDate(videoPublishDate),
         treatmentDateYYYYMMDD,
         treatmentDateYYYYMMDD,
         YTTreatmentHelper.Utils.formatDate(new Date()),
         (status) => console.log(`  ${status}`),
-        false // no retention for lifetime
+        false, // no retention for lifetime
+        treatmentDateYYYYMMDD,
+        videoPublishDate
       );
       console.log('✅ Step 7: Lifetime periods extracted:', result);
       metrics = { mode: 'lifetime', ...result };

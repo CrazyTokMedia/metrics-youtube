@@ -219,6 +219,88 @@ YTTreatmentHelper.API = {
   },
 
   /**
+   * Recalculate date ranges with a custom maximum date
+   * Used when YouTube's actual data availability is less than expected
+   */
+  recalculateWithMaxDate: function(treatmentDate, videoPublishDate, maxYouTubeDateYYYYMMDD) {
+    const formatDate = YTTreatmentHelper.Utils.formatDate;
+
+    const createUTCMidnight = (dateInput) => {
+      let date;
+      if (typeof dateInput === 'string') {
+        const [year, month, day] = dateInput.split('-').map(Number);
+        date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      } else if (dateInput instanceof Date) {
+        date = new Date(Date.UTC(
+          dateInput.getFullYear(),
+          dateInput.getMonth(),
+          dateInput.getDate(),
+          0, 0, 0, 0
+        ));
+      } else {
+        const now = new Date();
+        date = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          0, 0, 0, 0
+        ));
+      }
+      return date;
+    };
+
+    const treatment = createUTCMidnight(treatmentDate);
+    const maxDate = createUTCMidnight(maxYouTubeDateYYYYMMDD);
+    const publishDate = videoPublishDate ? createUTCMidnight(videoPublishDate) : null;
+
+    const daysSince = Math.floor((maxDate - treatment) / (1000 * 60 * 60 * 24));
+    const maxPostDays = daysSince + 1;
+
+    let maxPreDays;
+    if (publishDate) {
+      const daysBetween = Math.floor((treatment - publishDate) / (1000 * 60 * 60 * 24));
+      maxPreDays = daysBetween;
+    } else {
+      maxPreDays = maxPostDays;
+    }
+
+    const periodLength = Math.min(maxPreDays, maxPostDays);
+
+    const preEnd = new Date(treatment);
+    preEnd.setUTCDate(preEnd.getUTCDate() - 1);
+    const preStart = new Date(preEnd);
+    preStart.setUTCDate(preStart.getUTCDate() - periodLength + 1);
+
+    const postStart = new Date(treatment);
+    const postEnd = new Date(postStart);
+    postEnd.setUTCDate(postEnd.getUTCDate() + periodLength - 1);
+
+    console.log(`Recalculated with YouTube max date ${maxYouTubeDateYYYYMMDD}:
+    Treatment: ${formatDate(treatment)}
+    Max YouTube date: ${formatDate(maxDate)}
+    Video published: ${publishDate ? formatDate(publishDate) : 'Unknown'}
+    Days since: ${daysSince}
+    POST: ${formatDate(postStart)} to ${formatDate(postEnd)} (${periodLength} days)
+    PRE: ${formatDate(preStart)} to ${formatDate(preEnd)} (${periodLength} days)
+  `);
+
+    return {
+      daysSince: daysSince,
+      videoPublishDate: publishDate ? formatDate(publishDate) : null,
+      pre: {
+        start: formatDate(preStart),
+        end: formatDate(preEnd),
+        days: periodLength
+      },
+      post: {
+        start: formatDate(postStart),
+        end: formatDate(postEnd),
+        days: periodLength
+      }
+    };
+  },
+
+  /**
    * Set custom date range in YouTube Studio
    */
   setCustomDateRange: async function(startDate, endDate, overrideFormat = null) {
@@ -865,12 +947,28 @@ YTTreatmentHelper.API = {
       // First attempt: Use auto-detected format
       await this.setCustomDateRange(startDate, endDate);
     } catch (error) {
-      // Check if this is a YouTube validation error (likely format mismatch)
+      // Check if this is a YouTube validation error
       if (error.message && error.message.includes('YouTube validation failed')) {
+
+        // Check if error indicates a minimum date constraint (e.g., "Enter 05/10/2025 or later")
+        const minDateMatch = error.message.match(/Enter (\d+)\/(\d+)\/(\d+) or later/i);
+        if (minDateMatch) {
+          // YouTube is telling us the minimum allowed date
+          // This means our calculated start date is before the video's publish date or data availability
+          console.error(`❌ Date range error: YouTube minimum date is ${minDateMatch[0]}`);
+          console.error(`   Our start date (${startDate}) is before YouTube's earliest available data`);
+          console.error(`   This usually means:`);
+          console.error(`   1. The video was published after your calculated PRE period start, OR`);
+          console.error(`   2. YouTube doesn't have analytics data going that far back`);
+
+          // Re-throw with a more helpful error message
+          throw new Error(`Cannot extract data: YouTube's earliest available date is ${minDateMatch[1]}/${minDateMatch[2]}/${minDateMatch[3]}, but your PRE period starts on ${startDate}. This video was likely published after ${startDate}, so there is no data for the full PRE period. Please choose a more recent treatment date or check the video's publish date.`);
+        }
+
+        // Not a minimum date error - try alternate date format
         console.log('⚠️ First attempt failed with YouTube validation error, retrying with alternate date format...');
 
         // Try to intelligently pick the alternate format by looking at the error message
-        // If error says "Enter 05/10/2025", it's expecting a specific format
         let formatToTry = null;
         const errorMatch = error.message.match(/Enter (\d+)\/(\d+)\/(\d+)/);
         if (errorMatch) {
@@ -899,6 +997,12 @@ YTTreatmentHelper.API = {
           await this.setCustomDateRange(startDate, endDate, formatToTry);
           console.log(`✅ Retry successful with ${formatToTry} format!`);
         } catch (retryError) {
+          // Check again for minimum date error in retry
+          const retryMinDateMatch = retryError.message.match(/Enter (\d+)\/(\d+)\/(\d+) or later/i);
+          if (retryMinDateMatch) {
+            throw new Error(`Cannot extract data: YouTube's earliest available date is ${retryMinDateMatch[1]}/${retryMinDateMatch[2]}/${retryMinDateMatch[3]}, but your PRE period starts on ${startDate}. This video was likely published after ${startDate}, so there is no data for the full PRE period. Please choose a more recent treatment date or check the video's publish date.`);
+          }
+
           // If both attempts failed, throw the original error with additional context
           console.error('❌ Both date format attempts failed!');
           console.error(`   First attempt: auto-detect`);

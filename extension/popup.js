@@ -91,6 +91,110 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Handle history button click
+  const historyBtn = document.getElementById('history-btn');
+  const historySection = document.getElementById('history-section');
+  const historyList = document.getElementById('history-list');
+
+  historyBtn.addEventListener('click', async () => {
+    // Log user action
+    if (window.ExtensionLogger) {
+      window.ExtensionLogger.logUserAction('History button clicked from popup');
+    }
+
+    // Toggle history visibility
+    if (historySection.style.display === 'none') {
+      // Load and show history
+      await loadHistory();
+      historySection.style.display = 'block';
+      historyBtn.textContent = '📜 Hide History';
+    } else {
+      // Hide history
+      historySection.style.display = 'none';
+      historyBtn.textContent = '📜 View History';
+    }
+  });
+
+  // Load and display history
+  async function loadHistory() {
+    try {
+      // Get history from storage
+      const result = await chrome.storage.local.get(['extractionHistory']);
+      const history = result.extractionHistory || { single: [], batch: [] };
+
+      // Handle backward compatibility - convert old object format to array
+      let singleHistory = [];
+      if (Array.isArray(history.single)) {
+        singleHistory = history.single;
+      } else {
+        // Convert old format
+        for (const videoId in history.single) {
+          singleHistory.push(...history.single[videoId]);
+        }
+        singleHistory.sort((a, b) => new Date(b.extractionDate) - new Date(a.extractionDate));
+      }
+
+      if (singleHistory.length === 0) {
+        historyList.innerHTML = '<div class="history-empty">No extraction history</div>';
+        return;
+      }
+
+      // Build history HTML
+      let html = '';
+      singleHistory.forEach((entry) => {
+        const modeLabel = entry.mode === 'equal-periods' ? 'Equal Periods' :
+                          entry.mode === 'lifetime' ? 'Lifetime' : 'Complete';
+
+        const date = formatExtractionDate(entry.extractionDate);
+
+        html += `
+          <div class="history-item">
+            <div class="history-item-header">
+              <span class="history-item-date">${date}</span>
+              <span class="history-item-mode">${modeLabel}</span>
+            </div>
+            <div class="history-video-title">${entry.videoTitle || 'Unknown Video'}</div>
+            <div class="history-video-id">${entry.videoId}</div>
+            <div class="history-treatment-date">Treatment: ${entry.treatmentDate}</div>
+          </div>
+        `;
+      });
+
+      historyList.innerHTML = html;
+    } catch (error) {
+      console.error('Error loading history:', error);
+      historyList.innerHTML = '<div class="history-empty">Error loading history</div>';
+    }
+  }
+
+  // Format extraction date for display
+  function formatExtractionDate(isoDateString) {
+    try {
+      const date = new Date(isoDateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+
+      // Show actual date for older extractions
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Unknown';
+    }
+  }
+
   function updateButton(visible) {
     if (visible) {
       toggleBtn.classList.remove('hide');
