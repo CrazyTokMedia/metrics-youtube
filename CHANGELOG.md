@@ -2,6 +2,15 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [1.2.2] - 2025-11-07
+
+### Fixed
+- **Duration Format for Google Sheets**: Average Watch Time now exports in proper HH:MM:SS duration format
+  - Converts YouTube's "1:23" format to "00:01:23" for all copy buttons
+  - Ensures Google Sheets interprets values as durations rather than time-of-day
+  - Applied to: Copy Pre/Post buttons, Copy for Spreadsheet, Copy Complete Analysis
+  - Prevents formatting issues when pasting metrics into spreadsheets
+
 ## [1.2.1] - 2025-11-06
 
 ### Added
