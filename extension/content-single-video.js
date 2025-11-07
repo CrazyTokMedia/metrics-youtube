@@ -97,7 +97,7 @@ YTTreatmentHelper.SingleVideo = {
       </div>
 
       <div class="helper-body">
-        <div id="single-video-container">
+        <div id="single-video-container" style="display: block;">
 
         <!-- Step 1: Treatment Date -->
         <div class="step-container" id="step-1">
