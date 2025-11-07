@@ -623,53 +623,6 @@ YTTreatmentHelper.BatchMode = {
   },
 
   /**
-   * Helper: Extract with retry on YouTube max date error
-   */
-  extractWithRetry: async function(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention, treatmentDateYYYYMMDD, videoPublishDate) {
-    try {
-      // First attempt
-      return await YTTreatmentHelper.API.extractPrePostMetrics(
-        preStart, preEnd, postStart, postEnd,
-        statusCallback,
-        includeRetention
-      );
-    } catch (error) {
-      // Check if error contains YouTube max date constraint
-      const maxDateYYYYMMDD = YTTreatmentHelper.Utils.parseMaxDateFromError(error.message);
-
-      if (maxDateYYYYMMDD) {
-        console.log(`⚠️ YouTube date validation error - retrying with actual max date: ${maxDateYYYYMMDD}`);
-
-        // Recalculate date ranges with YouTube's actual max date
-        const newRanges = YTTreatmentHelper.API.recalculateWithMaxDate(
-          treatmentDateYYYYMMDD,
-          videoPublishDate,
-          maxDateYYYYMMDD
-        );
-
-        console.log('✅ Recalculated date ranges:', {
-          pre: `${newRanges.pre.start} to ${newRanges.pre.end}`,
-          post: `${newRanges.post.start} to ${newRanges.post.end}`
-        });
-
-        // Retry with new dates
-        console.log('🔄 Retrying extraction with corrected dates...');
-        return await YTTreatmentHelper.API.extractPrePostMetrics(
-          newRanges.pre.start,
-          newRanges.pre.end,
-          newRanges.post.start,
-          newRanges.post.end,
-          statusCallback,
-          includeRetention
-        );
-      }
-
-      // Not a max date error - re-throw
-      throw error;
-    }
-  },
-
-  /**
    * Extract metrics for a single video
    * Returns result object with all metrics
    * @param {Object} progressCallback - Optional callback(stepNum, totalSteps, stepDescription)
@@ -768,15 +721,13 @@ YTTreatmentHelper.BatchMode = {
       console.log('Step 7a: Extracting equal periods...');
       if (progressCallback) progressCallback(++currentStep, totalSteps, 'Extracting equal periods...');
 
-      const equalResult = await this.extractWithRetry(
+      const equalResult = await YTTreatmentHelper.API.extractPrePostMetrics(
         dateRanges.pre.start,
         dateRanges.pre.end,
         dateRanges.post.start,
         dateRanges.post.end,
         (status) => console.log(`  [Equal] ${status}`),
-        true, // include retention
-        treatmentDateYYYYMMDD,
-        videoPublishDate
+        true // include retention
       );
       console.log('✅ Step 7a: Equal periods extracted:', equalResult);
 
@@ -794,15 +745,13 @@ YTTreatmentHelper.BatchMode = {
       maxYouTubeDate.setUTCDate(maxYouTubeDate.getUTCDate() - 3);
       const maxDateStr = YTTreatmentHelper.Utils.formatDate(maxYouTubeDate);
 
-      const lifetimeResult = await this.extractWithRetry(
+      const lifetimeResult = await YTTreatmentHelper.API.extractPrePostMetrics(
         YTTreatmentHelper.Utils.formatDate(videoPublishDate),
         treatmentDateYYYYMMDD,
         treatmentDateYYYYMMDD,
         maxDateStr,
         (status) => console.log(`  [Lifetime] ${status}`),
-        false, // no retention for lifetime
-        treatmentDateYYYYMMDD,
-        videoPublishDate
+        false // no retention for lifetime
       );
       console.log('✅ Step 7b: Lifetime periods extracted:', lifetimeResult);
 
@@ -816,15 +765,13 @@ YTTreatmentHelper.BatchMode = {
       console.log('Step 7: Extracting equal periods...');
       if (progressCallback) progressCallback(++currentStep, totalSteps, 'Extracting equal periods...');
 
-      const result = await this.extractWithRetry(
+      const result = await YTTreatmentHelper.API.extractPrePostMetrics(
         dateRanges.pre.start,
         dateRanges.pre.end,
         dateRanges.post.start,
         dateRanges.post.end,
         (status) => console.log(`  ${status}`),
-        true, // include retention
-        treatmentDateYYYYMMDD,
-        videoPublishDate
+        true // include retention
       );
       console.log('✅ Step 7: Equal periods extracted:', result);
       metrics = { mode: 'equal-periods', ...result };
@@ -844,15 +791,13 @@ YTTreatmentHelper.BatchMode = {
       maxYouTubeDate.setUTCDate(maxYouTubeDate.getUTCDate() - 3);
       const maxDateStr = YTTreatmentHelper.Utils.formatDate(maxYouTubeDate);
 
-      const result = await this.extractWithRetry(
+      const result = await YTTreatmentHelper.API.extractPrePostMetrics(
         YTTreatmentHelper.Utils.formatDate(videoPublishDate),
         treatmentDateYYYYMMDD,
         treatmentDateYYYYMMDD,
         maxDateStr,
         (status) => console.log(`  ${status}`),
-        false, // no retention for lifetime
-        treatmentDateYYYYMMDD,
-        videoPublishDate
+        false // no retention for lifetime
       );
       console.log('✅ Step 7: Lifetime periods extracted:', result);
       metrics = { mode: 'lifetime', ...result };
