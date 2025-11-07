@@ -480,9 +480,9 @@ YTTreatmentHelper.BatchMode = {
         return; // Navigation will reload page and resume
       }
 
-      // We're on the right page - wait a bit for page to settle after navigation
+      // We're on the right page - small delay to ensure URL is stable
       console.log(`On correct video page: ${video.videoId}`);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 300)); // Reduced from 2000ms
 
       // We're on the right page - extract metrics
       try {
@@ -568,10 +568,8 @@ YTTreatmentHelper.BatchMode = {
       }
     }
 
-    // Wait longer for data to populate (analytics can be slow)
-    console.log('Step 2: Waiting 5 seconds for analytics data to populate...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    console.log('✅ Step 2: Wait complete');
+    // Don't wait for data - we're navigating to Advanced Mode which loads its own data
+    console.log('✅ Step 2: Analytics page loaded, proceeding to extraction');
 
     // Get video title from page
     console.log('Step 3: Extracting video title...');
