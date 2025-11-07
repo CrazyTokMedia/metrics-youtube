@@ -1815,11 +1815,18 @@ YTTreatmentHelper.API = {
 
   /**
    * Main extraction orchestration
+   * @param {Function} statusCallback - Legacy callback for status messages
+   * @param {Function} progressCallback - Optional callback(currentSubStep, totalSubSteps, description)
    */
-  extractPrePostMetrics: async function(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention = false) {
+  extractPrePostMetrics: async function(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention = false, progressCallback = null) {
     try {
+      // Calculate total sub-steps
+      const totalSubSteps = includeRetention ? 11 : 6;
+      let currentSubStep = 0;
+
       // First, navigate to Advanced Mode if not already there
       if (statusCallback) statusCallback('🔧 Navigating to Advanced Mode...');
+      if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Navigating to Advanced Mode...');
 
       if (!this.isOnAdvancedMode()) {
         console.log('Not on Advanced Mode - navigating there...');
@@ -1833,30 +1840,35 @@ YTTreatmentHelper.API = {
       await new Promise(resolve => setTimeout(resolve, 50));
 
       if (statusCallback) statusCallback('🔧 Selecting required metrics...');
+      if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Selecting metrics...');
       await this.selectMetrics();
 
       if (statusCallback) statusCallback('📅 Opening date picker for PRE...');
       await new Promise(resolve => setTimeout(resolve, 50));
 
       if (statusCallback) statusCallback('📅 Setting PRE period dates...');
+      if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Setting PRE dates...');
       await this.setCustomDateRangeWithRetry(preStart, preEnd);
 
       if (statusCallback) statusCallback('⏳ Waiting for PRE data to load...');
       await new Promise(resolve => setTimeout(resolve, 100));
 
       if (statusCallback) statusCallback('📥 Reading PRE metrics from table...');
+      if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Extracting PRE metrics...');
       const preMetrics = await this.extractValues();
 
       if (statusCallback) statusCallback('📅 Opening date picker for POST...');
       await new Promise(resolve => setTimeout(resolve, 50));
 
       if (statusCallback) statusCallback('📅 Setting POST period dates...');
+      if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Setting POST dates...');
       await this.setCustomDateRangeWithRetry(postStart, postEnd);
 
       if (statusCallback) statusCallback('⏳ Waiting for POST data to load...');
       await new Promise(resolve => setTimeout(resolve, 100));
 
       if (statusCallback) statusCallback('📥 Reading POST metrics from table...');
+      if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Extracting POST metrics...');
       const postMetrics = await this.extractValues();
 
       // Extract retention if enabled
@@ -1869,21 +1881,26 @@ YTTreatmentHelper.API = {
           await new Promise(resolve => setTimeout(resolve, 50));
 
           if (statusCallback) statusCallback('📊 Switching to Audience Retention...');
+          if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Navigating to retention chart...');
           await this.navigateToAudienceRetention();
 
           if (statusCallback) statusCallback('⏳ Waiting for retention chart...');
           await new Promise(resolve => setTimeout(resolve, 100));
 
           if (statusCallback) statusCallback('📅 Setting PRE dates for retention...');
+          if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Setting PRE retention dates...');
           await this.setCustomDateRangeWithRetry(preStart, preEnd);
 
           if (statusCallback) statusCallback('📊 Reading PRE retention value...');
+          if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Extracting PRE retention...');
           preRetention = await this.extractRetentionMetric();
 
           if (statusCallback) statusCallback('📅 Setting POST dates for retention...');
+          if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Setting POST retention dates...');
           await this.setCustomDateRangeWithRetry(postStart, postEnd);
 
           if (statusCallback) statusCallback('📊 Reading POST retention value...');
+          if (progressCallback) progressCallback(++currentSubStep, totalSubSteps, 'Extracting POST retention...');
           postRetention = await this.extractRetentionMetric();
 
           // All data has been extracted successfully!
