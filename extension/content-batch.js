@@ -571,22 +571,25 @@ YTTreatmentHelper.BatchMode = {
     // Don't wait for data - we're navigating to Advanced Mode which loads its own data
     console.log('✅ Step 2: Analytics page loaded, proceeding to extraction');
 
-    // Get video title from page
-    console.log('Step 3: Extracting video title...');
+    // Get video title from Details tab
+    console.log('Step 3: Navigating to Details tab to extract video title...');
     let videoTitle = 'Unknown Title';
     try {
-      // Try to get title from page
-      const titleElement = document.querySelector('h1.video-title') ||
-                          document.querySelector('[class*="title"]') ||
-                          document.querySelector('ytcp-video-metadata-editor-title-description h1');
-      if (titleElement) {
-        videoTitle = titleElement.textContent.trim();
-        console.log(`✅ Step 3: Video title found: "${videoTitle}"`);
-      } else {
-        console.warn('⚠️ Step 3: Could not find video title element');
-      }
+      // Navigate to Details tab
+      await YTTreatmentHelper.API.navigateToDetailsTab();
+      console.log('✅ Step 3a: Details tab loaded');
+
+      // Extract title from Details tab
+      videoTitle = YTTreatmentHelper.API.extractVideoTitle();
+      console.log(`✅ Step 3b: Video title extracted: "${videoTitle}"`);
+
+      // Navigate back to Analytics tab for metric extraction
+      console.log('Step 3c: Navigating back to Analytics tab...');
+      await YTTreatmentHelper.API.navigateToAnalyticsTab();
+      console.log('✅ Step 3c: Back on Analytics tab');
     } catch (error) {
-      console.warn('⚠️ Step 3: Error extracting video title:', error);
+      console.warn('⚠️ Step 3: Error extracting video title from Details tab:', error);
+      console.warn('Will use fallback title: "Unknown Title"');
     }
 
     // Convert treatment date to YYYY-MM-DD
@@ -677,6 +680,7 @@ YTTreatmentHelper.BatchMode = {
     return {
       videoId: video.videoId,
       videoTitle: videoTitle,
+      publishDate: YTTreatmentHelper.Utils.formatDate(videoPublishDate),
       url: video.url,
       status: 'success',
       metrics: metrics,
@@ -769,19 +773,28 @@ YTTreatmentHelper.BatchMode = {
     const downloadBtn = document.getElementById('batch-download-btn');
     console.log('Export buttons:', { copyBtn: !!copyBtn, downloadBtn: !!downloadBtn });
 
-    // Scroll to results section
+    // Scroll the helper-body container to show results section
     setTimeout(() => {
-      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      const helperBody = document.querySelector('.helper-body');
+      if (helperBody && resultsSection) {
+        // Get the position of results section relative to helper-body
+        const resultsTop = resultsSection.offsetTop;
+        // Scroll the helper-body container to show the results
+        helperBody.scrollTo({
+          top: resultsTop - 20, // 20px offset for spacing
+          behavior: 'smooth'
+        });
+      }
     }, 100);
 
     console.log(`✅ Results displayed: ${this.batchResults.length} videos`);
   },
 
   /**
-   * Copy results to clipboard as TSV
+   * Copy results to clipboard as TSV (without headers)
    */
   copyResultsToClipboard: async function() {
-    const tsv = this.formatResultsAsTSV();
+    const tsv = this.formatResultsAsTSVWithoutHeaders();
 
     try {
       await navigator.clipboard.writeText(tsv);
@@ -843,6 +856,31 @@ YTTreatmentHelper.BatchMode = {
   },
 
   /**
+   * Format results as TSV WITHOUT headers (for clipboard copy)
+   * Returns string with only data rows, no header row
+   */
+  formatResultsAsTSVWithoutHeaders: function() {
+    if (this.batchResults.length === 0) {
+      return '';
+    }
+
+    // Determine format based on first result's extraction mode
+    const firstResult = this.batchResults[0];
+    const mode = firstResult.metrics?.mode;
+
+    if (mode === 'complete') {
+      return this.formatCompleteAnalysisTSVWithoutHeaders();
+    } else if (mode === 'equal-periods') {
+      return this.formatEqualPeriodsTSVWithoutHeaders();
+    } else if (mode === 'lifetime') {
+      return this.formatLifetimeTSVWithoutHeaders();
+    } else {
+      // Fallback format
+      return this.formatBasicTSVWithoutHeaders();
+    }
+  },
+
+  /**
    * Format complete analysis results (both equal periods and lifetime)
    */
   formatCompleteAnalysisTSV: function() {
@@ -850,6 +888,7 @@ YTTreatmentHelper.BatchMode = {
       'URL',
       'Video Title',
       'Video ID',
+      'Publish Date',
       'Treatment Date',
       // Equal Periods
       'Equal Pre Impressions',
@@ -880,7 +919,7 @@ YTTreatmentHelper.BatchMode = {
     for (const result of this.batchResults) {
       if (result.status !== 'success') {
         // Error row
-        rows.push([result.url, result.videoTitle, result.videoId, 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
+        rows.push([result.url, result.videoTitle, result.videoId, result.publishDate || '', 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
         continue;
       }
 
@@ -891,6 +930,7 @@ YTTreatmentHelper.BatchMode = {
         result.url,
         result.videoTitle,
         result.videoId,
+        result.publishDate || '',
         result.treatmentDate,
         // Equal periods
         equal.pre?.impressions || '',
@@ -930,6 +970,7 @@ YTTreatmentHelper.BatchMode = {
       'URL',
       'Video Title',
       'Video ID',
+      'Publish Date',
       'Treatment Date',
       'Pre Impressions',
       'Post Impressions',
@@ -949,7 +990,7 @@ YTTreatmentHelper.BatchMode = {
 
     for (const result of this.batchResults) {
       if (result.status !== 'success') {
-        rows.push([result.url, result.videoTitle, result.videoId, 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
+        rows.push([result.url, result.videoTitle, result.videoId, result.publishDate || '', 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
         continue;
       }
 
@@ -957,6 +998,7 @@ YTTreatmentHelper.BatchMode = {
         result.url,
         result.videoTitle,
         result.videoId,
+        result.publishDate || '',
         result.treatmentDate,
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
@@ -986,6 +1028,7 @@ YTTreatmentHelper.BatchMode = {
       'URL',
       'Video Title',
       'Video ID',
+      'Publish Date',
       'Treatment Date',
       'Pre Impressions (Publish to Treatment)',
       'Post Impressions (Treatment to Today)',
@@ -1001,7 +1044,7 @@ YTTreatmentHelper.BatchMode = {
 
     for (const result of this.batchResults) {
       if (result.status !== 'success') {
-        rows.push([result.url, result.videoTitle, result.videoId, 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
+        rows.push([result.url, result.videoTitle, result.videoId, result.publishDate || '', 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
         continue;
       }
 
@@ -1009,6 +1052,7 @@ YTTreatmentHelper.BatchMode = {
         result.url,
         result.videoTitle,
         result.videoId,
+        result.publishDate || '',
         result.treatmentDate,
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
@@ -1030,7 +1074,7 @@ YTTreatmentHelper.BatchMode = {
    * Format basic results (fallback)
    */
   formatBasicTSV: function() {
-    const headers = ['URL', 'Video Title', 'Video ID', 'Status', 'Treatment Date'];
+    const headers = ['URL', 'Video Title', 'Video ID', 'Publish Date', 'Status', 'Treatment Date'];
     const rows = [headers.join('\t')];
 
     for (const result of this.batchResults) {
@@ -1038,6 +1082,149 @@ YTTreatmentHelper.BatchMode = {
         result.url,
         result.videoTitle || '',
         result.videoId,
+        result.publishDate || '',
+        result.status,
+        result.treatmentDate || ''
+      ];
+      rows.push(row.join('\t'));
+    }
+
+    return rows.join('\n');
+  },
+
+  /**
+   * Format complete analysis results WITHOUT headers
+   */
+  formatCompleteAnalysisTSVWithoutHeaders: function() {
+    const rows = [];
+
+    for (const result of this.batchResults) {
+      if (result.status !== 'success') {
+        rows.push([result.url, result.videoTitle, result.videoId, result.publishDate || '', 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
+        continue;
+      }
+
+      const equal = result.metrics.equal || {};
+      const lifetime = result.metrics.lifetime || {};
+
+      const row = [
+        result.url,
+        result.videoTitle,
+        result.videoId,
+        result.publishDate || '',
+        result.treatmentDate,
+        equal.pre?.impressions || '',
+        equal.post?.impressions || '',
+        equal.pre?.ctr || '',
+        equal.post?.ctr || '',
+        equal.pre?.views || '',
+        equal.post?.views || '',
+        equal.pre?.awt || '',
+        equal.post?.awt || '',
+        equal.pre?.retention || '',
+        equal.post?.retention || '',
+        equal.pre?.stayedToWatch || '',
+        equal.post?.stayedToWatch || '',
+        lifetime.pre?.impressions || '',
+        lifetime.post?.impressions || '',
+        lifetime.pre?.ctr || '',
+        lifetime.post?.ctr || '',
+        lifetime.pre?.views || '',
+        lifetime.post?.views || '',
+        lifetime.pre?.awt || '',
+        lifetime.post?.awt || ''
+      ];
+
+      rows.push(row.join('\t'));
+    }
+
+    return rows.join('\n');
+  },
+
+  /**
+   * Format equal periods results WITHOUT headers
+   */
+  formatEqualPeriodsTSVWithoutHeaders: function() {
+    const rows = [];
+
+    for (const result of this.batchResults) {
+      if (result.status !== 'success') {
+        rows.push([result.url, result.videoTitle, result.videoId, result.publishDate || '', 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
+        continue;
+      }
+
+      const row = [
+        result.url,
+        result.videoTitle,
+        result.videoId,
+        result.publishDate || '',
+        result.treatmentDate,
+        result.metrics.pre?.impressions || '',
+        result.metrics.post?.impressions || '',
+        result.metrics.pre?.ctr || '',
+        result.metrics.post?.ctr || '',
+        result.metrics.pre?.views || '',
+        result.metrics.post?.views || '',
+        result.metrics.pre?.awt || '',
+        result.metrics.post?.awt || '',
+        result.metrics.pre?.retention || '',
+        result.metrics.post?.retention || '',
+        result.metrics.pre?.stayedToWatch || '',
+        result.metrics.post?.stayedToWatch || ''
+      ];
+
+      rows.push(row.join('\t'));
+    }
+
+    return rows.join('\n');
+  },
+
+  /**
+   * Format lifetime results WITHOUT headers
+   */
+  formatLifetimeTSVWithoutHeaders: function() {
+    const rows = [];
+
+    for (const result of this.batchResults) {
+      if (result.status !== 'success') {
+        rows.push([result.url, result.videoTitle, result.videoId, result.publishDate || '', 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
+        continue;
+      }
+
+      const row = [
+        result.url,
+        result.videoTitle,
+        result.videoId,
+        result.publishDate || '',
+        result.treatmentDate,
+        result.metrics.pre?.impressions || '',
+        result.metrics.post?.impressions || '',
+        result.metrics.pre?.ctr || '',
+        result.metrics.post?.ctr || '',
+        result.metrics.pre?.views || '',
+        result.metrics.post?.views || '',
+        result.metrics.pre?.awt || '',
+        result.metrics.post?.awt || ''
+      ];
+
+      rows.push(row.join('\t'));
+    }
+
+    return rows.join('\n');
+  },
+
+  /**
+   * Format basic results WITHOUT headers (fallback)
+   */
+  formatBasicTSVWithoutHeaders: function() {
+    const rows = [];
+
+    for (const result of this.batchResults) {
+      const row = [
+        result.url,
+        result.videoTitle || '',
+        result.videoId,
+        result.publishDate || '',
         result.status,
         result.treatmentDate || ''
       ];

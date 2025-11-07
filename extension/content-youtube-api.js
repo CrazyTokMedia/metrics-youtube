@@ -93,25 +93,57 @@ YTTreatmentHelper.API = {
   calculateDateRanges: function(treatmentDate, videoPublishDate = null) {
     const formatDate = YTTreatmentHelper.Utils.formatDate;
 
-    const treatment = new Date(treatmentDate);
-    const today = new Date();
+    // Helper: Create UTC midnight date to avoid timezone issues
+    const createUTCMidnight = (dateInput) => {
+      let date;
+      if (typeof dateInput === 'string') {
+        // Parse YYYY-MM-DD string as UTC date
+        const [year, month, day] = dateInput.split('-').map(Number);
+        date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      } else if (dateInput instanceof Date) {
+        // Convert existing date to UTC midnight
+        date = new Date(Date.UTC(
+          dateInput.getFullYear(),
+          dateInput.getMonth(),
+          dateInput.getDate(),
+          0, 0, 0, 0
+        ));
+      } else {
+        // Use current UTC midnight
+        const now = new Date();
+        date = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          0, 0, 0, 0
+        ));
+      }
+      return date;
+    };
 
-    // YouTube Analytics only has data up to 2 days ago
-    const maxYouTubeDate = new Date(today);
-    maxYouTubeDate.setDate(maxYouTubeDate.getDate() - 2);
+    // Get today in UTC midnight
+    const todayUTC = createUTCMidnight();
+
+    // Parse treatment date as UTC midnight
+    const treatment = createUTCMidnight(treatmentDate);
+
+    // YouTube Analytics has data delay + timezone considerations
+    // Using 3-day buffer instead of 2 to handle:
+    // - YouTube's 2-day data processing delay
+    // - Timezone differences (users ahead of YouTube servers)
+    // - Edge cases where data might not be fully processed
+    const maxYouTubeDate = new Date(todayUTC);
+    maxYouTubeDate.setUTCDate(maxYouTubeDate.getUTCDate() - 3);
     const yesterday = maxYouTubeDate;
-
-    yesterday.setHours(0, 0, 0, 0);
-    treatment.setHours(0, 0, 0, 0);
 
     const daysSince = Math.floor((yesterday - treatment) / (1000 * 60 * 60 * 24));
 
     if (daysSince < 0) {
-      throw new Error('Treatment date cannot be in the future. Please select a date at least 1 day ago.');
+      throw new Error('Treatment date cannot be in the future. Please select a date at least 4 days ago (accounting for YouTube\'s data processing delay and timezone differences).');
     }
 
     if (daysSince < 2) {
-      throw new Error('Treatment date must be at least 3 days ago to have enough data for analysis. YouTube data has a 2-day delay.');
+      throw new Error('Treatment date must be at least 4 days ago to have enough data for analysis. YouTube data has a 2-3 day delay plus timezone considerations.');
     }
 
     const maxPostDays = daysSince + 1;
@@ -119,8 +151,8 @@ YTTreatmentHelper.API = {
     let publishDate;
 
     if (videoPublishDate) {
-      publishDate = new Date(videoPublishDate);
-      publishDate.setHours(0, 0, 0, 0);
+      // Parse publish date as UTC midnight
+      publishDate = createUTCMidnight(videoPublishDate);
 
       const daysBetween = Math.floor((treatment - publishDate) / (1000 * 60 * 60 * 24));
       maxPreDays = daysBetween;
@@ -136,17 +168,17 @@ YTTreatmentHelper.API = {
 
     console.log(`   Using period length: ${periodLength} days (shorter of PRE: ${maxPreDays}, POST: ${maxPostDays})`);
 
-    // PRE period
+    // PRE period - use UTC methods for consistency
     const preEnd = new Date(treatment);
-    preEnd.setDate(preEnd.getDate() - 1);
+    preEnd.setUTCDate(preEnd.getUTCDate() - 1);
     const preStart = new Date(preEnd);
-    preStart.setDate(preStart.getDate() - periodLength + 1);
+    preStart.setUTCDate(preStart.getUTCDate() - periodLength + 1);
     const preDays = periodLength;
 
-    // POST period
+    // POST period - use UTC methods for consistency
     const postStart = new Date(treatment);
     const postEnd = new Date(postStart);
-    postEnd.setDate(postEnd.getDate() + periodLength - 1);
+    postEnd.setUTCDate(postEnd.getUTCDate() + periodLength - 1);
     const postDays = periodLength;
 
     // Validate
@@ -160,9 +192,9 @@ YTTreatmentHelper.API = {
       throw new Error('Internal error: POST period calculation error. Please report this bug.');
     }
 
-    console.log(`Date calculation:
-    Today: ${formatDate(today)}
-    Yesterday (YouTube max): ${formatDate(yesterday)}
+    console.log(`Date calculation (UTC-based):
+    Today (UTC): ${formatDate(todayUTC)}
+    Max YouTube date (UTC - 3 days): ${formatDate(yesterday)}
     Treatment: ${formatDate(treatment)}
     Video published: ${videoPublishDate ? formatDate(videoPublishDate) : 'Unknown'}
     Days since: ${daysSince}
@@ -1334,6 +1366,111 @@ YTTreatmentHelper.API = {
     }
 
     console.log('Navigated to Advanced Mode');
+  },
+
+  /**
+   * Navigate to Details tab from current video page
+   * The Details tab contains video title and metadata
+   */
+  navigateToDetailsTab: async function() {
+    const waitForElement = YTTreatmentHelper.Utils.waitForElement;
+
+    console.log('Navigating to Details tab...');
+
+    // Find the Details tab menu item
+    // The Details tab is typically in a tp-yt-paper-icon-item with text "Details"
+    const menuItems = Array.from(document.querySelectorAll('tp-yt-paper-icon-item'));
+    let detailsItem = null;
+
+    for (const item of menuItems) {
+      const spans = item.querySelectorAll('span');
+      for (const span of spans) {
+        if (span.textContent.trim().toLowerCase() === 'details') {
+          detailsItem = item;
+          console.log('Found Details tab menu item');
+          break;
+        }
+      }
+      if (detailsItem) break;
+    }
+
+    if (!detailsItem) {
+      // Fallback: try finding by navigation link
+      const navLinks = Array.from(document.querySelectorAll('a[href*="/edit"]'));
+      for (const link of navLinks) {
+        const linkText = link.textContent.toLowerCase();
+        if (linkText.includes('details')) {
+          detailsItem = link;
+          console.log('Found Details link in navigation');
+          break;
+        }
+      }
+    }
+
+    if (!detailsItem) {
+      throw new Error('Details tab navigation not found. Please ensure you are on a video page.');
+    }
+
+    // Click the Details tab
+    detailsItem.click();
+
+    // Wait for Details tab content to load
+    // The Details tab contains ytcp-video-metadata-editor with the video title
+    await waitForElement('ytcp-video-metadata-editor', 5000);
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    console.log('Navigated to Details tab');
+  },
+
+  /**
+   * Extract video title from Details tab
+   * Must be called when on the Details tab
+   */
+  extractVideoTitle: function() {
+    console.log('Extracting video title from Details tab...');
+
+    // Method 1: Try the main title input in ytcp-video-title
+    const titleEditor = document.querySelector('ytcp-video-title');
+    if (titleEditor) {
+      // Look for the contenteditable div with id="textbox"
+      const titleTextbox = titleEditor.querySelector('#textbox[contenteditable="true"]');
+      if (titleTextbox) {
+        const title = titleTextbox.textContent.trim();
+        if (title) {
+          console.log(`✅ Found video title: "${title}"`);
+          return title;
+        }
+      }
+    }
+
+    // Method 2: Try any contenteditable textbox in the title section
+    const titleInputs = document.querySelectorAll('ytcp-social-suggestions-textbox #textbox[contenteditable="true"]');
+    for (const input of titleInputs) {
+      const ariaLabel = input.getAttribute('aria-label') || '';
+      if (ariaLabel.toLowerCase().includes('title')) {
+        const title = input.textContent.trim();
+        if (title) {
+          console.log(`✅ Found video title via aria-label: "${title}"`);
+          return title;
+        }
+      }
+    }
+
+    // Method 3: Fallback - first contenteditable in video metadata editor
+    const metadataEditor = document.querySelector('ytcp-video-metadata-editor');
+    if (metadataEditor) {
+      const firstTextbox = metadataEditor.querySelector('#textbox[contenteditable="true"]');
+      if (firstTextbox) {
+        const title = firstTextbox.textContent.trim();
+        if (title) {
+          console.log(`⚠️ Using fallback title extraction: "${title}"`);
+          return title;
+        }
+      }
+    }
+
+    console.error('❌ Could not extract video title from Details tab');
+    return 'Unknown Title';
   },
 
   navigateToAudienceRetention: async function() {
