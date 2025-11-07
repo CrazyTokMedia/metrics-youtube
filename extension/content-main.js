@@ -108,8 +108,9 @@ function init() {
       console.log('Initializing Single Video mode...');
       YTTreatmentHelper.SingleVideo.init();
     } else if (YTTreatmentHelper.Utils.isAnalyticsHomePage()) {
-      console.log('Initializing Batch mode...');
-      YTTreatmentHelper.BatchMode.init();
+      console.log('On Analytics home page - BatchMode is available via Single Video panel');
+      // BatchMode is integrated into SingleVideo panel, initialize it too
+      YTTreatmentHelper.SingleVideo.init();
     } else {
       console.log('Page type not recognized for extension functionality');
     }

@@ -861,15 +861,15 @@ YTTreatmentHelper.BatchMode = {
     console.log(`✅ EXTRACTION COMPLETE: ${video.videoId}\n`);
     if (progressCallback) progressCallback(totalSteps, totalSteps, 'Extraction complete');
 
-    // Extract date ranges from metrics (available in all modes)
-    let dateRanges = null;
+    // Extract date ranges from metrics for export (available in all modes)
+    let exportDateRanges = null;
     if (metrics.mode === 'complete' && metrics.equal?.periods) {
-      dateRanges = {
+      exportDateRanges = {
         pre: metrics.equal.periods.pre,
         post: metrics.equal.periods.post
       };
     } else if (metrics.periods) {
-      dateRanges = {
+      exportDateRanges = {
         pre: metrics.periods.pre,
         post: metrics.periods.post
       };
@@ -883,7 +883,7 @@ YTTreatmentHelper.BatchMode = {
       status: 'success',
       metrics: metrics,
       treatmentDate: treatmentDate,
-      dateRanges: dateRanges
+      dateRanges: exportDateRanges
     };
   },
 
@@ -1283,7 +1283,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoId,
         result.publishDate || '',
         result.status,
-        result.treatmentDate || ''
+        this.buildTreatmentDateDisplay(result)
       ];
       rows.push(row.join('\t'));
     }
@@ -1425,7 +1425,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoId,
         result.publishDate || '',
         result.status,
-        result.treatmentDate || ''
+        this.buildTreatmentDateDisplay(result)
       ];
       rows.push(row.join('\t'));
     }
