@@ -1619,8 +1619,6 @@ YTTreatmentHelper.SingleVideo = {
     header.style.cursor = 'move';
 
     header.addEventListener('mousedown', dragStart);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', dragEnd);
 
     function dragStart(e) {
       // Don't drag if clicking on close button or other interactive elements
@@ -1645,32 +1643,42 @@ YTTreatmentHelper.SingleVideo = {
       isDragging = true;
       header.style.cursor = 'grabbing';
       e.preventDefault(); // Prevent text selection while dragging
+
+      // Add drag listeners only when dragging starts
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('mouseup', dragEnd);
     }
 
     function drag(e) {
-      if (isDragging) {
-        e.preventDefault();
-
-        currentX = e.clientX - initialX;
-        currentY = e.clientY - initialY;
-
-        // Keep panel within viewport
-        const maxX = window.innerWidth - panel.offsetWidth;
-        const maxY = window.innerHeight - panel.offsetHeight;
-
-        currentX = Math.max(0, Math.min(currentX, maxX));
-        currentY = Math.max(0, Math.min(currentY, maxY));
-
-        panel.style.left = currentX + 'px';
-        panel.style.top = currentY + 'px';
-        panel.style.right = 'auto';
+      if (!isDragging) {
+        return; // Don't do anything if not dragging
       }
+
+      e.preventDefault();
+
+      currentX = e.clientX - initialX;
+      currentY = e.clientY - initialY;
+
+      // Keep panel within viewport
+      const maxX = window.innerWidth - panel.offsetWidth;
+      const maxY = window.innerHeight - panel.offsetHeight;
+
+      currentX = Math.max(0, Math.min(currentX, maxX));
+      currentY = Math.max(0, Math.min(currentY, maxY));
+
+      panel.style.left = currentX + 'px';
+      panel.style.top = currentY + 'px';
+      panel.style.right = 'auto';
     }
 
     function dragEnd() {
       if (isDragging) {
         isDragging = false;
         header.style.cursor = 'move';
+
+        // Remove drag listeners when dragging ends
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('mouseup', dragEnd);
 
         // Save position to storage
         safeStorage.set({
