@@ -757,6 +757,24 @@ YTTreatmentHelper.BatchMode = {
     }
 
     resultsSection.style.display = 'block';
+
+    // Hide progress and status when showing results
+    const progressContainer = document.getElementById('batch-progress-container');
+    const statusDiv = document.getElementById('batch-status');
+    if (progressContainer) progressContainer.style.display = 'none';
+    if (statusDiv) statusDiv.style.display = 'none';
+
+    // Check if buttons exist
+    const copyBtn = document.getElementById('batch-copy-btn');
+    const downloadBtn = document.getElementById('batch-download-btn');
+    console.log('Export buttons:', { copyBtn: !!copyBtn, downloadBtn: !!downloadBtn });
+
+    // Scroll to results section
+    setTimeout(() => {
+      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+
+    console.log(`✅ Results displayed: ${this.batchResults.length} videos`);
   },
 
   /**
