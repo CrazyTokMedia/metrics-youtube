@@ -844,3 +844,156 @@ input:focus-visible {
   outline: 2px solid #667eea;
   outline-offset: 2px;
 }
+
+/* ============================================================
+   BATCH MODE
+   ============================================================ */
+
+/* Mode Toggle */
+.mode-toggle-container {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mode-toggle-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-toggle-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.mode-toggle-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
+/* Batch URLs Textarea */
+.batch-urls-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.batch-urls-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.batch-url-count {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Batch Results Table */
+.batch-results-table-container {
+  margin: 16px 0;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.batch-results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.batch-results-table thead {
+  background: #f9fafb;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.batch-results-table th {
+  padding: 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.batch-results-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  color: #1f2937;
+}
+
+.batch-results-table tr:hover {
+  background: #f9fafb;
+}
+
+.batch-results-table tr.success {
+  background: #f0fdf4;
+}
+
+.batch-results-table tr.error {
+  background: #fef2f2;
+}
+
+/* Video Info Cell */
+.video-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.video-title {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.video-id {
+  font-size: 11px;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  color: #6b7280;
+}
+
+/* Status Cell */
+.status-success {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.status-error {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* Batch Export Section */
+.batch-export-section {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.batch-export-section .export-btn {
+  flex: 1;
+}

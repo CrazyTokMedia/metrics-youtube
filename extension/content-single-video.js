@@ -89,7 +89,14 @@ YTTreatmentHelper.SingleVideo = {
         </div>
         <button id="helper-close" class="helper-close-btn">×</button>
       </div>
-      <div class="helper-body">
+
+      <!-- Mode Toggle -->
+      <div class="mode-toggle-container">
+        <button class="mode-toggle-btn active" data-mode="single">Single Video</button>
+        <button class="mode-toggle-btn" data-mode="batch">Batch Mode</button>
+      </div>
+
+      <div class="helper-body" id="single-video-container">
 
         <!-- Step 1: Treatment Date -->
         <div class="step-container" id="step-1">
@@ -425,6 +432,10 @@ YTTreatmentHelper.SingleVideo = {
 
         </div>
       </div>
+      <!-- End Single Video Container -->
+
+      ${YTTreatmentHelper.BatchMode.createBatchUI()}
+
     `;
 
     document.body.appendChild(panel);
@@ -432,6 +443,33 @@ YTTreatmentHelper.SingleVideo = {
     // Setup auto-formatting for date inputs
     const treatmentDateInput = document.getElementById('treatment-date');
     YTTreatmentHelper.Utils.autoFormatDateInput(treatmentDateInput);
+
+    // Initialize batch mode event listeners
+    YTTreatmentHelper.BatchMode.initEventListeners();
+
+    // Setup mode toggle
+    const modeButtons = document.querySelectorAll('.mode-toggle-btn');
+    const singleContainer = document.getElementById('single-video-container');
+    const batchContainer = document.getElementById('batch-mode-container');
+
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+
+        // Update button states
+        modeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Toggle containers
+        if (mode === 'single') {
+          singleContainer.style.display = 'block';
+          batchContainer.style.display = 'none';
+        } else if (mode === 'batch') {
+          singleContainer.style.display = 'none';
+          batchContainer.style.display = 'block';
+        }
+      });
+    });
 
     // Make panel draggable
     self.makePanelDraggable(panel);
