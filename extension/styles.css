@@ -6,14 +6,11 @@
 /* ============================================================
    TOGGLE BUTTON
    ============================================================ */
-#treatment-helper-buttons {
+.treatment-helper-toggle {
   position: fixed;
   top: 10px;
   right: 20px;
   z-index: 10000;
-}
-
-.treatment-helper-toggle {
   padding: 10px 20px;
   background: #667eea;
   color: white;
@@ -29,17 +26,6 @@
 .treatment-helper-toggle:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.treatment-helper-toggle.history-btn {
-  background: #6b7280;
-  padding: 8px 16px;
-  font-size: 13px;
-}
-
-.treatment-helper-toggle.history-btn:hover {
-  background: #4b5563;
-  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
 }
 
 /* ============================================================
@@ -59,6 +45,8 @@
   z-index: 9999;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header */
@@ -70,6 +58,7 @@
   justify-content: space-between;
   align-items: center;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .header-content {
@@ -119,11 +108,12 @@
 /* Body */
 .helper-body {
   padding: 24px;
-  max-height: calc(90vh - 76px);
+  flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: 0 0 16px 16px; /* Match parent's bottom rounded corners */
   padding-bottom: 80px; /* Extra bottom padding for scroll accessibility */
+  min-height: 0; /* Important for flex child with overflow */
 }
 
 /* Add bottom spacing to last child */
