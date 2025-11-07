@@ -118,6 +118,17 @@ YTTreatmentHelper.BatchMode = {
   initEventListeners: function() {
     const self = this;
 
+    // Force enable all inputs on initialization (clear any stuck disabled state)
+    setTimeout(() => {
+      document.querySelectorAll('#yt-treatment-helper input[type="text"], #yt-treatment-helper textarea').forEach(input => {
+        if (input.disabled || input.readOnly) {
+          console.log('Force-enabling stuck input:', input.id);
+          input.disabled = false;
+          input.readOnly = false;
+        }
+      });
+    }, 500);
+
     // URL count update
     const urlsInput = document.getElementById('batch-urls-input');
     if (urlsInput) {
@@ -215,16 +226,35 @@ YTTreatmentHelper.BatchMode = {
       cancelBtn.textContent = 'Cancel';
     }
 
-    // Re-enable inputs
+    // Re-enable ALL inputs in both single and batch mode
     const urlsInput = document.getElementById('batch-urls-input');
     const treatmentDateInput = document.getElementById('batch-treatment-date');
-    if (urlsInput) urlsInput.disabled = false;
-    if (treatmentDateInput) treatmentDateInput.disabled = false;
+    const singleTreatmentDate = document.getElementById('treatment-date');
+
+    if (urlsInput) {
+      urlsInput.disabled = false;
+      urlsInput.readOnly = false;
+    }
+    if (treatmentDateInput) {
+      treatmentDateInput.disabled = false;
+      treatmentDateInput.readOnly = false;
+    }
+    if (singleTreatmentDate) {
+      singleTreatmentDate.disabled = false;
+      singleTreatmentDate.readOnly = false;
+    }
+
     document.querySelectorAll('input[name="batch-extraction-mode"]').forEach(input => {
       input.disabled = false;
     });
 
-    console.log('✅ Cleanup complete');
+    // Re-enable ALL text inputs just to be sure
+    document.querySelectorAll('#yt-treatment-helper input[type="text"], #yt-treatment-helper textarea').forEach(input => {
+      input.disabled = false;
+      input.readOnly = false;
+    });
+
+    console.log('✅ Cleanup complete - all inputs re-enabled');
   },
 
   /**
