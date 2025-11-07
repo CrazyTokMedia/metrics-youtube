@@ -851,32 +851,12 @@ input:focus-visible {
 
 /* Batch Mode Container */
 #batch-mode-container {
-  padding: 24px 24px 0 24px;
-  max-height: calc(90vh - 76px - 53px); /* Account for header and mode toggle */
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* No padding - uses parent .helper-body padding */
 }
 
-#batch-mode-container > *:last-child {
-  margin-bottom: 32px;
-}
-
-/* Scrollbar for batch mode */
-#batch-mode-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-#batch-mode-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-#batch-mode-container::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-}
-
-#batch-mode-container::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+/* Single Video Container */
+#single-video-container {
+  /* No padding - uses parent .helper-body padding */
 }
 
 /* Mode Toggle */
