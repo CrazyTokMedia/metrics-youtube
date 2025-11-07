@@ -1457,8 +1457,18 @@ YTTreatmentHelper.API = {
         .map(t => t.querySelector('.label-text')?.textContent.trim())
         .filter(Boolean)
         .slice(0, 5);
-      console.error('Report dropdown not found. Available labels:', availableLabels);
-      throw new Error('Report dropdown not found');
+      console.warn('Report dropdown not found. Available labels:', availableLabels);
+      console.log('This might be a Shorts video - checking if metrics table is already visible...');
+
+      // Check if metrics table is already visible (common on Shorts analytics)
+      const metricsTable = document.querySelector('yta-explore-table.data-container');
+      if (metricsTable) {
+        console.log('✅ Metrics table already visible - no navigation needed');
+        return; // Metrics already visible, no need to navigate
+      }
+
+      console.error('Metrics table not found either - cannot proceed');
+      throw new Error('Report dropdown not found and metrics table not visible');
     }
 
     const existingMenu = reportDropdown.querySelector('tp-yt-paper-listbox[role="menu"]');
@@ -1567,6 +1577,17 @@ YTTreatmentHelper.API = {
    */
   extractPrePostMetrics: async function(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention = false) {
     try {
+      // First, navigate to Advanced Mode if not already there
+      if (statusCallback) statusCallback('🔧 Navigating to Advanced Mode...');
+
+      if (!this.isOnAdvancedMode()) {
+        console.log('Not on Advanced Mode - navigating there...');
+        await this.navigateToAdvancedMode();
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for Advanced Mode to load
+      } else {
+        console.log('Already on Advanced Mode');
+      }
+
       if (statusCallback) statusCallback('🔧 Opening metrics picker...');
       await new Promise(resolve => setTimeout(resolve, 50));
 
