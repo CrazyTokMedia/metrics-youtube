@@ -1356,8 +1356,20 @@ YTTreatmentHelper.SingleVideo = {
         const videoId = YTTreatmentHelper.Utils.getVideoIdFromUrl();
         const mode = window.currentExtractionMode || 'equal-periods';
 
+        // Try to get video title from the page
+        let videoTitle = 'Unknown Title';
+        try {
+          const titleElement = document.querySelector('#entity-name');
+          if (titleElement) {
+            videoTitle = titleElement.textContent.trim();
+          }
+        } catch (e) {
+          console.warn('Could not extract video title:', e);
+        }
+
         await YTTreatmentHelper.ExtractionHistory.saveSingleExtraction({
           videoId: videoId,
+          videoTitle: videoTitle,
           treatmentDate: treatmentDate,
           mode: mode,
           dateRanges: {

@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Build history HTML
       let html = '';
-      singleHistory.forEach((entry) => {
+      singleHistory.forEach((entry, index) => {
         const modeLabel = entry.mode === 'equal-periods' ? 'Equal Periods' :
                           entry.mode === 'lifetime' ? 'Lifetime' : 'Complete';
 
@@ -156,15 +156,93 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="history-video-title">${entry.videoTitle || 'Unknown Video'}</div>
             <div class="history-video-id">${entry.videoId}</div>
             <div class="history-treatment-date">Treatment: ${entry.treatmentDate}</div>
+            <button class="history-copy-btn" data-entry-index="${index}">📋 Copy Data</button>
           </div>
         `;
       });
 
       historyList.innerHTML = html;
+
+      // Add copy button event listeners
+      const copyButtons = historyList.querySelectorAll('.history-copy-btn');
+      copyButtons.forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const entryIndex = parseInt(btn.dataset.entryIndex);
+          const entry = singleHistory[entryIndex];
+          await copyHistoryEntry(entry, btn);
+        });
+      });
     } catch (error) {
       console.error('Error loading history:', error);
       historyList.innerHTML = '<div class="history-empty">Error loading history</div>';
     }
+  }
+
+  // Copy history entry data to clipboard
+  async function copyHistoryEntry(entry, button) {
+    try {
+      console.log('Copy button clicked for entry:', entry);
+      let exportData = '';
+
+      // entry.metrics has structure: { pre: {...}, post: {...}, periods: {...} }
+      const metrics = entry.metrics;
+
+      if (!metrics || !metrics.pre || !metrics.post) {
+        console.error('Invalid metrics structure:', metrics);
+        button.textContent = '✗ No Data';
+        setTimeout(() => {
+          button.textContent = '📋 Copy Data';
+        }, 2000);
+        return;
+      }
+
+      // For now, all extractions follow equal-periods format
+      // Format: Treatment Date | Pre Impressions | Post Impressions | empty | Pre CTR | Post CTR | empty | Pre AWT | Post AWT | Pre Retention | Post Retention
+      const preRange = entry.dateRanges.pre;
+      const postRange = entry.dateRanges.post;
+      const treatmentDate = `Pre - ${formatDateForExport(preRange.start)}-${formatDateForExport(preRange.end)} Post- ${formatDateForExport(postRange.start)}-${formatDateForExport(postRange.end)}`;
+
+      exportData = [
+        treatmentDate,
+        metrics.pre.impressions || '',
+        metrics.post.impressions || '',
+        '', // Empty for Change column
+        metrics.pre.ctr || '',
+        metrics.post.ctr || '',
+        '', // Empty for Change column
+        metrics.pre.awt || '',
+        metrics.post.awt || '',
+        metrics.pre.retention || '',
+        metrics.post.retention || ''
+      ].join('\t');
+
+      console.log('Export data:', exportData);
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(exportData);
+
+      // Show success feedback
+      button.textContent = '✓ Copied!';
+      button.classList.add('copied');
+
+      setTimeout(() => {
+        button.textContent = '📋 Copy Data';
+        button.classList.remove('copied');
+      }, 2000);
+    } catch (error) {
+      console.error('Error copying data:', error);
+      button.textContent = '✗ Error';
+      setTimeout(() => {
+        button.textContent = '📋 Copy Data';
+      }, 2000);
+    }
+  }
+
+  // Format date for export (DD.MM.YYYY)
+  function formatDateForExport(dateStr) {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}.${month}.${year}`;
   }
 
   // Format extraction date for display
