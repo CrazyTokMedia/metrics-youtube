@@ -143,10 +143,41 @@ YTTreatmentHelper.BatchMode = {
     // Cancel button
     const cancelBtn = document.getElementById('batch-cancel-btn');
     if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
+      cancelBtn.addEventListener('click', async () => {
+        console.log('🛑 Cancel button clicked');
         self.shouldCancel = true;
         cancelBtn.disabled = true;
         cancelBtn.textContent = 'Cancelling...';
+
+        // Force cleanup after a short delay if extraction doesn't stop
+        setTimeout(async () => {
+          if (self.isRunning) {
+            console.log('⚠️ Force-stopping stuck batch extraction');
+            await safeStorage.set({ batchInProgress: null });
+            self.isRunning = false;
+            self.shouldCancel = false;
+
+            // Reset UI
+            const extractBtn = document.getElementById('batch-extract-btn');
+            if (extractBtn) extractBtn.style.display = 'inline-block';
+            if (cancelBtn) {
+              cancelBtn.style.display = 'none';
+              cancelBtn.disabled = false;
+              cancelBtn.textContent = 'Cancel';
+            }
+
+            // Re-enable inputs
+            const urlsInput = document.getElementById('batch-urls-input');
+            const treatmentDateInput = document.getElementById('batch-treatment-date');
+            if (urlsInput) urlsInput.disabled = false;
+            if (treatmentDateInput) treatmentDateInput.disabled = false;
+            document.querySelectorAll('input[name="batch-extraction-mode"]').forEach(input => {
+              input.disabled = false;
+            });
+
+            self.updateStatus('Batch cancelled', 'warning');
+          }
+        }, 2000); // Give 2 seconds for graceful cancellation
       });
     }
 
@@ -165,6 +196,35 @@ YTTreatmentHelper.BatchMode = {
         self.downloadResultsAsCSV();
       });
     }
+  },
+
+  /**
+   * Perform cleanup after batch extraction (complete or cancelled)
+   */
+  performCleanup: function(extractBtn, cancelBtn) {
+    console.log('🧹 Performing batch cleanup...');
+
+    this.isRunning = false;
+    this.shouldCancel = false;
+
+    // Reset buttons
+    if (extractBtn) extractBtn.style.display = 'inline-block';
+    if (cancelBtn) {
+      cancelBtn.style.display = 'none';
+      cancelBtn.disabled = false;
+      cancelBtn.textContent = 'Cancel';
+    }
+
+    // Re-enable inputs
+    const urlsInput = document.getElementById('batch-urls-input');
+    const treatmentDateInput = document.getElementById('batch-treatment-date');
+    if (urlsInput) urlsInput.disabled = false;
+    if (treatmentDateInput) treatmentDateInput.disabled = false;
+    document.querySelectorAll('input[name="batch-extraction-mode"]').forEach(input => {
+      input.disabled = false;
+    });
+
+    console.log('✅ Cleanup complete');
   },
 
   /**
@@ -362,9 +422,13 @@ YTTreatmentHelper.BatchMode = {
     // Process remaining videos
     for (let i = currentIndex; i < videos.length; i++) {
       if (this.shouldCancel) {
+        console.log(`🛑 Batch cancelled by user at video ${i + 1}`);
         this.updateStatus(`Cancelled after ${i} video(s)`, 'warning');
         await safeStorage.set({ batchInProgress: null });
-        break;
+
+        // Perform immediate cleanup
+        this.performCleanup(batchExtractBtn, batchCancelBtn);
+        return; // Exit function immediately
       }
 
       const video = videos[i];
@@ -440,20 +504,7 @@ YTTreatmentHelper.BatchMode = {
     this.displayResults();
 
     // UI cleanup
-    this.isRunning = false;
-    if (batchExtractBtn && batchCancelBtn) {
-      batchExtractBtn.style.display = 'inline-block';
-      batchCancelBtn.style.display = 'none';
-    }
-
-    // Re-enable inputs
-    const urlsInput = document.getElementById('batch-urls-input');
-    const treatmentDateInput = document.getElementById('batch-treatment-date');
-    if (urlsInput) urlsInput.disabled = false;
-    if (treatmentDateInput) treatmentDateInput.disabled = false;
-    document.querySelectorAll('input[name="batch-extraction-mode"]').forEach(input => {
-      input.disabled = false;
-    });
+    this.performCleanup(batchExtractBtn, batchCancelBtn);
   },
 
   /**
