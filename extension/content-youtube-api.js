@@ -1319,7 +1319,7 @@ YTTreatmentHelper.API = {
     advancedButton.click();
     await waitForUrlChange('/explore?', 10000);
     await waitForElement('yta-explore-table.data-container', 10000);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 500)); // Reduced from 1500ms
 
     // Ensure progress bar state persists after navigation
     const progressContainer = document.getElementById('progress-container');
@@ -1583,7 +1583,7 @@ YTTreatmentHelper.API = {
       if (!this.isOnAdvancedMode()) {
         console.log('Not on Advanced Mode - navigating there...');
         await this.navigateToAdvancedMode();
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for Advanced Mode to load
+        await new Promise(resolve => setTimeout(resolve, 500)); // Reduced from 2000ms
       } else {
         console.log('Already on Advanced Mode');
       }
