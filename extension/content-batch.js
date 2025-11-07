@@ -392,7 +392,12 @@ YTTreatmentHelper.BatchMode = {
 
       // We're on the right page - extract metrics
       try {
+        console.log(`📊 Starting extraction for video ${i + 1} of ${videos.length}: ${video.videoId}`);
+        this.updateStatus(`Extracting video ${i + 1} / ${videos.length}: ${video.videoId}`, 'info');
+
         const result = await this.extractVideoMetrics(video, treatmentDate, extractionMode);
+
+        console.log(`✅ Extraction successful for ${video.videoId}:`, result);
         this.batchResults.push(result);
         this.updateStatus(`Completed ${i + 1} / ${videos.length}`, 'info');
 
@@ -400,18 +405,25 @@ YTTreatmentHelper.BatchMode = {
         state.results = this.batchResults;
         await safeStorage.set({ batchInProgress: state });
       } catch (error) {
-        console.error(`Error extracting ${video.videoId}:`, error);
+        console.error(`❌ Error extracting ${video.videoId}:`, error);
+        console.error('Error stack:', error.stack);
+
         this.batchResults.push({
           videoId: video.videoId,
           url: video.url,
           status: 'error',
-          error: error.message
+          error: error.message || error.toString()
         });
         this.updateStatus(`Error on video ${i + 1}: ${error.message}`, 'error');
 
         // Update state in storage
         state.results = this.batchResults;
         await safeStorage.set({ batchInProgress: state });
+
+        // Show alert for first error to help debug
+        if (i === state.currentIndex) {
+          alert(`Extraction failed for ${video.videoId}: ${error.message}\n\nCheck console for details.`);
+        }
       }
 
       // Small delay before next video
@@ -449,36 +461,39 @@ YTTreatmentHelper.BatchMode = {
    * Returns result object with all metrics
    */
   extractVideoMetrics: async function(video, treatmentDate, extractionMode) {
-    console.log(`Extracting metrics for ${video.videoId}...`);
+    console.log(`\n=== EXTRACTION START: ${video.videoId} ===`);
+    console.log(`Treatment Date: ${treatmentDate}, Mode: ${extractionMode}`);
 
     // Wait for analytics page to load - try multiple selectors
-    console.log('Waiting for analytics page to load...');
+    console.log('Step 1: Waiting for analytics page to load...');
     let analyticsLoaded = false;
 
     try {
       // Try waiting for the analytics page element
       await waitForElement('ytcp-analytics-page', 20000);
       analyticsLoaded = true;
-      console.log('Analytics page element found');
+      console.log('✅ Step 1: Analytics page element found');
     } catch (error) {
-      console.warn('ytcp-analytics-page not found, trying alternate selectors...');
+      console.warn('⚠️ ytcp-analytics-page not found, trying alternate selectors...');
 
       // Try alternate selector for analytics section
       try {
         await waitForElement('[class*="analytics"]', 10000);
         analyticsLoaded = true;
-        console.log('Analytics section found via alternate selector');
+        console.log('✅ Step 1: Analytics section found via alternate selector');
       } catch (error2) {
-        console.error('Analytics page did not load after 30 seconds');
+        console.error('❌ Step 1: Analytics page did not load after 30 seconds');
         throw new Error('Analytics page did not load - please ensure you are on the Analytics tab');
       }
     }
 
     // Wait longer for data to populate (analytics can be slow)
-    console.log('Waiting for analytics data to populate...');
+    console.log('Step 2: Waiting 5 seconds for analytics data to populate...');
     await new Promise(resolve => setTimeout(resolve, 5000));
+    console.log('✅ Step 2: Wait complete');
 
     // Get video title from page
+    console.log('Step 3: Extracting video title...');
     let videoTitle = 'Unknown Title';
     try {
       // Try to get title from page
@@ -487,49 +502,63 @@ YTTreatmentHelper.BatchMode = {
                           document.querySelector('ytcp-video-metadata-editor-title-description h1');
       if (titleElement) {
         videoTitle = titleElement.textContent.trim();
+        console.log(`✅ Step 3: Video title found: "${videoTitle}"`);
+      } else {
+        console.warn('⚠️ Step 3: Could not find video title element');
       }
     } catch (error) {
-      console.warn('Could not extract video title:', error);
+      console.warn('⚠️ Step 3: Error extracting video title:', error);
     }
 
     // Convert treatment date to YYYY-MM-DD
+    console.log('Step 4: Converting treatment date format...');
     const treatmentDateYYYYMMDD = YTTreatmentHelper.Utils.formatDateToYYYYMMDD(treatmentDate);
+    console.log(`✅ Step 4: Treatment date: ${treatmentDate} → ${treatmentDateYYYYMMDD}`);
 
     // Get video publish date
+    console.log('Step 5: Getting video publish date...');
     const videoPublishDate = YTTreatmentHelper.API.getVideoPublishDate();
     if (!videoPublishDate) {
+      console.error('❌ Step 5: Could not determine video publish date');
       throw new Error('Could not determine video publish date');
     }
+    console.log(`✅ Step 5: Publish date: ${YTTreatmentHelper.Utils.formatDate(videoPublishDate)}`);
 
     // Calculate date ranges
+    console.log('Step 6: Calculating date ranges...');
     const dateRanges = YTTreatmentHelper.API.calculateDateRanges(treatmentDateYYYYMMDD, videoPublishDate);
+    console.log('✅ Step 6: Date ranges calculated:', {
+      pre: `${dateRanges.pre.start} to ${dateRanges.pre.end}`,
+      post: `${dateRanges.post.start} to ${dateRanges.post.end}`
+    });
 
     // Extract metrics based on mode
+    console.log(`Step 7: Starting metrics extraction (${extractionMode})...`);
     let metrics = {};
 
     if (extractionMode === 'complete') {
       // Extract both equal periods and lifetime
-      console.log('Extracting complete analysis...');
-
-      // First extract equal periods
+      console.log('Step 7a: Extracting equal periods...');
       const equalResult = await YTTreatmentHelper.API.extractPrePostMetrics(
         dateRanges.pre.start,
         dateRanges.pre.end,
         dateRanges.post.start,
         dateRanges.post.end,
-        (status) => console.log(`[Equal] ${status}`),
+        (status) => console.log(`  [Equal] ${status}`),
         true // include retention
       );
+      console.log('✅ Step 7a: Equal periods extracted:', equalResult);
 
-      // Then extract lifetime periods
+      console.log('Step 7b: Extracting lifetime periods...');
       const lifetimeResult = await YTTreatmentHelper.API.extractPrePostMetrics(
         YTTreatmentHelper.Utils.formatDate(videoPublishDate),
         treatmentDateYYYYMMDD,
         treatmentDateYYYYMMDD,
         YTTreatmentHelper.Utils.formatDate(new Date()),
-        (status) => console.log(`[Lifetime] ${status}`),
+        (status) => console.log(`  [Lifetime] ${status}`),
         false // no retention for lifetime
       );
+      console.log('✅ Step 7b: Lifetime periods extracted:', lifetimeResult);
 
       metrics = {
         mode: 'complete',
@@ -538,31 +567,33 @@ YTTreatmentHelper.BatchMode = {
       };
     } else if (extractionMode === 'equal-periods') {
       // Extract equal PRE/POST periods
-      console.log('Extracting equal periods...');
+      console.log('Step 7: Extracting equal periods...');
       const result = await YTTreatmentHelper.API.extractPrePostMetrics(
         dateRanges.pre.start,
         dateRanges.pre.end,
         dateRanges.post.start,
         dateRanges.post.end,
-        (status) => console.log(status),
+        (status) => console.log(`  ${status}`),
         true // include retention
       );
+      console.log('✅ Step 7: Equal periods extracted:', result);
       metrics = { mode: 'equal-periods', ...result };
     } else if (extractionMode === 'lifetime') {
       // Extract lifetime periods (publish to treatment, treatment to today)
-      console.log('Extracting lifetime periods...');
+      console.log('Step 7: Extracting lifetime periods...');
       const result = await YTTreatmentHelper.API.extractPrePostMetrics(
         YTTreatmentHelper.Utils.formatDate(videoPublishDate),
         treatmentDateYYYYMMDD,
         treatmentDateYYYYMMDD,
         YTTreatmentHelper.Utils.formatDate(new Date()),
-        (status) => console.log(status),
+        (status) => console.log(`  ${status}`),
         false // no retention for lifetime
       );
+      console.log('✅ Step 7: Lifetime periods extracted:', result);
       metrics = { mode: 'lifetime', ...result };
     }
 
-    console.log(`Extraction complete for ${video.videoId}`);
+    console.log(`✅ EXTRACTION COMPLETE: ${video.videoId}\n`);
 
     return {
       videoId: video.videoId,
