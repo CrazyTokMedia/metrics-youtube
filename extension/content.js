@@ -2917,7 +2917,7 @@ function createHelperPanel() {
       // Get metrics in order: CTR, Views, AWT, Retention
       const ctr = document.getElementById(`${period}-ctr`).textContent;
       const views = document.getElementById(`${period}-views`).textContent;
-      const awt = document.getElementById(`${period}-awt`).textContent;
+      const awt = formatDurationForSheets(document.getElementById(`${period}-awt`).textContent);
       const retention = document.getElementById(`${period}-retention`).textContent;
 
       // Format as tab-separated values for Airtable
@@ -2978,6 +2978,30 @@ function createHelperPanel() {
     return dateStr;
   };
 
+  // Helper: Convert duration from YouTube format (1:23) to Google Sheets duration format (00:01:23)
+  const formatDurationForSheets = (duration) => {
+    if (!duration || duration === '—' || duration === 'N/A') return duration;
+
+    // Parse YouTube duration format (could be m:ss or h:mm:ss)
+    const parts = duration.split(':');
+
+    if (parts.length === 2) {
+      // Format is m:ss or mm:ss - convert to 00:mm:ss
+      const minutes = parts[0].padStart(2, '0');
+      const seconds = parts[1].padStart(2, '0');
+      return `00:${minutes}:${seconds}`;
+    } else if (parts.length === 3) {
+      // Already in h:mm:ss format - just ensure 2-digit padding
+      const hours = parts[0].padStart(2, '0');
+      const minutes = parts[1].padStart(2, '0');
+      const seconds = parts[2].padStart(2, '0');
+      return `${hours}:${minutes}:${seconds}`;
+    }
+
+    // If format is unexpected, return as-is
+    return duration;
+  };
+
   // Copy for Spreadsheet (Tab-separated)
   document.getElementById('copy-spreadsheet-btn').addEventListener('click', (e) => {
     const treatmentDate = formatDateRangesForSpreadsheet();
@@ -2985,8 +3009,8 @@ function createHelperPanel() {
     const postImpressions = document.getElementById('post-impressions').textContent;
     const preCtr = document.getElementById('pre-ctr').textContent;
     const postCtr = document.getElementById('post-ctr').textContent;
-    const preAwt = document.getElementById('pre-awt').textContent;
-    const postAwt = document.getElementById('post-awt').textContent;
+    const preAwt = formatDurationForSheets(document.getElementById('pre-awt').textContent);
+    const postAwt = formatDurationForSheets(document.getElementById('post-awt').textContent);
     const preRetention = document.getElementById('pre-retention').textContent;
     const postRetention = document.getElementById('post-retention').textContent;
     const preViews = document.getElementById('pre-views').textContent;
@@ -3029,14 +3053,14 @@ function createHelperPanel() {
     const equalPreImpr = data.equal.pre.impressions || '';
     const equalPreViews = data.equal.pre.views || '';
     const equalPreCtr = data.equal.pre.ctr || '';
-    const equalPreAwt = data.equal.pre.awt || '';
+    const equalPreAwt = formatDurationForSheets(data.equal.pre.awt || '');
     const equalPreRet = data.equal.pre.retention?.value || '';
     const equalPreStw = data.equal.pre.stayedToWatch || '';
 
     const equalPostImpr = data.equal.post.impressions || '';
     const equalPostViews = data.equal.post.views || '';
     const equalPostCtr = data.equal.post.ctr || '';
-    const equalPostAwt = data.equal.post.awt || '';
+    const equalPostAwt = formatDurationForSheets(data.equal.post.awt || '');
     const equalPostRet = data.equal.post.retention?.value || '';
     const equalPostStw = data.equal.post.stayedToWatch || '';
 
@@ -3044,14 +3068,14 @@ function createHelperPanel() {
     const lifePreImpr = data.lifetime.pre.impressions || '';
     const lifePreViews = data.lifetime.pre.views || '';
     const lifePreCtr = data.lifetime.pre.ctr || '';
-    const lifePreAwt = data.lifetime.pre.awt || '';
+    const lifePreAwt = formatDurationForSheets(data.lifetime.pre.awt || '');
     const lifePreRet = data.lifetime.pre.retention?.value || '';
     const lifePreStw = data.lifetime.pre.stayedToWatch || '';
 
     const lifePostImpr = data.lifetime.post.impressions || '';
     const lifePostViews = data.lifetime.post.views || '';
     const lifePostCtr = data.lifetime.post.ctr || '';
-    const lifePostAwt = data.lifetime.post.awt || '';
+    const lifePostAwt = formatDurationForSheets(data.lifetime.post.awt || '');
     const lifePostRet = data.lifetime.post.retention?.value || '';
     const lifePostStw = data.lifetime.post.stayedToWatch || '';
 
