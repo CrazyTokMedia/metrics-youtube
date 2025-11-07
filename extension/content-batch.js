@@ -193,11 +193,46 @@ YTTreatmentHelper.BatchMode = {
 
     for (const line of lines) {
       // Extract video ID from various URL formats
-      const match = line.match(/\/video\/([a-zA-Z0-9_-]+)/);
+      let videoId = null;
+
+      // Format 1: YouTube Studio analytics URL
+      // https://studio.youtube.com/video/ABC123/analytics
+      let match = line.match(/\/video\/([a-zA-Z0-9_-]+)/);
       if (match && match[1]) {
+        videoId = match[1];
+      }
+
+      // Format 2: YouTube watch URL
+      // https://www.youtube.com/watch?v=ABC123
+      if (!videoId) {
+        match = line.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          videoId = match[1];
+        }
+      }
+
+      // Format 3: YouTube shorts URL
+      // https://youtube.com/shorts/ABC123
+      if (!videoId) {
+        match = line.match(/\/shorts\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          videoId = match[1];
+        }
+      }
+
+      // Format 4: Short URL
+      // https://youtu.be/ABC123
+      if (!videoId) {
+        match = line.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          videoId = match[1];
+        }
+      }
+
+      if (videoId) {
         results.push({
           url: line,
-          videoId: match[1]
+          videoId: videoId
         });
       }
     }
