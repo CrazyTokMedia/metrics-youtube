@@ -134,31 +134,61 @@ document.addEventListener('DOMContentLoaded', async () => {
         singleHistory.sort((a, b) => new Date(b.extractionDate) - new Date(a.extractionDate));
       }
 
-      if (singleHistory.length === 0) {
+      // Get batch history
+      let batchHistory = Array.isArray(history.batch) ? history.batch : [];
+
+      // Combine and sort by extraction date
+      const allHistory = [
+        ...singleHistory.map(e => ({ ...e, type: 'single' })),
+        ...batchHistory.map(e => ({ ...e, type: 'batch' }))
+      ].sort((a, b) => new Date(b.extractionDate) - new Date(a.extractionDate));
+
+      if (allHistory.length === 0) {
         historyList.innerHTML = '<div class="history-empty">No extraction history</div>';
         return;
       }
 
       // Build history HTML
       let html = '';
-      singleHistory.forEach((entry, index) => {
-        const modeLabel = entry.mode === 'equal-periods' ? 'Equal Periods' :
-                          entry.mode === 'lifetime' ? 'Lifetime' : 'Complete';
-
+      allHistory.forEach((entry, index) => {
         const date = formatExtractionDate(entry.extractionDate);
 
-        html += `
-          <div class="history-item">
-            <div class="history-item-header">
-              <span class="history-item-date">${date}</span>
-              <span class="history-item-mode">${modeLabel}</span>
+        if (entry.type === 'single') {
+          // Single video entry
+          const modeLabel = entry.mode === 'equal-periods' ? 'Equal Periods' :
+                            entry.mode === 'lifetime' ? 'Lifetime' : 'Complete';
+
+          html += `
+            <div class="history-item">
+              <div class="history-item-header">
+                <span class="history-item-date">${date}<span class="history-type-badge badge-single">Single</span></span>
+                <span class="history-item-mode">${modeLabel}</span>
+              </div>
+              <div class="history-video-title">${entry.videoTitle || 'Unknown Video'}</div>
+              <div class="history-video-id">${entry.videoId}</div>
+              <div class="history-treatment-date">Treatment: ${entry.treatmentDate}</div>
+              <button class="history-copy-btn" data-entry-index="${index}" data-entry-type="single">📋 Copy Data</button>
             </div>
-            <div class="history-video-title">${entry.videoTitle || 'Unknown Video'}</div>
-            <div class="history-video-id">${entry.videoId}</div>
-            <div class="history-treatment-date">Treatment: ${entry.treatmentDate}</div>
-            <button class="history-copy-btn" data-entry-index="${index}">📋 Copy Data</button>
-          </div>
-        `;
+          `;
+        } else {
+          // Batch entry
+          const modeLabel = entry.mode === 'equal-periods' ? 'Equal Periods' :
+                            entry.mode === 'lifetime' ? 'Lifetime' : 'Complete';
+          const videoCount = entry.results ? entry.results.length : 0;
+
+          html += `
+            <div class="history-item">
+              <div class="history-item-header">
+                <span class="history-item-date">${date}<span class="history-type-badge badge-batch">Batch</span></span>
+                <span class="history-item-mode">${modeLabel}</span>
+              </div>
+              <div class="history-video-title">Batch Extraction</div>
+              <div class="batch-video-count">${videoCount} video(s) extracted</div>
+              <div class="history-treatment-date">Treatment: ${entry.treatmentDate}</div>
+              <button class="history-copy-btn" data-entry-index="${index}" data-entry-type="batch">📋 Copy All Data</button>
+            </div>
+          `;
+        }
       });
 
       historyList.innerHTML = html;
@@ -168,8 +198,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       copyButtons.forEach(btn => {
         btn.addEventListener('click', async () => {
           const entryIndex = parseInt(btn.dataset.entryIndex);
-          const entry = singleHistory[entryIndex];
-          await copyHistoryEntry(entry, btn);
+          const entryType = btn.dataset.entryType;
+          const entry = allHistory[entryIndex];
+
+          if (entryType === 'batch') {
+            await copyBatchHistoryEntry(entry, btn);
+          } else {
+            await copyHistoryEntry(entry, btn);
+          }
         });
       });
     } catch (error) {
@@ -234,6 +270,90 @@ document.addEventListener('DOMContentLoaded', async () => {
       button.textContent = '✗ Error';
       setTimeout(() => {
         button.textContent = '📋 Copy Data';
+      }, 2000);
+    }
+  }
+
+  // Copy batch history entry data to clipboard
+  async function copyBatchHistoryEntry(entry, button) {
+    try {
+      console.log('Copy batch button clicked for entry:', entry);
+
+      if (!entry.results || entry.results.length === 0) {
+        console.error('No batch results found');
+        button.textContent = '✗ No Data';
+        setTimeout(() => {
+          button.textContent = '📋 Copy All Data';
+        }, 2000);
+        return;
+      }
+
+      // Build TSV data for all videos in batch
+      let allRows = [];
+
+      entry.results.forEach(result => {
+        if (!result.metrics || !result.metrics.pre || !result.metrics.post) {
+          console.warn('Skipping video with invalid metrics:', result.videoId);
+          return;
+        }
+
+        const preRange = result.dateRanges?.pre || entry.dateRanges?.pre;
+        const postRange = result.dateRanges?.post || entry.dateRanges?.post;
+
+        if (!preRange || !postRange) {
+          console.warn('Skipping video with missing date ranges:', result.videoId);
+          return;
+        }
+
+        const treatmentDate = `Pre - ${formatDateForExport(preRange.start)}-${formatDateForExport(preRange.end)} Post- ${formatDateForExport(postRange.start)}-${formatDateForExport(postRange.end)}`;
+
+        const metrics = result.metrics;
+        const row = [
+          treatmentDate,
+          metrics.pre.impressions || '',
+          metrics.post.impressions || '',
+          '', // Empty for Change column
+          metrics.pre.ctr || '',
+          metrics.post.ctr || '',
+          '', // Empty for Change column
+          metrics.pre.awt || '',
+          metrics.post.awt || '',
+          metrics.pre.retention || '',
+          metrics.post.retention || ''
+        ].join('\t');
+
+        allRows.push(row);
+      });
+
+      if (allRows.length === 0) {
+        button.textContent = '✗ No Valid Data';
+        setTimeout(() => {
+          button.textContent = '📋 Copy All Data';
+        }, 2000);
+        return;
+      }
+
+      // Join all rows with newlines
+      const exportData = allRows.join('\n');
+
+      console.log(`Batch export data (${allRows.length} videos):`, exportData);
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(exportData);
+
+      // Show success feedback
+      button.textContent = `✓ Copied ${allRows.length} videos!`;
+      button.classList.add('copied');
+
+      setTimeout(() => {
+        button.textContent = '📋 Copy All Data';
+        button.classList.remove('copied');
+      }, 2000);
+    } catch (error) {
+      console.error('Error copying batch data:', error);
+      button.textContent = '✗ Error';
+      setTimeout(() => {
+        button.textContent = '📋 Copy All Data';
       }, 2000);
     }
   }
