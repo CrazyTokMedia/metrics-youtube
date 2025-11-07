@@ -603,25 +603,6 @@ YTTreatmentHelper.BatchMode = {
   },
 
   /**
-   * Build treatment date string with full date ranges
-   * Formats: "Pre - DD.MM.YYYY-DD.MM.YYYY Post- DD.MM.YYYY-DD.MM.YYYY"
-   * Matches single-video export format
-   */
-  buildTreatmentDateDisplay: function(result) {
-    if (!result.dateRanges?.pre || !result.dateRanges?.post) {
-      // Fallback to simple treatment date if ranges not available
-      return result.treatmentDate || '';
-    }
-
-    const preStart = this.formatDateForExport(result.dateRanges.pre.start);
-    const preEnd = this.formatDateForExport(result.dateRanges.pre.end);
-    const postStart = this.formatDateForExport(result.dateRanges.post.start);
-    const postEnd = this.formatDateForExport(result.dateRanges.post.end);
-
-    return `Pre - ${preStart}-${preEnd} Post- ${postStart}-${postEnd}`;
-  },
-
-  /**
    * Extract metrics for a single video
    * Returns result object with all metrics
    * @param {Object} progressCallback - Optional callback(stepNum, totalSteps, stepDescription)
@@ -1165,6 +1146,8 @@ YTTreatmentHelper.BatchMode = {
       'Video ID',
       'Publish Date',
       'Treatment Date',
+      'Pre Period',
+      'Post Period',
       'Pre Impressions',
       'Post Impressions',
       'Pre CTR',
@@ -1187,12 +1170,20 @@ YTTreatmentHelper.BatchMode = {
         continue;
       }
 
+      // Build date period strings
+      const prePeriod = result.dateRanges?.pre ?
+        `${this.formatDateForExport(result.dateRanges.pre.start)}-${this.formatDateForExport(result.dateRanges.pre.end)}` : '';
+      const postPeriod = result.dateRanges?.post ?
+        `${this.formatDateForExport(result.dateRanges.post.start)}-${this.formatDateForExport(result.dateRanges.post.end)}` : '';
+
       const row = [
         result.url,
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        this.buildTreatmentDateDisplay(result),
+        result.treatmentDate || '',
+        prePeriod,
+        postPeriod,
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
         result.metrics.pre?.ctr || '',
@@ -1223,8 +1214,10 @@ YTTreatmentHelper.BatchMode = {
       'Video ID',
       'Publish Date',
       'Treatment Date',
-      'Pre Impressions (Publish to Treatment)',
-      'Post Impressions (Treatment to Today)',
+      'Pre Period',
+      'Post Period',
+      'Pre Impressions',
+      'Post Impressions',
       'Pre CTR',
       'Post CTR',
       'Pre Views',
@@ -1241,12 +1234,20 @@ YTTreatmentHelper.BatchMode = {
         continue;
       }
 
+      // Build date period strings
+      const prePeriod = result.dateRanges?.pre ?
+        `${this.formatDateForExport(result.dateRanges.pre.start)}-${this.formatDateForExport(result.dateRanges.pre.end)}` : '';
+      const postPeriod = result.dateRanges?.post ?
+        `${this.formatDateForExport(result.dateRanges.post.start)}-${this.formatDateForExport(result.dateRanges.post.end)}` : '';
+
       const row = [
         result.url,
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        this.buildTreatmentDateDisplay(result),
+        result.treatmentDate || '',
+        prePeriod,
+        postPeriod,
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
         result.metrics.pre?.ctr || '',
@@ -1277,7 +1278,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoId,
         result.publishDate || '',
         result.status,
-        this.buildTreatmentDateDisplay(result)
+        result.treatmentDate || ''
       ];
       rows.push(row.join('\t'));
     }
@@ -1300,12 +1301,25 @@ YTTreatmentHelper.BatchMode = {
       const equal = result.metrics.equal || {};
       const lifetime = result.metrics.lifetime || {};
 
+      // Build date period strings
+      const equalPrePeriod = result.dateRanges?.pre ?
+        `${this.formatDateForExport(result.dateRanges.pre.start)}-${this.formatDateForExport(result.dateRanges.pre.end)}` : '';
+      const equalPostPeriod = result.dateRanges?.post ?
+        `${this.formatDateForExport(result.dateRanges.post.start)}-${this.formatDateForExport(result.dateRanges.post.end)}` : '';
+
+      const lifetimePrePeriod = lifetime.periods?.pre ?
+        `${this.formatDateForExport(lifetime.periods.pre.start)}-${this.formatDateForExport(lifetime.periods.pre.end)}` : '';
+      const lifetimePostPeriod = lifetime.periods?.post ?
+        `${this.formatDateForExport(lifetime.periods.post.start)}-${this.formatDateForExport(lifetime.periods.post.end)}` : '';
+
       const row = [
         result.url,
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        this.buildTreatmentDateDisplay(result),
+        result.treatmentDate || '',
+        equalPrePeriod,
+        equalPostPeriod,
         equal.pre?.impressions || '',
         equal.post?.impressions || '',
         equal.pre?.ctr || '',
@@ -1318,6 +1332,8 @@ YTTreatmentHelper.BatchMode = {
         equal.post?.retention || '',
         equal.pre?.stayedToWatch || '',
         equal.post?.stayedToWatch || '',
+        lifetimePrePeriod,
+        lifetimePostPeriod,
         lifetime.pre?.impressions || '',
         lifetime.post?.impressions || '',
         lifetime.pre?.ctr || '',
@@ -1346,12 +1362,20 @@ YTTreatmentHelper.BatchMode = {
         continue;
       }
 
+      // Build date period strings
+      const prePeriod = result.dateRanges?.pre ?
+        `${this.formatDateForExport(result.dateRanges.pre.start)}-${this.formatDateForExport(result.dateRanges.pre.end)}` : '';
+      const postPeriod = result.dateRanges?.post ?
+        `${this.formatDateForExport(result.dateRanges.post.start)}-${this.formatDateForExport(result.dateRanges.post.end)}` : '';
+
       const row = [
         result.url,
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        this.buildTreatmentDateDisplay(result),
+        result.treatmentDate || '',
+        prePeriod,
+        postPeriod,
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
         result.metrics.pre?.ctr || '',
@@ -1384,12 +1408,20 @@ YTTreatmentHelper.BatchMode = {
         continue;
       }
 
+      // Build date period strings
+      const prePeriod = result.dateRanges?.pre ?
+        `${this.formatDateForExport(result.dateRanges.pre.start)}-${this.formatDateForExport(result.dateRanges.pre.end)}` : '';
+      const postPeriod = result.dateRanges?.post ?
+        `${this.formatDateForExport(result.dateRanges.post.start)}-${this.formatDateForExport(result.dateRanges.post.end)}` : '';
+
       const row = [
         result.url,
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        this.buildTreatmentDateDisplay(result),
+        result.treatmentDate || '',
+        prePeriod,
+        postPeriod,
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
         result.metrics.pre?.ctr || '',
@@ -1419,7 +1451,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoId,
         result.publishDate || '',
         result.status,
-        this.buildTreatmentDateDisplay(result)
+        result.treatmentDate || ''
       ];
       rows.push(row.join('\t'));
     }
@@ -1569,15 +1601,23 @@ YTTreatmentHelper.BatchMode = {
    * Helper to format batch results for export (used by history too)
    */
   formatBatchResultsForExport: function(results, mode) {
-    // This is a simplified version - you can expand based on your export format
+    // Simplified export format for history (no URL/Video ID columns)
     const rows = [];
 
     for (const result of results) {
       if (result.status !== 'success') continue;
 
+      // Build date period strings
+      const prePeriod = result.dateRanges?.pre ?
+        `${this.formatDateForExport(result.dateRanges.pre.start)}-${this.formatDateForExport(result.dateRanges.pre.end)}` : '';
+      const postPeriod = result.dateRanges?.post ?
+        `${this.formatDateForExport(result.dateRanges.post.start)}-${this.formatDateForExport(result.dateRanges.post.end)}` : '';
+
       const row = [
         result.videoTitle || '',
-        this.buildTreatmentDateDisplay(result),
+        result.treatmentDate || '',
+        prePeriod,
+        postPeriod,
         result.metrics?.pre?.impressions || '',
         result.metrics?.post?.impressions || '',
         '',
