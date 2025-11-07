@@ -335,8 +335,8 @@ YTTreatmentHelper.BatchMode = {
    * Called on page load to resume interrupted batches
    */
   checkAndResumeBatch: async function() {
-    // Wait a bit for page to be ready
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Minimal wait for page to be ready
+    await new Promise(resolve => setTimeout(resolve, 200)); // Reduced from 1000ms
 
     const batchState = await safeStorage.get(['batchInProgress']);
 
@@ -480,9 +480,9 @@ YTTreatmentHelper.BatchMode = {
         return; // Navigation will reload page and resume
       }
 
-      // We're on the right page - small delay to ensure URL is stable
+      // We're on the right page - tiny delay to ensure page is stable
       console.log(`On correct video page: ${video.videoId}`);
-      await new Promise(resolve => setTimeout(resolve, 300)); // Reduced from 2000ms
+      await new Promise(resolve => setTimeout(resolve, 100)); // Reduced from 300ms
 
       // We're on the right page - extract metrics
       try {
@@ -550,8 +550,8 @@ YTTreatmentHelper.BatchMode = {
     let analyticsLoaded = false;
 
     try {
-      // Try waiting for the analytics page element
-      await waitForElement('ytcp-analytics-page', 20000);
+      // Try waiting for the analytics page element - MUCH shorter timeout
+      await waitForElement('ytcp-analytics-page', 5000); // Reduced from 20s to 5s
       analyticsLoaded = true;
       console.log('✅ Step 1: Analytics page element found');
     } catch (error) {
@@ -559,11 +559,11 @@ YTTreatmentHelper.BatchMode = {
 
       // Try alternate selector for analytics section
       try {
-        await waitForElement('[class*="analytics"]', 10000);
+        await waitForElement('[class*="analytics"]', 3000); // Reduced from 10s to 3s
         analyticsLoaded = true;
         console.log('✅ Step 1: Analytics section found via alternate selector');
       } catch (error2) {
-        console.error('❌ Step 1: Analytics page did not load after 30 seconds');
+        console.error('❌ Step 1: Analytics page did not load after 8 seconds');
         throw new Error('Analytics page did not load - please ensure you are on the Analytics tab');
       }
     }
