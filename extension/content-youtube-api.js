@@ -1017,7 +1017,8 @@ YTTreatmentHelper.API = {
       views: null,
       awt: null,
       consumption: null,
-      ctr: null
+      ctr: null,
+      stayedToWatch: null
     };
 
     metricColumns.forEach((cell, index) => {
@@ -1038,6 +1039,8 @@ YTTreatmentHelper.API = {
         metrics.consumption = value;
       } else if (headerLower.includes('click-through rate')) {
         metrics.ctr = value;
+      } else if (headerLower.includes('stayed to watch')) {
+        metrics.stayedToWatch = value;
       }
     });
 
