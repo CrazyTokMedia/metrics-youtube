@@ -232,24 +232,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // For now, all extractions follow equal-periods format
-      // Format: Treatment Date | Pre Impressions | Post Impressions | empty | Pre CTR | Post CTR | empty | Pre AWT | Post AWT | Pre Retention | Post Retention
+      // Format: Treatment Date | Pre Period | Post Period | Pre Impressions | Post Impressions | empty | Pre CTR | Post CTR | empty | Pre Views | Post Views | empty | Pre AWT | Post AWT | empty | Pre Retention | Post Retention | empty | Pre Stayed to Watch | Post Stayed to Watch
       const preRange = entry.dateRanges.pre;
       const postRange = entry.dateRanges.post;
-      const treatmentDate = `Pre - ${formatDateForExport(preRange.start)}-${formatDateForExport(preRange.end)} Post- ${formatDateForExport(postRange.start)}-${formatDateForExport(postRange.end)}`;
+      const treatmentDate = entry.treatmentDate || ''; // Simple DD/MM/YYYY format
+      const prePeriod = `${formatDateForExport(preRange.start)}-${formatDateForExport(preRange.end)}`;
+      const postPeriod = `${formatDateForExport(postRange.start)}-${formatDateForExport(postRange.end)}`;
 
       exportData = [
         treatmentDate,
+        prePeriod,
+        postPeriod,
         metrics.pre.impressions || '',
         metrics.post.impressions || '',
         '', // Empty for Change column
         metrics.pre.ctr || '',
         metrics.post.ctr || '',
         '', // Empty for Change column
+        metrics.pre.views || '',
+        metrics.post.views || '',
+        '', // Empty for Change column
         metrics.pre.awt || '',
         metrics.post.awt || '',
+        '', // Empty for Change column
         metrics.pre.retention || '',
-        metrics.post.retention || ''
+        metrics.post.retention || '',
+        '', // Empty for Change column
+        metrics.pre.stayedToWatch || '',
+        metrics.post.stayedToWatch || ''
       ].join('\t');
 
       console.log('Export data:', exportData);
@@ -305,21 +315,33 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        const treatmentDate = `Pre - ${formatDateForExport(preRange.start)}-${formatDateForExport(preRange.end)} Post- ${formatDateForExport(postRange.start)}-${formatDateForExport(postRange.end)}`;
+        const treatmentDate = result.treatmentDate || entry.treatmentDate || ''; // Simple DD/MM/YYYY
+        const prePeriod = `${formatDateForExport(preRange.start)}-${formatDateForExport(preRange.end)}`;
+        const postPeriod = `${formatDateForExport(postRange.start)}-${formatDateForExport(postRange.end)}`;
 
         const metrics = result.metrics;
         const row = [
+          result.videoTitle || '',
           treatmentDate,
+          prePeriod,
+          postPeriod,
           metrics.pre.impressions || '',
           metrics.post.impressions || '',
           '', // Empty for Change column
           metrics.pre.ctr || '',
           metrics.post.ctr || '',
           '', // Empty for Change column
+          metrics.pre.views || '',
+          metrics.post.views || '',
+          '', // Empty for Change column
           metrics.pre.awt || '',
           metrics.post.awt || '',
+          '', // Empty for Change column
           metrics.pre.retention || '',
-          metrics.post.retention || ''
+          metrics.post.retention || '',
+          '', // Empty for Change column
+          metrics.pre.stayedToWatch || '',
+          metrics.post.stayedToWatch || ''
         ].join('\t');
 
         allRows.push(row);
