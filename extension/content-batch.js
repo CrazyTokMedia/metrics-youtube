@@ -468,6 +468,11 @@ YTTreatmentHelper.BatchMode = {
     this.isRunning = true;
     this.batchResults = results;
 
+    // Calculate total steps for entire batch
+    const stepsPerVideo = extractionMode === 'complete' ? 10 : 8;
+    const totalBatchSteps = videos.length * stepsPerVideo;
+    console.log(`📊 Batch extraction: ${videos.length} videos × ${stepsPerVideo} steps = ${totalBatchSteps} total steps`);
+
     // Process remaining videos
     for (let i = currentIndex; i < videos.length; i++) {
       if (this.shouldCancel) {
@@ -481,7 +486,9 @@ YTTreatmentHelper.BatchMode = {
       }
 
       const video = videos[i];
-      this.updateProgress(i, videos.length, `Processing ${video.videoId}...`);
+
+      // Calculate steps completed so far
+      const stepsCompletedBefore = i * stepsPerVideo;
 
       // Check if we're on the right video page
       const currentVideoId = YTTreatmentHelper.Utils.getVideoIdFromUrl();
@@ -493,6 +500,7 @@ YTTreatmentHelper.BatchMode = {
         await safeStorage.set({ batchInProgress: state });
 
         console.log(`Navigating to video ${video.videoId}...`);
+        this.updateProgress(stepsCompletedBefore, totalBatchSteps, `Navigating to video ${i + 1}/${videos.length}...`);
 
         // Navigate and wait for page to reload
         window.location.href = `https://studio.youtube.com/video/${video.videoId}/analytics`;
@@ -506,13 +514,33 @@ YTTreatmentHelper.BatchMode = {
       // We're on the right page - extract metrics
       try {
         console.log(`📊 Starting extraction for video ${i + 1} of ${videos.length}: ${video.videoId}`);
-        this.updateStatus(`Extracting video ${i + 1} / ${videos.length}: ${video.videoId}`, 'info');
 
-        const result = await this.extractVideoMetrics(video, treatmentDate, extractionMode);
+        // Create progress callback that updates batch progress
+        const progressCallback = (stepNum, totalSteps, stepDescription) => {
+          const overallStep = stepsCompletedBefore + stepNum;
+          const progressPercent = Math.round((overallStep / totalBatchSteps) * 100);
+
+          this.updateProgress(
+            overallStep,
+            totalBatchSteps,
+            `${overallStep}/${totalBatchSteps} (${progressPercent}%)`
+          );
+
+          this.updateStatus(
+            `Video ${i + 1}/${videos.length}: ${stepDescription}`,
+            'info'
+          );
+        };
+
+        const result = await this.extractVideoMetrics(video, treatmentDate, extractionMode, progressCallback);
 
         console.log(`✅ Extraction successful for ${video.videoId}:`, result);
         this.batchResults.push(result);
-        this.updateStatus(`Completed ${i + 1} / ${videos.length}`, 'info');
+
+        // Update to show video completed
+        const stepsCompletedAfter = (i + 1) * stepsPerVideo;
+        this.updateProgress(stepsCompletedAfter, totalBatchSteps, `${stepsCompletedAfter}/${totalBatchSteps}`);
+        this.updateStatus(`Completed video ${i + 1} / ${videos.length}`, 'info');
 
         // Update state in storage
         state.results = this.batchResults;
@@ -566,6 +594,35 @@ YTTreatmentHelper.BatchMode = {
   },
 
   /**
+   * Format date for export (DD.MM.YYYY)
+   * Converts YYYY-MM-DD to DD.MM.YYYY
+   */
+  formatDateForExport: function(dateStr) {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}.${month}.${year}`;
+  },
+
+  /**
+   * Build treatment date string with full date ranges
+   * Formats: "Pre - DD.MM.YYYY-DD.MM.YYYY Post- DD.MM.YYYY-DD.MM.YYYY"
+   * Matches single-video export format
+   */
+  buildTreatmentDateDisplay: function(result) {
+    if (!result.dateRanges?.pre || !result.dateRanges?.post) {
+      // Fallback to simple treatment date if ranges not available
+      return result.treatmentDate || '';
+    }
+
+    const preStart = this.formatDateForExport(result.dateRanges.pre.start);
+    const preEnd = this.formatDateForExport(result.dateRanges.pre.end);
+    const postStart = this.formatDateForExport(result.dateRanges.post.start);
+    const postEnd = this.formatDateForExport(result.dateRanges.post.end);
+
+    return `Pre - ${preStart}-${preEnd} Post- ${postStart}-${postEnd}`;
+  },
+
+  /**
    * Helper: Extract with retry on YouTube max date error
    */
   extractWithRetry: async function(preStart, preEnd, postStart, postEnd, statusCallback, includeRetention, treatmentDateYYYYMMDD, videoPublishDate) {
@@ -615,13 +672,19 @@ YTTreatmentHelper.BatchMode = {
   /**
    * Extract metrics for a single video
    * Returns result object with all metrics
+   * @param {Object} progressCallback - Optional callback(stepNum, totalSteps, stepDescription)
    */
-  extractVideoMetrics: async function(video, treatmentDate, extractionMode) {
+  extractVideoMetrics: async function(video, treatmentDate, extractionMode, progressCallback = null) {
     console.log(`\n=== EXTRACTION START: ${video.videoId} ===`);
     console.log(`Treatment Date: ${treatmentDate}, Mode: ${extractionMode}`);
 
+    // Calculate total steps based on extraction mode
+    const totalSteps = extractionMode === 'complete' ? 10 : 8;
+    let currentStep = 0;
+
     // Wait for analytics page to load - try multiple selectors
     console.log('Step 1: Waiting for analytics page to load...');
+    if (progressCallback) progressCallback(++currentStep, totalSteps, 'Waiting for analytics page...');
     let analyticsLoaded = false;
 
     try {
@@ -645,14 +708,17 @@ YTTreatmentHelper.BatchMode = {
 
     // Don't wait for data - we're navigating to Advanced Mode which loads its own data
     console.log('✅ Step 2: Analytics page loaded, proceeding to extraction');
+    if (progressCallback) progressCallback(++currentStep, totalSteps, 'Analytics page loaded');
 
     // Get video title from Details tab
     console.log('Step 3: Navigating to Details tab to extract video title...');
+    if (progressCallback) progressCallback(++currentStep, totalSteps, 'Navigating to Details tab...');
     let videoTitle = 'Unknown Title';
     try {
       // Navigate to Details tab
       await YTTreatmentHelper.API.navigateToDetailsTab();
       console.log('✅ Step 3a: Details tab loaded');
+      if (progressCallback) progressCallback(++currentStep, totalSteps, 'Extracting video title...');
 
       // Extract title from Details tab
       videoTitle = YTTreatmentHelper.API.extractVideoTitle();
@@ -660,17 +726,21 @@ YTTreatmentHelper.BatchMode = {
 
       // Navigate back to Analytics tab for metric extraction
       console.log('Step 3c: Navigating back to Analytics tab...');
+      if (progressCallback) progressCallback(++currentStep, totalSteps, 'Returning to Analytics tab...');
       await YTTreatmentHelper.API.navigateToAnalyticsTab();
       console.log('✅ Step 3c: Back on Analytics tab');
     } catch (error) {
       console.warn('⚠️ Step 3: Error extracting video title from Details tab:', error);
       console.warn('Will use fallback title: "Unknown Title"');
+      // Still increment currentStep to keep count accurate
+      currentStep += 2; // Account for skipped steps
     }
 
     // Convert treatment date to YYYY-MM-DD
     console.log('Step 4: Converting treatment date format...');
     const treatmentDateYYYYMMDD = YTTreatmentHelper.Utils.formatDateToYYYYMMDD(treatmentDate);
     console.log(`✅ Step 4: Treatment date: ${treatmentDate} → ${treatmentDateYYYYMMDD}`);
+    if (progressCallback) progressCallback(++currentStep, totalSteps, 'Calculating date ranges...');
 
     // Get video publish date
     console.log('Step 5: Getting video publish date...');
@@ -696,6 +766,8 @@ YTTreatmentHelper.BatchMode = {
     if (extractionMode === 'complete') {
       // Extract both equal periods and lifetime
       console.log('Step 7a: Extracting equal periods...');
+      if (progressCallback) progressCallback(++currentStep, totalSteps, 'Extracting equal periods...');
+
       const equalResult = await this.extractWithRetry(
         dateRanges.pre.start,
         dateRanges.pre.end,
@@ -709,11 +781,24 @@ YTTreatmentHelper.BatchMode = {
       console.log('✅ Step 7a: Equal periods extracted:', equalResult);
 
       console.log('Step 7b: Extracting lifetime periods...');
+      if (progressCallback) progressCallback(++currentStep, totalSteps, 'Extracting lifetime periods...');
+
+      // Calculate max YouTube date (UTC-based, 3-day buffer) - same as single video mode
+      const todayUTC = new Date();
+      const maxYouTubeDate = new Date(Date.UTC(
+        todayUTC.getUTCFullYear(),
+        todayUTC.getUTCMonth(),
+        todayUTC.getUTCDate(),
+        0, 0, 0, 0
+      ));
+      maxYouTubeDate.setUTCDate(maxYouTubeDate.getUTCDate() - 3);
+      const maxDateStr = YTTreatmentHelper.Utils.formatDate(maxYouTubeDate);
+
       const lifetimeResult = await this.extractWithRetry(
         YTTreatmentHelper.Utils.formatDate(videoPublishDate),
         treatmentDateYYYYMMDD,
         treatmentDateYYYYMMDD,
-        YTTreatmentHelper.Utils.formatDate(new Date()),
+        maxDateStr,
         (status) => console.log(`  [Lifetime] ${status}`),
         false, // no retention for lifetime
         treatmentDateYYYYMMDD,
@@ -729,6 +814,8 @@ YTTreatmentHelper.BatchMode = {
     } else if (extractionMode === 'equal-periods') {
       // Extract equal PRE/POST periods
       console.log('Step 7: Extracting equal periods...');
+      if (progressCallback) progressCallback(++currentStep, totalSteps, 'Extracting equal periods...');
+
       const result = await this.extractWithRetry(
         dateRanges.pre.start,
         dateRanges.pre.end,
@@ -744,11 +831,24 @@ YTTreatmentHelper.BatchMode = {
     } else if (extractionMode === 'lifetime') {
       // Extract lifetime periods (publish to treatment, treatment to today)
       console.log('Step 7: Extracting lifetime periods...');
+      if (progressCallback) progressCallback(++currentStep, totalSteps, 'Extracting lifetime periods...');
+
+      // Calculate max YouTube date (UTC-based, 3-day buffer) - same as single video mode
+      const todayUTC = new Date();
+      const maxYouTubeDate = new Date(Date.UTC(
+        todayUTC.getUTCFullYear(),
+        todayUTC.getUTCMonth(),
+        todayUTC.getUTCDate(),
+        0, 0, 0, 0
+      ));
+      maxYouTubeDate.setUTCDate(maxYouTubeDate.getUTCDate() - 3);
+      const maxDateStr = YTTreatmentHelper.Utils.formatDate(maxYouTubeDate);
+
       const result = await this.extractWithRetry(
         YTTreatmentHelper.Utils.formatDate(videoPublishDate),
         treatmentDateYYYYMMDD,
         treatmentDateYYYYMMDD,
-        YTTreatmentHelper.Utils.formatDate(new Date()),
+        maxDateStr,
         (status) => console.log(`  ${status}`),
         false, // no retention for lifetime
         treatmentDateYYYYMMDD,
@@ -759,15 +859,31 @@ YTTreatmentHelper.BatchMode = {
     }
 
     console.log(`✅ EXTRACTION COMPLETE: ${video.videoId}\n`);
+    if (progressCallback) progressCallback(totalSteps, totalSteps, 'Extraction complete');
+
+    // Extract date ranges from metrics (available in all modes)
+    let dateRanges = null;
+    if (metrics.mode === 'complete' && metrics.equal?.periods) {
+      dateRanges = {
+        pre: metrics.equal.periods.pre,
+        post: metrics.equal.periods.post
+      };
+    } else if (metrics.periods) {
+      dateRanges = {
+        pre: metrics.periods.pre,
+        post: metrics.periods.post
+      };
+    }
 
     return {
       videoId: video.videoId,
       videoTitle: videoTitle,
-      publishDate: YTTreatmentHelper.Utils.formatDate(videoPublishDate),
+      publishDate: this.formatDateForExport(YTTreatmentHelper.Utils.formatDate(videoPublishDate)),
       url: video.url,
       status: 'success',
       metrics: metrics,
-      treatmentDate: treatmentDate
+      treatmentDate: treatmentDate,
+      dateRanges: dateRanges
     };
   },
 
@@ -1014,7 +1130,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        result.treatmentDate,
+        this.buildTreatmentDateDisplay(result),
         // Equal periods
         equal.pre?.impressions || '',
         equal.post?.impressions || '',
@@ -1082,7 +1198,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        result.treatmentDate,
+        this.buildTreatmentDateDisplay(result),
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
         result.metrics.pre?.ctr || '',
@@ -1136,7 +1252,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        result.treatmentDate,
+        this.buildTreatmentDateDisplay(result),
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
         result.metrics.pre?.ctr || '',
@@ -1195,7 +1311,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        result.treatmentDate,
+        this.buildTreatmentDateDisplay(result),
         equal.pre?.impressions || '',
         equal.post?.impressions || '',
         equal.pre?.ctr || '',
@@ -1241,7 +1357,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        result.treatmentDate,
+        this.buildTreatmentDateDisplay(result),
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
         result.metrics.pre?.ctr || '',
@@ -1279,7 +1395,7 @@ YTTreatmentHelper.BatchMode = {
         result.videoTitle,
         result.videoId,
         result.publishDate || '',
-        result.treatmentDate,
+        this.buildTreatmentDateDisplay(result),
         result.metrics.pre?.impressions || '',
         result.metrics.post?.impressions || '',
         result.metrics.pre?.ctr || '',
@@ -1467,7 +1583,7 @@ YTTreatmentHelper.BatchMode = {
 
       const row = [
         result.videoTitle || '',
-        result.treatmentDate || '',
+        this.buildTreatmentDateDisplay(result),
         result.metrics?.pre?.impressions || '',
         result.metrics?.post?.impressions || '',
         '',
