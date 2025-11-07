@@ -96,7 +96,8 @@ YTTreatmentHelper.SingleVideo = {
         <button class="mode-toggle-btn" data-mode="batch">Batch Mode</button>
       </div>
 
-      <div class="helper-body" id="single-video-container">
+      <div class="helper-body">
+        <div id="single-video-container">
 
         <!-- Step 1: Treatment Date -->
         <div class="step-container" id="step-1">
@@ -431,10 +432,13 @@ YTTreatmentHelper.SingleVideo = {
           </div>
 
         </div>
-      </div>
-      <!-- End Single Video Container -->
+        </div>
+        <!-- End Single Video Container -->
 
-      ${YTTreatmentHelper.BatchMode.createBatchUI()}
+        ${YTTreatmentHelper.BatchMode.createBatchUI()}
+
+      </div>
+      <!-- End Helper Body -->
 
     `;
 
