@@ -474,8 +474,12 @@ function watchForVideoChanges() {
 }
 
 // Alias: Initialize (migrated to content-single-video.js)
-function init() {
-  return YTTreatmentHelper.SingleVideo.init();
+async function init() {
+  // Initialize single video helper
+  YTTreatmentHelper.SingleVideo.init();
+
+  // Check if batch extraction is in progress and resume if needed
+  await YTTreatmentHelper.BatchMode.checkAndResumeBatch();
 }
 
 // Run initialization

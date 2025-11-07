@@ -206,6 +206,26 @@ YTTreatmentHelper.BatchMode = {
   },
 
   /**
+   * Check if batch is in progress (from storage)
+   * Called on page load to resume interrupted batches
+   */
+  checkAndResumeBatch: async function() {
+    const batchState = await safeStorage.get(['batchInProgress']);
+
+    if (batchState.batchInProgress) {
+      console.log('Resuming batch extraction...');
+
+      // Restore state
+      const state = batchState.batchInProgress;
+      this.batchResults = state.results || [];
+      this.isRunning = true;
+
+      // Continue extraction
+      await this.continueBatchExtraction(state);
+    }
+  },
+
+  /**
    * Start batch extraction process
    */
   startBatchExtraction: async function() {
@@ -243,36 +263,80 @@ YTTreatmentHelper.BatchMode = {
     this.batchResults = [];
     this.shouldCancel = false;
 
-    // UI updates
-    document.getElementById('batch-extract-btn').style.display = 'none';
-    document.getElementById('batch-cancel-btn').style.display = 'inline-block';
-    document.getElementById('batch-progress-container').style.display = 'block';
-    document.getElementById('batch-status').style.display = 'block';
-    document.getElementById('batch-results-section').style.display = 'none';
+    // Save batch state to storage
+    const batchState = {
+      videos: videos,
+      treatmentDate: treatmentDate,
+      extractionMode: extractionMode.value,
+      currentIndex: 0,
+      results: []
+    };
 
-    // Disable inputs
-    urlsInput.disabled = true;
-    treatmentDateInput.disabled = true;
-    document.querySelectorAll('input[name="batch-extraction-mode"]').forEach(input => {
-      input.disabled = true;
-    });
+    await safeStorage.set({ batchInProgress: batchState });
+
+    // Start extraction
+    await this.continueBatchExtraction(batchState);
+  },
+
+  /**
+   * Continue batch extraction (can be called after page navigation)
+   */
+  continueBatchExtraction: async function(state) {
+    const { videos, treatmentDate, extractionMode, currentIndex, results } = state;
+
+    // Check if we need to show UI (might not exist after page navigation)
+    const batchExtractBtn = document.getElementById('batch-extract-btn');
+    const batchCancelBtn = document.getElementById('batch-cancel-btn');
+    const progressContainer = document.getElementById('batch-progress-container');
+    const statusDiv = document.getElementById('batch-status');
+    const resultsSection = document.getElementById('batch-results-section');
+
+    // If UI exists, update it
+    if (batchExtractBtn && batchCancelBtn && progressContainer && statusDiv) {
+      batchExtractBtn.style.display = 'none';
+      batchCancelBtn.style.display = 'inline-block';
+      progressContainer.style.display = 'block';
+      statusDiv.style.display = 'block';
+      if (resultsSection) resultsSection.style.display = 'none';
+    }
 
     this.isRunning = true;
+    this.batchResults = results;
 
-    // Process each video
-    for (let i = 0; i < videos.length; i++) {
+    // Process remaining videos
+    for (let i = currentIndex; i < videos.length; i++) {
       if (this.shouldCancel) {
         this.updateStatus(`Cancelled after ${i} video(s)`, 'warning');
+        await safeStorage.set({ batchInProgress: null });
         break;
       }
 
       const video = videos[i];
       this.updateProgress(i, videos.length, `Processing ${video.videoId}...`);
 
+      // Check if we're on the right video page
+      const currentVideoId = YTTreatmentHelper.Utils.getVideoIdFromUrl();
+
+      if (currentVideoId !== video.videoId) {
+        // Need to navigate - save state and navigate
+        state.currentIndex = i;
+        state.results = this.batchResults;
+        await safeStorage.set({ batchInProgress: state });
+
+        console.log(`Navigating to video ${video.videoId}...`);
+        window.location.href = `https://studio.youtube.com/video/${video.videoId}/analytics`;
+        return; // Navigation will reload page and resume
+      }
+
+      // We're on the right page - extract metrics
       try {
-        const result = await this.extractVideoMetrics(video, treatmentDate, extractionMode.value);
+        const result = await this.extractVideoMetrics(video, treatmentDate, extractionMode);
         this.batchResults.push(result);
         this.updateStatus(`Completed ${i + 1} / ${videos.length}`, 'info');
+
+        // Update state in storage
+        state.results = this.batchResults;
+        await safeStorage.set({ batchInProgress: state });
       } catch (error) {
         console.error(`Error extracting ${video.videoId}:`, error);
         this.batchResults.push({
@@ -282,13 +346,19 @@ YTTreatmentHelper.BatchMode = {
           error: error.message
         });
         this.updateStatus(`Error on video ${i + 1}: ${error.message}`, 'error');
+
+        // Update state in storage
+        state.results = this.batchResults;
+        await safeStorage.set({ batchInProgress: state });
       }
 
-      // Small delay between videos
+      // Small delay before next video
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    // Complete
+    // Complete - clear batch state
+    await safeStorage.set({ batchInProgress: null });
+
     this.updateProgress(videos.length, videos.length, 'Complete');
     this.updateStatus(`Extracted ${this.batchResults.length} video(s)`, 'success');
 
@@ -297,12 +367,16 @@ YTTreatmentHelper.BatchMode = {
 
     // UI cleanup
     this.isRunning = false;
-    document.getElementById('batch-extract-btn').style.display = 'inline-block';
-    document.getElementById('batch-cancel-btn').style.display = 'none';
+    if (batchExtractBtn && batchCancelBtn) {
+      batchExtractBtn.style.display = 'inline-block';
+      batchCancelBtn.style.display = 'none';
+    }
 
     // Re-enable inputs
-    urlsInput.disabled = false;
-    treatmentDateInput.disabled = false;
+    const urlsInput = document.getElementById('batch-urls-input');
+    const treatmentDateInput = document.getElementById('batch-treatment-date');
+    if (urlsInput) urlsInput.disabled = false;
+    if (treatmentDateInput) treatmentDateInput.disabled = false;
     document.querySelectorAll('input[name="batch-extraction-mode"]').forEach(input => {
       input.disabled = false;
     });
@@ -313,31 +387,42 @@ YTTreatmentHelper.BatchMode = {
    * Returns result object with all metrics
    */
   extractVideoMetrics: async function(video, treatmentDate, extractionMode) {
-    // Navigate to video analytics page
-    const videoUrl = `https://studio.youtube.com/video/${video.videoId}/analytics`;
+    console.log(`Extracting metrics for ${video.videoId}...`);
 
-    // Check if we're already on this video
-    const currentVideoId = YTTreatmentHelper.Utils.getVideoIdFromUrl();
-
-    if (currentVideoId !== video.videoId) {
-      // Need to navigate to this video
-      window.location.href = videoUrl;
-
-      // Wait for page to load
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Wait for analytics to load
-      await waitForElement('ytcp-analytics-page', 10000);
+    // Wait for analytics page to load
+    try {
+      await waitForElement('ytcp-analytics-page', 15000);
+    } catch (error) {
+      throw new Error('Analytics page did not load');
     }
 
-    // TODO: Get video title from page
-    const videoTitle = 'Video Title'; // Placeholder
+    // Wait a bit more for data to populate
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Get video title from page
+    let videoTitle = 'Unknown Title';
+    try {
+      // Try to get title from page
+      const titleElement = document.querySelector('h1.video-title') ||
+                          document.querySelector('[class*="title"]') ||
+                          document.querySelector('ytcp-video-metadata-editor-title-description h1');
+      if (titleElement) {
+        videoTitle = titleElement.textContent.trim();
+      }
+    } catch (error) {
+      console.warn('Could not extract video title:', error);
+    }
 
     // Convert treatment date to YYYY-MM-DD
     const treatmentDateYYYYMMDD = YTTreatmentHelper.Utils.formatDateToYYYYMMDD(treatmentDate);
 
+    // Get video publish date
+    const videoPublishDate = YTTreatmentHelper.API.getVideoPublishDate();
+    if (!videoPublishDate) {
+      throw new Error('Could not determine video publish date');
+    }
+
     // Calculate date ranges
-    const videoPublishDate = await YTTreatmentHelper.API.getVideoPublishDate();
     const dateRanges = YTTreatmentHelper.API.calculateDateRanges(treatmentDateYYYYMMDD, videoPublishDate);
 
     // Extract metrics based on mode
@@ -345,10 +430,36 @@ YTTreatmentHelper.BatchMode = {
 
     if (extractionMode === 'complete') {
       // Extract both equal periods and lifetime
-      // TODO: Implement complete analysis extraction
-      metrics = { mode: 'complete', data: {} };
+      console.log('Extracting complete analysis...');
+
+      // First extract equal periods
+      const equalResult = await YTTreatmentHelper.API.extractPrePostMetrics(
+        dateRanges.pre.start,
+        dateRanges.pre.end,
+        dateRanges.post.start,
+        dateRanges.post.end,
+        (status) => console.log(`[Equal] ${status}`),
+        true // include retention
+      );
+
+      // Then extract lifetime periods
+      const lifetimeResult = await YTTreatmentHelper.API.extractPrePostMetrics(
+        YTTreatmentHelper.Utils.formatDate(videoPublishDate),
+        treatmentDateYYYYMMDD,
+        treatmentDateYYYYMMDD,
+        YTTreatmentHelper.Utils.formatDate(new Date()),
+        (status) => console.log(`[Lifetime] ${status}`),
+        false // no retention for lifetime
+      );
+
+      metrics = {
+        mode: 'complete',
+        equal: equalResult,
+        lifetime: lifetimeResult
+      };
     } else if (extractionMode === 'equal-periods') {
       // Extract equal PRE/POST periods
+      console.log('Extracting equal periods...');
       const result = await YTTreatmentHelper.API.extractPrePostMetrics(
         dateRanges.pre.start,
         dateRanges.pre.end,
@@ -359,10 +470,20 @@ YTTreatmentHelper.BatchMode = {
       );
       metrics = { mode: 'equal-periods', ...result };
     } else if (extractionMode === 'lifetime') {
-      // Extract lifetime periods
-      // TODO: Implement lifetime extraction
-      metrics = { mode: 'lifetime', data: {} };
+      // Extract lifetime periods (publish to treatment, treatment to today)
+      console.log('Extracting lifetime periods...');
+      const result = await YTTreatmentHelper.API.extractPrePostMetrics(
+        YTTreatmentHelper.Utils.formatDate(videoPublishDate),
+        treatmentDateYYYYMMDD,
+        treatmentDateYYYYMMDD,
+        YTTreatmentHelper.Utils.formatDate(new Date()),
+        (status) => console.log(status),
+        false // no retention for lifetime
+      );
+      metrics = { mode: 'lifetime', ...result };
     }
+
+    console.log(`Extraction complete for ${video.videoId}`);
 
     return {
       videoId: video.videoId,
@@ -494,9 +615,214 @@ YTTreatmentHelper.BatchMode = {
    * Returns string ready for clipboard or file download
    */
   formatResultsAsTSV: function() {
-    // TODO: Implement proper formatting based on extraction mode
-    // For now, return basic format
+    if (this.batchResults.length === 0) {
+      return '';
+    }
 
+    // Determine format based on first result's extraction mode
+    const firstResult = this.batchResults[0];
+    const mode = firstResult.metrics?.mode;
+
+    if (mode === 'complete') {
+      return this.formatCompleteAnalysisTSV();
+    } else if (mode === 'equal-periods') {
+      return this.formatEqualPeriodsTSV();
+    } else if (mode === 'lifetime') {
+      return this.formatLifetimeTSV();
+    } else {
+      // Fallback format
+      return this.formatBasicTSV();
+    }
+  },
+
+  /**
+   * Format complete analysis results (both equal periods and lifetime)
+   */
+  formatCompleteAnalysisTSV: function() {
+    const headers = [
+      'URL',
+      'Video Title',
+      'Video ID',
+      'Treatment Date',
+      // Equal Periods
+      'Equal Pre Impressions',
+      'Equal Post Impressions',
+      'Equal Pre CTR',
+      'Equal Post CTR',
+      'Equal Pre Views',
+      'Equal Post Views',
+      'Equal Pre AWT',
+      'Equal Post AWT',
+      'Equal Pre Retention',
+      'Equal Post Retention',
+      'Equal Pre Stayed to Watch',
+      'Equal Post Stayed to Watch',
+      // Lifetime
+      'Lifetime Pre Impressions',
+      'Lifetime Post Impressions',
+      'Lifetime Pre CTR',
+      'Lifetime Post CTR',
+      'Lifetime Pre Views',
+      'Lifetime Post Views',
+      'Lifetime Pre AWT',
+      'Lifetime Post AWT'
+    ];
+
+    const rows = [headers.join('\t')];
+
+    for (const result of this.batchResults) {
+      if (result.status !== 'success') {
+        // Error row
+        rows.push([result.url, result.videoTitle, result.videoId, 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
+        continue;
+      }
+
+      const equal = result.metrics.equal || {};
+      const lifetime = result.metrics.lifetime || {};
+
+      const row = [
+        result.url,
+        result.videoTitle,
+        result.videoId,
+        result.treatmentDate,
+        // Equal periods
+        equal.pre?.impressions || '',
+        equal.post?.impressions || '',
+        equal.pre?.ctr || '',
+        equal.post?.ctr || '',
+        equal.pre?.views || '',
+        equal.post?.views || '',
+        equal.pre?.awt || '',
+        equal.post?.awt || '',
+        equal.pre?.retention || '',
+        equal.post?.retention || '',
+        equal.pre?.stayedToWatch || '',
+        equal.post?.stayedToWatch || '',
+        // Lifetime
+        lifetime.pre?.impressions || '',
+        lifetime.post?.impressions || '',
+        lifetime.pre?.ctr || '',
+        lifetime.post?.ctr || '',
+        lifetime.pre?.views || '',
+        lifetime.post?.views || '',
+        lifetime.pre?.awt || '',
+        lifetime.post?.awt || ''
+      ];
+
+      rows.push(row.join('\t'));
+    }
+
+    return rows.join('\n');
+  },
+
+  /**
+   * Format equal periods results
+   */
+  formatEqualPeriodsTSV: function() {
+    const headers = [
+      'URL',
+      'Video Title',
+      'Video ID',
+      'Treatment Date',
+      'Pre Impressions',
+      'Post Impressions',
+      'Pre CTR',
+      'Post CTR',
+      'Pre Views',
+      'Post Views',
+      'Pre AWT',
+      'Post AWT',
+      'Pre Retention',
+      'Post Retention',
+      'Pre Stayed to Watch',
+      'Post Stayed to Watch'
+    ];
+
+    const rows = [headers.join('\t')];
+
+    for (const result of this.batchResults) {
+      if (result.status !== 'success') {
+        rows.push([result.url, result.videoTitle, result.videoId, 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
+        continue;
+      }
+
+      const row = [
+        result.url,
+        result.videoTitle,
+        result.videoId,
+        result.treatmentDate,
+        result.metrics.pre?.impressions || '',
+        result.metrics.post?.impressions || '',
+        result.metrics.pre?.ctr || '',
+        result.metrics.post?.ctr || '',
+        result.metrics.pre?.views || '',
+        result.metrics.post?.views || '',
+        result.metrics.pre?.awt || '',
+        result.metrics.post?.awt || '',
+        result.metrics.pre?.retention || '',
+        result.metrics.post?.retention || '',
+        result.metrics.pre?.stayedToWatch || '',
+        result.metrics.post?.stayedToWatch || ''
+      ];
+
+      rows.push(row.join('\t'));
+    }
+
+    return rows.join('\n');
+  },
+
+  /**
+   * Format lifetime results
+   */
+  formatLifetimeTSV: function() {
+    const headers = [
+      'URL',
+      'Video Title',
+      'Video ID',
+      'Treatment Date',
+      'Pre Impressions (Publish to Treatment)',
+      'Post Impressions (Treatment to Today)',
+      'Pre CTR',
+      'Post CTR',
+      'Pre Views',
+      'Post Views',
+      'Pre AWT',
+      'Post AWT'
+    ];
+
+    const rows = [headers.join('\t')];
+
+    for (const result of this.batchResults) {
+      if (result.status !== 'success') {
+        rows.push([result.url, result.videoTitle, result.videoId, 'ERROR: ' + (result.error || 'Unknown error')].join('\t'));
+        continue;
+      }
+
+      const row = [
+        result.url,
+        result.videoTitle,
+        result.videoId,
+        result.treatmentDate,
+        result.metrics.pre?.impressions || '',
+        result.metrics.post?.impressions || '',
+        result.metrics.pre?.ctr || '',
+        result.metrics.post?.ctr || '',
+        result.metrics.pre?.views || '',
+        result.metrics.post?.views || '',
+        result.metrics.pre?.awt || '',
+        result.metrics.post?.awt || ''
+      ];
+
+      rows.push(row.join('\t'));
+    }
+
+    return rows.join('\n');
+  },
+
+  /**
+   * Format basic results (fallback)
+   */
+  formatBasicTSV: function() {
     const headers = ['URL', 'Video Title', 'Video ID', 'Status', 'Treatment Date'];
     const rows = [headers.join('\t')];
 
