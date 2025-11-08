@@ -8,13 +8,20 @@ A Chrome extension that automates PRE vs POST treatment period comparison in You
 
 ## ✨ Features
 
+### Core Features
 - **Automatic Date Calculation**: Calculates equal-length PRE and POST periods based on your treatment date
 - **One-Click Extraction**: Extracts all metrics with a single button click
-- **Comprehensive Metrics**: Captures views, watch time, CTR, average view duration, and more
-- **Retention Analysis**: Optional audience retention metrics for detailed analysis
-- **Export Ready**: JSON format ready for Airtable, spreadsheets, or data analysis tools
+- **Comprehensive Metrics**: Captures impressions, CTR, views, watch time, average view duration, retention, and more
 - **Smart Date Handling**: Automatically detects YouTube's date format (DD/MM/YYYY or MM/DD/YYYY)
 - **Reliable Logging**: Detailed logs for debugging and troubleshooting
+
+### New in v2.0.0
+- **🔄 Batch Mode**: Process multiple videos automatically by pasting YouTube URLs
+- **📊 Extraction History**: Track and review past extractions in the extension popup
+- **📈 Progress Tracking**: Real-time status updates with visual progress indicators
+- **📱 YouTube Shorts Support**: Full compatibility with Shorts videos
+- **🏗️ Modular Architecture**: Clean, maintainable code structure
+- **📋 Unified Export Format**: Consistent format across single-video and batch exports
 
 ## 📦 Installation
 
@@ -60,18 +67,23 @@ The treatment date is when you made a change to your video (new thumbnail, title
 
 ```
 yt_metrics_airtable/
-├── extension/          # Chrome extension source code
-│   ├── content.js     # Main content script with extraction logic
-│   ├── logger.js      # Logging and debugging system
-│   ├── manifest.json  # Extension manifest (v3)
-│   ├── popup.html     # Extension popup UI
-│   ├── popup.js       # Popup logic and log export
-│   ├── styles.css     # Extension styles
-│   └── icons/         # Extension icons
-├── scripts/           # Build and packaging scripts
-├── create_release.py  # Automated GitHub release tool
-├── CHANGELOG.md       # Version history
-└── README.md          # This file
+├── extension/                      # Chrome extension source code
+│   ├── content.js                 # Main orchestration and initialization
+│   ├── content-utils.js           # Utility functions and date formatting
+│   ├── content-youtube-api.js     # YouTube Studio DOM interaction
+│   ├── content-single-video.js    # Single-video extraction UI and logic
+│   ├── content-batch.js           # Batch processing UI and logic
+│   ├── logger.js                  # Logging and debugging system
+│   ├── manifest.json              # Extension manifest (v3)
+│   ├── popup.html                 # Extension popup UI
+│   ├── popup.js                   # Popup logic, history, and log export
+│   ├── styles.css                 # Extension styles
+│   └── icons/                     # Extension icons
+├── ai_summaries/                  # AI-generated documentation and analysis
+├── create_release.py              # Automated GitHub release tool
+├── CHANGELOG.md                   # Version history
+├── CLAUDE.md                      # Development guide for Claude Code
+└── README.md                      # This file
 ```
 
 ### Creating a Release
@@ -156,7 +168,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history and release notes.
 
 - **Issues**: [GitHub Issues](https://github.com/CrazyTokMedia/metrics-youtube/issues)
 - **Source Code**: [GitHub Repository](https://github.com/CrazyTokMedia/metrics-youtube)
-- **Latest Release**: [v1.0.3](https://github.com/CrazyTokMedia/metrics-youtube/releases/tag/v1.0.3)
+- **Latest Release**: [v2.0.0](https://github.com/CrazyTokMedia/metrics-youtube/releases/tag/v2.0.0)
 
 ## 📄 License
 
@@ -164,7 +176,16 @@ Internal tool for CrazyTok Media. All rights reserved.
 
 ## 🙏 Credits
 
-Developed by CrazyTok Media with assistance from Claude Code.
+**Lead Developer**: Siddharth ([@dorddisct](https://github.com/dorddisct))
+
+Developed for CrazyTok Media with AI assistance from Claude Code.
+
+### Major Contributions
+- ✨ Complete v2.0.0 architectural refactor (50+ commits)
+- 🔄 Batch mode implementation
+- 📊 History system and progress tracking
+- 📋 Export format standardization
+- 🐛 Extensive bug fixes and performance improvements
 
 ---
 
