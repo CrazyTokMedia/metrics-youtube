@@ -156,41 +156,6 @@
   display: block;
 }
 
-.step-label-with-action {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.edit-link {
-  background: transparent;
-  border: none;
-  color: #667eea;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.edit-link:hover {
-  background: rgba(102, 126, 234, 0.1);
-  text-decoration: none;
-}
-
-.edit-link.editing {
-  background: #10b981;
-  color: white;
-  text-decoration: none;
-}
-
-.edit-link.editing:hover {
-  background: #059669;
-}
 
 /* ============================================================
    STEP 1: INPUT SECTION
@@ -354,32 +319,62 @@
   font-size: 13px;
   font-weight: 600;
   color: #1f2937;
-  border: 2px solid #e5e7eb;
-  background: #fafafa;
+  border: 2px solid #d1d5db;
+  background: #ffffff;
   padding: 8px 10px;
   border-radius: 6px;
   transition: all 0.2s;
-  cursor: not-allowed;
+  cursor: text;
   box-sizing: border-box;
 }
 
-.date-edit:disabled {
-  opacity: 1;
-  cursor: not-allowed;
-}
-
-.date-edit.editable,
-.date-edit:not(:disabled) {
-  border-color: #667eea;
-  background: #ffffff;
-  cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+.date-edit:hover {
+  border-color: #9ca3af;
 }
 
 .date-edit:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.date-edit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+/* Validation states */
+.date-edit.valid {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.date-edit.valid:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.date-edit.invalid {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.date-edit.invalid:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.date-edit.warning {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.date-edit.warning:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 /* ============================================================
@@ -856,6 +851,7 @@ input:focus-visible {
 input[type="text"],
 textarea,
 input.date-input,
+input.date-edit,
 textarea.batch-urls-textarea {
   pointer-events: auto !important;
   user-select: text !important;
@@ -990,9 +986,105 @@ textarea.batch-urls-textarea {
   font-style: italic;
 }
 
+/* Batch Summary Card */
+.batch-summary-card {
+  display: flex;
+  gap: 16px;
+  margin: 16px 0;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.batch-summary-stat {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.batch-summary-stat .summary-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.batch-summary-stat .summary-count {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.batch-summary-stat .summary-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.batch-summary-stat.success .summary-icon {
+  color: #10b981;
+}
+
+.batch-summary-stat.success .summary-count {
+  color: #10b981;
+}
+
+.batch-summary-stat.partial .summary-icon {
+  color: #f59e0b;
+}
+
+.batch-summary-stat.partial .summary-count {
+  color: #f59e0b;
+}
+
+.batch-summary-stat.error .summary-icon {
+  color: #ef4444;
+}
+
+.batch-summary-stat.error .summary-count {
+  color: #ef4444;
+}
+
+/* Problems Header */
+.batch-problems-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.problems-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.toggle-all-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #667eea;
+  background: transparent;
+  border: 1px solid #667eea;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-all-btn:hover {
+  background: #667eea;
+  color: white;
+}
+
 /* Batch Results Table */
 .batch-results-table-container {
-  margin: 16px 0;
+  margin: 0 0 16px 0;
   max-height: 400px;
   overflow-y: auto;
   border: 1px solid #e5e7eb;
@@ -1020,11 +1112,33 @@ textarea.batch-urls-textarea {
   border-bottom: 2px solid #e5e7eb;
 }
 
+.batch-results-table th:nth-child(1) {
+  width: 45%;
+}
+
+.batch-results-table th:nth-child(2) {
+  width: 15%;
+}
+
+.batch-results-table th:nth-child(3) {
+  width: 40%;
+}
+
 .batch-results-table td {
-  padding: 12px;
+  padding: 14px 12px;
   border-bottom: 1px solid #e5e7eb;
   font-size: 13px;
   color: #1f2937;
+  vertical-align: top;
+}
+
+.batch-results-table td:nth-child(2) {
+  white-space: nowrap;
+}
+
+.batch-results-table td:nth-child(3) {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .batch-results-table tr:hover {
@@ -1033,6 +1147,10 @@ textarea.batch-urls-textarea {
 
 .batch-results-table tr.success {
   background: #f0fdf4;
+}
+
+.batch-results-table tr.warning {
+  background: #fffbeb;
 }
 
 .batch-results-table tr.error {
@@ -1049,6 +1167,10 @@ textarea.batch-urls-textarea {
 .video-title {
   font-weight: 600;
   color: #1f2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .video-id {
@@ -1060,6 +1182,11 @@ textarea.batch-urls-textarea {
 /* Status Cell */
 .status-success {
   color: #10b981;
+  font-weight: 600;
+}
+
+.status-partial {
+  color: #f59e0b;
   font-weight: 600;
 }
 
@@ -1241,6 +1368,17 @@ textarea.batch-urls-textarea {
 .history-treatment-date {
   font-size: 11px;
   color: #6b7280;
+}
+
+.history-duration {
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4b5563;
+  white-space: nowrap;
 }
 
 .history-item-details {

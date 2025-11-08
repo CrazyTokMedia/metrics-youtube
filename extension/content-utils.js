@@ -281,7 +281,8 @@ YTTreatmentHelper.ExtractionHistory = {
         extractionDate: new Date().toISOString(),
         mode: extractionData.mode || 'equal-periods',
         dateRanges: extractionData.dateRanges,
-        metrics: extractionData.metrics
+        metrics: extractionData.metrics,
+        durationMs: extractionData.durationMs || 0  // Time taken for extraction
       };
 
       // Load existing history
@@ -322,7 +323,10 @@ YTTreatmentHelper.ExtractionHistory = {
         treatmentDate: batchData.treatmentDate,
         mode: batchData.mode,
         videoCount: batchData.results.length,
-        results: batchData.results
+        results: batchData.results,
+        durationMs: batchData.durationMs || 0,  // Actual extraction time
+        estimatedManualTimeMs: batchData.estimatedManualTimeMs || 0,  // Estimated manual time
+        timeSavedMs: batchData.timeSavedMs || 0  // Time saved by automation
       };
 
       // Load existing history

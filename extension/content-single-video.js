@@ -112,10 +112,7 @@ YTTreatmentHelper.SingleVideo = {
         <div id="results-section" class="results-section" style="display: none;">
 
           <div class="step-container">
-            <div class="step-label-with-action">
-              <span class="step-label">Calculated periods</span>
-              <button id="edit-dates-btn" class="edit-link">Edit</button>
-            </div>
+            <div class="step-label">Calculated periods (editable)</div>
           </div>
 
           <div class="periods-container">
@@ -127,11 +124,11 @@ YTTreatmentHelper.SingleVideo = {
               <div class="period-dates-vertical">
                 <div class="date-row">
                   <label class="date-label">Start</label>
-                  <input type="text" id="pre-start" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" disabled />
+                  <input type="text" id="pre-start" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" />
                 </div>
                 <div class="date-row">
                   <label class="date-label">End</label>
-                  <input type="text" id="pre-end" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" disabled />
+                  <input type="text" id="pre-end" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" />
                 </div>
               </div>
             </div>
@@ -144,11 +141,11 @@ YTTreatmentHelper.SingleVideo = {
               <div class="period-dates-vertical">
                 <div class="date-row">
                   <label class="date-label">Start</label>
-                  <input type="text" id="post-start" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" disabled />
+                  <input type="text" id="post-start" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" />
                 </div>
                 <div class="date-row">
                   <label class="date-label">End</label>
-                  <input type="text" id="post-end" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" disabled />
+                  <input type="text" id="post-end" class="date-edit" placeholder="DD/MM/YYYY" maxlength="10" />
                 </div>
               </div>
             </div>
@@ -490,6 +487,55 @@ YTTreatmentHelper.SingleVideo = {
     // Make panel draggable
     self.makePanelDraggable(panel);
 
+    /**
+     * Centralized Input State Management
+     * Manages the enabled/disabled state of all inputs based on UI state
+     */
+    const setInputsState = (state) => {
+      const treatmentDateInput = document.getElementById('treatment-date');
+      const dateEditInputs = document.querySelectorAll('.date-edit');
+      const extractBtn = document.getElementById('auto-extract-btn');
+      const calculateBtn = document.getElementById('calculate-btn');
+
+      switch(state) {
+        case 'INITIAL':
+          // Initial state: Only treatment date input enabled
+          // Date edit inputs don't exist yet (hidden in results-section)
+          if (treatmentDateInput) treatmentDateInput.disabled = false;
+          if (extractBtn) extractBtn.disabled = true;
+          if (calculateBtn) calculateBtn.disabled = false;
+          break;
+
+        case 'CALCULATED':
+          // After calculation: All inputs editable
+          if (treatmentDateInput) treatmentDateInput.disabled = false;
+          dateEditInputs.forEach(input => input.disabled = false);
+          if (calculateBtn) calculateBtn.disabled = false;
+          // Extract button state managed by validation
+          console.log('Date inputs enabled:', dateEditInputs.length, 'inputs');
+          break;
+
+        case 'EXTRACTING':
+          // During extraction: All inputs disabled
+          if (treatmentDateInput) treatmentDateInput.disabled = true;
+          dateEditInputs.forEach(input => input.disabled = true);
+          if (extractBtn) extractBtn.disabled = true;
+          if (calculateBtn) calculateBtn.disabled = true;
+          break;
+
+        case 'COMPLETE':
+          // After extraction: All inputs editable again
+          if (treatmentDateInput) treatmentDateInput.disabled = false;
+          dateEditInputs.forEach(input => input.disabled = false);
+          if (calculateBtn) calculateBtn.disabled = false;
+          // Extract button state managed by validation
+          break;
+
+        default:
+          console.warn('Unknown input state:', state);
+      }
+    };
+
     // Check saved visibility state
     safeStorage.get(['panelVisible']).then((result) => {
       if (result.panelVisible === false) {
@@ -666,6 +712,9 @@ YTTreatmentHelper.SingleVideo = {
       document.getElementById('results-section').style.display = 'block';
       document.getElementById('extraction-mode-section').style.display = 'block';
 
+      // Enable all inputs for editing (centralized state management)
+      setInputsState('CALCULATED');
+
       // Scroll helper-body to show results
       const helperBody = document.querySelector('.helper-body');
       const resultsSection = document.getElementById('results-section');
@@ -697,12 +746,22 @@ YTTreatmentHelper.SingleVideo = {
 
     // Helper: Validate and update date ranges after manual edit
     function validateAndUpdateDateRanges() {
-      const preStartDD = document.getElementById('pre-start').value;
-      const preEndDD = document.getElementById('pre-end').value;
-      const postStartDD = document.getElementById('post-start').value;
-      const postEndDD = document.getElementById('post-end').value;
+      const preStartEl = document.getElementById('pre-start');
+      const preEndEl = document.getElementById('pre-end');
+      const postStartEl = document.getElementById('post-start');
+      const postEndEl = document.getElementById('post-end');
       const warningEl = document.getElementById('period-warning');
       const extractBtn = document.getElementById('auto-extract-btn');
+
+      const preStartDD = preStartEl.value;
+      const preEndDD = preEndEl.value;
+      const postStartDD = postStartEl.value;
+      const postEndDD = postEndEl.value;
+
+      // Clear all validation classes first
+      [preStartEl, preEndEl, postStartEl, postEndEl].forEach(el => {
+        el.classList.remove('valid', 'invalid', 'warning');
+      });
 
       // Check all dates are filled
       if (!preStartDD || !preEndDD || !postStartDD || !postEndDD) {
@@ -718,14 +777,19 @@ YTTreatmentHelper.SingleVideo = {
 
       if (!preStart || !preEnd || !postStart || !postEnd) {
         console.warn('Invalid date format');
+        // Mark invalid inputs
+        if (!preStart) preStartEl.classList.add('invalid');
+        if (!preEnd) preEndEl.classList.add('invalid');
+        if (!postStart) postStartEl.classList.add('invalid');
+        if (!postEnd) postEndEl.classList.add('invalid');
         return;
       }
 
       // Update dataset.original with converted dates for extraction
-      document.getElementById('pre-start').dataset.original = preStart;
-      document.getElementById('pre-end').dataset.original = preEnd;
-      document.getElementById('post-start').dataset.original = postStart;
-      document.getElementById('post-end').dataset.original = postEnd;
+      preStartEl.dataset.original = preStart;
+      preEndEl.dataset.original = preEnd;
+      postStartEl.dataset.original = postStart;
+      postEndEl.dataset.original = postEnd;
 
       // Calculate days for each period
       const preDays = calculateDaysBetween(preStart, preEnd);
@@ -748,26 +812,50 @@ YTTreatmentHelper.SingleVideo = {
       if (preStartDate > preEndDate) {
         warningMsg = '❌ PRE period: Start date must be before or equal to end date';
         hasError = true;
+        preStartEl.classList.add('invalid');
+        preEndEl.classList.add('invalid');
       }
       // Check: POST start <= POST end
       else if (postStartDate > postEndDate) {
         warningMsg = '❌ POST period: Start date must be before or equal to end date';
         hasError = true;
+        postStartEl.classList.add('invalid');
+        postEndEl.classList.add('invalid');
       }
       // Check: PRE end < POST start (periods shouldn't overlap)
       else if (preEndDate >= postStartDate) {
         warningMsg = '❌ PRE period must end before POST period starts';
         hasError = true;
+        preEndEl.classList.add('invalid');
+        postStartEl.classList.add('invalid');
       }
       // Check: Days are positive
       else if (preDays <= 0 || postDays <= 0) {
         warningMsg = '❌ Period must be at least 1 day long';
         hasError = true;
+        if (preDays <= 0) {
+          preStartEl.classList.add('invalid');
+          preEndEl.classList.add('invalid');
+        }
+        if (postDays <= 0) {
+          postStartEl.classList.add('invalid');
+          postEndEl.classList.add('invalid');
+        }
       }
       // Warning: Unequal periods
       else if (preDays !== postDays) {
         warningMsg = `⚠️ Warning: PRE (${preDays}d) and POST (${postDays}d) periods have different lengths. This may affect comparison fairness.`;
         hasError = false; // Warning, not error
+        // Mark all as warning (orange)
+        [preStartEl, preEndEl, postStartEl, postEndEl].forEach(el => {
+          el.classList.add('warning');
+        });
+      }
+      else {
+        // All valid - mark green
+        [preStartEl, preEndEl, postStartEl, postEndEl].forEach(el => {
+          el.classList.add('valid');
+        });
       }
 
       // Show/hide warning
@@ -803,62 +891,19 @@ YTTreatmentHelper.SingleVideo = {
       }
     }
 
-    // Add change listeners to all date inputs
+    // Add auto-formatting and validation to all date inputs
     document.querySelectorAll('.date-edit').forEach(input => {
-      input.addEventListener('change', () => {
-        validateAndUpdateDateRanges();
-      });
-    });
+      // Add auto-formatting for DD/MM/YYYY
+      YTTreatmentHelper.Utils.autoFormatDateInput(input);
 
-    // Edit dates button functionality
-    panel.addEventListener('click', (e) => {
-      const editBtn = e.target.closest('#edit-dates-btn');
-      if (editBtn || e.target.id === 'edit-dates-btn') {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const dateInputs = document.querySelectorAll('.date-edit');
-        const isEditing = editBtn.textContent.trim() === 'Done';
-
-        if (isEditing) {
-          // Save and lock - validate one final time
+      // Add change listeners for automatic validation
+      input.addEventListener('input', () => {
+        // Debounce validation to avoid excessive calls
+        clearTimeout(input.validationTimeout);
+        input.validationTimeout = setTimeout(() => {
           validateAndUpdateDateRanges();
-
-          dateInputs.forEach(input => {
-            input.disabled = true;
-            input.classList.remove('editable');
-          });
-          editBtn.textContent = 'Edit';
-          editBtn.classList.remove('editing');
-          console.log('Dates locked');
-
-          // Log user action
-          if (window.ExtensionLogger) {
-            window.ExtensionLogger.logUserAction('Edit dates completed', {
-              preStart: document.getElementById('pre-start').value,
-              preEnd: document.getElementById('pre-end').value,
-              postStart: document.getElementById('post-start').value,
-              postEnd: document.getElementById('post-end').value
-            });
-          }
-        } else {
-          // Enable editing
-          dateInputs.forEach(input => {
-            input.disabled = false;
-            input.classList.add('editable');
-            // Add auto-formatting to each date input
-            YTTreatmentHelper.Utils.autoFormatDateInput(input);
-          });
-          editBtn.textContent = 'Done';
-          editBtn.classList.add('editing');
-          console.log('Dates now editable - enter dates in DD/MM/YYYY format');
-
-          // Log user action
-          if (window.ExtensionLogger) {
-            window.ExtensionLogger.logUserAction('Edit dates started');
-          }
-        }
-      }
+        }, 300);
+      });
     });
 
     // Copy period for Airtable functionality
@@ -1124,6 +1169,9 @@ YTTreatmentHelper.SingleVideo = {
       document.getElementById('cancel-extract-btn').style.display = 'none';
       document.getElementById('auto-extract-btn').disabled = false;
       document.getElementById('progress-container').style.display = 'none';
+
+      // Re-enable all inputs after cancellation (centralized state management)
+      setInputsState('COMPLETE');
     });
 
     const runExtraction = async (isRetry = false) => {
@@ -1164,7 +1212,13 @@ YTTreatmentHelper.SingleVideo = {
 
       extractionCancelled = false;
 
+      // Start timing the extraction
+      const extractionStartTime = Date.now();
+
       try {
+        // Disable all inputs during extraction (centralized state management)
+        setInputsState('EXTRACTING');
+
         // Show UI
         statusEl.style.display = 'block';
         statusEl.className = 'extraction-status';
@@ -1367,6 +1421,10 @@ YTTreatmentHelper.SingleVideo = {
           console.warn('Could not extract video title:', e);
         }
 
+        // Calculate extraction duration
+        const extractionEndTime = Date.now();
+        const durationMs = extractionEndTime - extractionStartTime;
+
         await YTTreatmentHelper.ExtractionHistory.saveSingleExtraction({
           videoId: videoId,
           videoTitle: videoTitle,
@@ -1384,7 +1442,8 @@ YTTreatmentHelper.SingleVideo = {
               days: calculateDaysBetween(postStart, postEnd)
             }
           },
-          metrics: result
+          metrics: result,
+          durationMs: durationMs
         });
 
         console.log('Extraction saved to history');
@@ -1460,6 +1519,8 @@ YTTreatmentHelper.SingleVideo = {
           }
         }
       } finally {
+        // Re-enable all inputs after extraction (centralized state management)
+        setInputsState('COMPLETE');
         autoExtractBtn.disabled = false;
       }
     };
@@ -1621,6 +1682,8 @@ YTTreatmentHelper.SingleVideo = {
         statusEl.className = 'extraction-status error';
         cancelBtn.style.display = 'none';
       } finally {
+        // Re-enable all inputs after extraction (centralized state management)
+        setInputsState('COMPLETE');
         autoExtractBtn.disabled = false;
       }
     };

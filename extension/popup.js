@@ -115,6 +115,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Helper: Format duration from milliseconds to readable string
+  function formatDuration(ms) {
+    if (!ms || ms <= 0) return '';
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
+  }
+
   // Load and display history
   async function loadHistory() {
     try {
@@ -158,6 +170,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           const modeLabel = entry.mode === 'equal-periods' ? 'Equal Periods' :
                             entry.mode === 'lifetime' ? 'Lifetime' : 'Complete';
 
+          // Format extraction time
+          const duration = formatDuration(entry.durationMs);
+          const durationHtml = duration ? `<span class="history-duration">⏱ ${duration}</span>` : '';
+
           html += `
             <div class="history-item">
               <div class="history-item-header">
@@ -166,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
               <div class="history-video-title">${entry.videoTitle || 'Unknown Video'}</div>
               <div class="history-video-id">${entry.videoId}</div>
-              <div class="history-treatment-date">Treatment: ${entry.treatmentDate}</div>
+              <div class="history-treatment-date">Treatment: ${entry.treatmentDate} ${durationHtml}</div>
               <button class="history-copy-btn" data-entry-index="${index}" data-entry-type="single">📋 Copy Data</button>
             </div>
           `;
@@ -176,6 +192,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                             entry.mode === 'lifetime' ? 'Lifetime' : 'Complete';
           const videoCount = entry.results ? entry.results.length : 0;
 
+          // Format extraction time and time saved
+          const duration = formatDuration(entry.durationMs);
+          const timeSaved = formatDuration(entry.timeSavedMs);
+          let timingHtml = '';
+          if (duration) {
+            timingHtml = `<span class="history-duration">⏱ ${duration}`;
+            if (timeSaved) {
+              timingHtml += ` • Saved ${timeSaved}`;
+            }
+            timingHtml += `</span>`;
+          }
+
           html += `
             <div class="history-item">
               <div class="history-item-header">
@@ -184,7 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
               <div class="history-video-title">Batch Extraction</div>
               <div class="batch-video-count">${videoCount} video(s) extracted</div>
-              <div class="history-treatment-date">Treatment: ${entry.treatmentDate}</div>
+              <div class="history-treatment-date">Treatment: ${entry.treatmentDate} ${timingHtml}</div>
               <button class="history-copy-btn" data-entry-index="${index}" data-entry-type="batch">📋 Copy All Data</button>
             </div>
           `;

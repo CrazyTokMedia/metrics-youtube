@@ -2,6 +2,29 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [2.0.1] - 2025-11-08
+
+### Added
+- **Batch Results Summary Card**: Visual summary showing success/partial/failed counts at a glance
+- **Smart Results Filtering**: Show only videos needing attention by default (failed/partial)
+- **Toggle All Results**: Button to show/hide all results vs problems-only view
+
+### Changed
+- **Improved Batch Results UX**: Cleaner, more actionable results display
+  - Summary card with color-coded stats (green/amber/red)
+  - Default view shows only videos with errors or partial results
+  - Better column width distribution (45% video, 15% status, 40% details)
+  - Long video titles truncate with ellipsis
+  - Error messages wrap properly for readability
+- **Date Inputs Always Editable**: Single video mode date inputs no longer need "Edit" button
+- **Better Table Styling**: Improved padding, alignment, and visual hierarchy
+
+### Fixed
+- Missing amber background for partial/warning results
+- Missing color styling for partial status
+- Text overflow issues in batch results table
+- Column width inconsistencies in results display
+
 ## [2.0.0] - 2025-11-08
 
 ### 🎉 Major Release - Modular Architecture & Batch Processing

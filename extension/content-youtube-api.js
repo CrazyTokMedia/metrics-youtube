@@ -1314,14 +1314,24 @@ YTTreatmentHelper.API = {
     const targetTime = isShort ? 3 : 30;
 
     let retentionValue = null;
+    let displayValue = 'Video too short for retention metric';
+
     if (targetTime <= maxTime) {
       retentionValue = getRetentionAtTime(targetTime);
+
+      // Validate retention value (only check for negative, >100% is valid for looping Shorts)
+      if (retentionValue < 0) {
+        console.warn(`⚠️ Invalid retention value (${retentionValue}%) - negative value detected`);
+        displayValue = 'Error: Invalid graph data';
+      } else {
+        displayValue = `${retentionValue}%`;
+      }
     }
 
-    console.log(`Retention extracted: ${retentionValue}% at ${targetTime}s`);
+    console.log(`Retention extracted: ${displayValue} at ${targetTime}s`);
 
     return {
-      value: retentionValue ? `${retentionValue}%` : 'N/A',
+      value: displayValue,
       targetTime: targetTime,
       isShort: isShort,
       videoDuration: maxTime
@@ -1920,9 +1930,22 @@ YTTreatmentHelper.API = {
 
         } catch (error) {
           console.warn('Retention extraction failed:', error);
-          // Continue without retention data
-          preRetention = { value: 'N/A', error: error.message };
-          postRetention = { value: 'N/A', error: error.message };
+
+          // Provide context-specific error messages based on view count
+          // YouTube typically requires 20-25 views to generate retention graph
+          const preViews = parseInt(preMetrics?.views) || 0;
+          const postViews = parseInt(postMetrics?.views) || 0;
+
+          const getRetentionError = (views) => {
+            if (views < 25) {
+              return 'Views too low for retention graph on YT';
+            } else {
+              return 'Error fetching retention data';
+            }
+          };
+
+          preRetention = { value: getRetentionError(preViews), error: error.message };
+          postRetention = { value: getRetentionError(postViews), error: error.message };
         }
       }
 
