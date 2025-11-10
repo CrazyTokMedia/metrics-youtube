@@ -1189,7 +1189,7 @@ YTTreatmentHelper.SingleVideo = {
       const progressPercent = document.getElementById('progress-percent');
 
       let currentStep = '';
-      let totalSteps = 18; // Granular progress with 18 steps
+      let totalSteps = 14; // Total sub-steps tracked by updateStatus text-mapping
       let currentStepNum = 0;
 
       const updateProgress = (step, stepNum) => {
@@ -1247,26 +1247,23 @@ YTTreatmentHelper.SingleVideo = {
         const updateStatus = (message) => {
           if (extractionCancelled) throw new Error('Cancelled by user');
 
-          // Map messages to step numbers (18 granular steps total)
-          if (message.includes('Opening metrics picker')) updateProgress(message, 1);
-          else if (message.includes('Selecting required metrics')) updateProgress(message, 2);
-          else if (message.includes('Opening date picker for PRE')) updateProgress(message, 3);
-          else if (message.includes('Setting PRE period dates')) updateProgress(message, 4);
+          // Map status messages to progress steps (fallback system)
+          // This ensures progress bar updates even if progressCallback has issues
+          if (message.includes('Navigating to Advanced Mode')) updateProgress(message, 1);
+          else if (message.includes('Opening metrics picker')) updateProgress(message, 2);
+          else if (message.includes('Selecting required metrics')) updateProgress(message, 3);
+          else if (message.includes('Setting PRE period dates') || message.includes('Setting PRE dates')) updateProgress(message, 4);
           else if (message.includes('Waiting for PRE data')) updateProgress(message, 5);
-          else if (message.includes('Reading PRE metrics')) updateProgress(message, 6);
-          else if (message.includes('Opening date picker for POST')) updateProgress(message, 7);
-          else if (message.includes('Setting POST period dates')) updateProgress(message, 8);
-          else if (message.includes('Waiting for POST data')) updateProgress(message, 9);
-          else if (message.includes('Reading POST metrics')) updateProgress(message, 10);
-          else if (message.includes('Opening report menu')) updateProgress(message, 11);
-          else if (message.includes('Switching to Audience Retention')) updateProgress(message, 12);
-          else if (message.includes('Waiting for retention chart')) updateProgress(message, 13);
-          else if (message.includes('Setting PRE dates for retention')) updateProgress(message, 14);
-          else if (message.includes('Reading PRE retention')) updateProgress(message, 15);
-          else if (message.includes('Setting POST dates for retention')) updateProgress(message, 16);
-          else if (message.includes('Reading POST retention')) updateProgress(message, 17);
-          else if (message.includes('Switching back to metrics')) updateProgress(message, 18);
-          else statusEl.textContent = message;
+          else if (message.includes('Reading PRE metrics') || message.includes('Extracting PRE metrics')) updateProgress(message, 6);
+          else if (message.includes('Setting POST period dates') || message.includes('Setting POST dates')) updateProgress(message, 7);
+          else if (message.includes('Waiting for POST data')) updateProgress(message, 8);
+          else if (message.includes('Reading POST metrics') || message.includes('Extracting POST metrics')) updateProgress(message, 9);
+          else if (message.includes('Switching to Audience Retention')) updateProgress(message, 10);
+          else if (message.includes('Setting PRE dates for retention') || message.includes('Setting PRE retention dates')) updateProgress(message, 11);
+          else if (message.includes('Extracting PRE retention')) updateProgress(message, 12);
+          else if (message.includes('Setting POST dates for retention') || message.includes('Setting POST retention dates')) updateProgress(message, 13);
+          else if (message.includes('Extracting POST retention')) updateProgress(message, 14);
+          else statusEl.textContent = message; // For messages that don't match
         };
 
         // Run extraction (always include retention)
@@ -1277,7 +1274,7 @@ YTTreatmentHelper.SingleVideo = {
             preStart, preEnd,
             postStart, postEnd,
             updateStatus,
-            true // Always extract retention
+            true // Always extract retention (progressCallback not needed - updateStatus handles progress)
           );
         } catch (error) {
           // Check if error contains YouTube max date constraint
