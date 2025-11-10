@@ -160,8 +160,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
+      // Calculate total time saved from batch extractions
+      let totalTimeSavedMs = 0;
+      batchHistory.forEach(entry => {
+        if (entry.timeSavedMs) {
+          totalTimeSavedMs += entry.timeSavedMs;
+        }
+      });
+
       // Build history HTML with accordion structure
       let html = '';
+
+      // Add total time saved header if there's any time saved
+      if (totalTimeSavedMs > 0) {
+        const totalTimeSaved = formatDuration(totalTimeSavedMs);
+        html += `
+          <div class="history-stats">
+            <span class="history-stats-icon">⚡</span>
+            <span class="history-stats-text">Total time saved with batch: <strong>${totalTimeSaved}</strong></span>
+          </div>
+        `;
+      }
+
       allHistory.forEach((entry, index) => {
         const date = formatExtractionDate(entry.extractionDate);
 
@@ -197,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="history-header-clickable">
                   <span class="history-chevron">▶</span>
                   <div class="history-header-content">
-                    <div class="history-type-label">Single Extraction</div>
+                    <div class="history-type-label single">Single Extraction</div>
                     <div class="history-video-title">${entry.videoTitle || 'Unknown Video'}</div>
                     <div class="history-header-meta">
                       <span class="history-item-date">${date}</span>
@@ -296,13 +316,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
           }
 
-          // Format metadata line (treatment date + duration)
+          // Format metadata line (treatment date + duration, no time saved)
           let metadataLine = `Treatment: ${entry.treatmentDate}`;
           if (duration) {
             metadataLine += ` • ${duration}`;
-            if (timeSaved) {
-              metadataLine += ` (Saved ${timeSaved})`;
-            }
           }
 
           html += `
@@ -311,7 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="history-header-clickable">
                   <span class="history-chevron">▶</span>
                   <div class="history-header-content">
-                    <div class="history-type-label">Batch Extraction</div>
+                    <div class="history-type-label batch">Batch Extraction</div>
                     <div class="history-video-title">${batchTitlePreview}</div>
                     <div class="history-header-meta">
                       <span class="history-item-date">${date}</span>
@@ -319,7 +336,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                       <span class="history-item-mode">${modeLabel}</span>
                     </div>
                     <div class="history-metadata-line">${metadataLine}</div>
-                    <div class="history-click-hint">Click to see all titles</div>
+                    <div class="history-click-hint">Click to see all video titles</div>
                   </div>
                 </div>
                 <button class="history-header-copy-btn" data-entry-index="${index}" data-entry-type="batch">📋 Copy</button>
