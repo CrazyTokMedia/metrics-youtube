@@ -177,9 +177,9 @@
       background: white;
       border: 1px solid #e5e7eb;
       border-radius: 6px;
-      padding: 10px;
       margin-bottom: 8px;
       font-size: 12px;
+      overflow: hidden;
     }
 
     .history-item:last-child {
@@ -188,65 +188,145 @@
 
     .history-item-header {
       display: flex;
-      justify-content: space-between;
+      align-items: flex-start;
+      padding: 12px;
+      transition: background-color 0.2s;
+      user-select: none;
+      gap: 8px;
+    }
+
+    .history-header-clickable {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .history-header-clickable:hover {
+      opacity: 0.8;
+    }
+
+    .history-chevron {
+      flex-shrink: 0;
+      margin-right: 8px;
+      color: #6b7280;
+      font-size: 12px;
+      line-height: 1.4;
+      transition: transform 0.2s;
+    }
+
+    .history-item.expanded .history-chevron {
+      transform: rotate(90deg);
+    }
+
+    .history-header-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-header-copy-btn {
+      flex-shrink: 0;
+      padding: 6px 10px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .history-header-copy-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .history-header-copy-btn:active {
+      transform: translateY(0);
+    }
+
+    .history-header-copy-btn.copied {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .history-header-copy-btn.error {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .history-video-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .history-header-meta {
+      display: flex;
       align-items: center;
-      margin-bottom: 6px;
+      gap: 8px;
+      font-size: 11px;
+      color: #6b7280;
+      flex-wrap: wrap;
     }
 
     .history-item-date {
-      font-weight: 600;
-      color: #1f2937;
-      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .history-meta-separator {
+      color: #d1d5db;
     }
 
     .history-item-mode {
       font-size: 10px;
       color: #6b7280;
-      background: #f3f4f6;
-      padding: 2px 6px;
-      border-radius: 4px;
     }
 
-    .history-video-title {
+    .history-item-details {
+      display: none;
+      padding: 12px 12px 12px 32px;
+      border-top: 1px solid #f3f4f6;
+    }
+
+    .history-item.expanded .history-item-details {
+      display: block;
+    }
+
+    .history-detail-row {
       font-size: 11px;
+      color: #4b5563;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    .history-detail-label {
       font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 4px;
+      color: #374151;
+      display: inline-block;
+      min-width: 80px;
     }
 
     .history-video-id {
-      font-size: 10px;
       font-family: 'Courier New', monospace;
-      color: #9ca3af;
-      margin-bottom: 4px;
+      color: #6b7280;
+      font-size: 10px;
     }
 
     .history-treatment-date {
+      font-size: 11px;
+      color: #374151;
+    }
+
+    .history-date-ranges {
       font-size: 10px;
       color: #6b7280;
-    }
-
-    .history-copy-btn {
-      width: 100%;
-      padding: 6px;
-      margin-top: 8px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .history-copy-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
-    }
-
-    .history-copy-btn.copied {
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      margin-top: 4px;
+      line-height: 1.6;
     }
 
     .history-type-badge {
@@ -273,6 +353,38 @@
       font-size: 11px;
       color: #6b7280;
       margin-top: 4px;
+    }
+
+    .history-type-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #6b7280;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .history-click-hint {
+      font-size: 10px;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    .batch-video-list {
+      margin-top: 8px;
+      margin-left: 80px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .batch-video-item {
+      font-size: 11px;
+      color: #4b5563;
+      padding: 4px 8px;
+      margin-bottom: 4px;
+      background: #f9fafb;
+      border-radius: 4px;
+      border-left: 2px solid #d1d5db;
     }
   </style>
 </head>

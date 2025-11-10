@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // Build history HTML
+      // Build history HTML with accordion structure
       let html = '';
       allHistory.forEach((entry, index) => {
         const date = formatExtractionDate(entry.extractionDate);
@@ -172,18 +172,53 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           // Format extraction time
           const duration = formatDuration(entry.durationMs);
-          const durationHtml = duration ? `<span class="history-duration">⏱ ${duration}</span>` : '';
+          const durationText = duration ? ` • ${duration}` : '';
+
+          // Format date ranges if available
+          let dateRangesHtml = '';
+          if (entry.dateRanges && entry.dateRanges.pre && entry.dateRanges.post) {
+            const preRange = `${formatDateForExport(entry.dateRanges.pre.start)}-${formatDateForExport(entry.dateRanges.pre.end)}`;
+            const postRange = `${formatDateForExport(entry.dateRanges.post.start)}-${formatDateForExport(entry.dateRanges.post.end)}`;
+            dateRangesHtml = `
+              <div class="history-detail-row">
+                <span class="history-detail-label">Pre Period:</span>
+                <span>${preRange}</span>
+              </div>
+              <div class="history-detail-row">
+                <span class="history-detail-label">Post Period:</span>
+                <span>${postRange}</span>
+              </div>
+            `;
+          }
 
           html += `
-            <div class="history-item">
+            <div class="history-item" data-entry-index="${index}">
               <div class="history-item-header">
-                <span class="history-item-date">${date}<span class="history-type-badge badge-single">Single</span></span>
-                <span class="history-item-mode">${modeLabel}</span>
+                <div class="history-header-clickable">
+                  <span class="history-chevron">▶</span>
+                  <div class="history-header-content">
+                    <div class="history-type-label">Single Extraction</div>
+                    <div class="history-video-title">${entry.videoTitle || 'Unknown Video'}</div>
+                    <div class="history-header-meta">
+                      <span class="history-item-date">${date}</span>
+                      <span class="history-meta-separator">•</span>
+                      <span class="history-item-mode">${modeLabel}</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="history-header-copy-btn" data-entry-index="${index}" data-entry-type="single">📋 Copy</button>
               </div>
-              <div class="history-video-title">${entry.videoTitle || 'Unknown Video'}</div>
-              <div class="history-video-id">${entry.videoId}</div>
-              <div class="history-treatment-date">Treatment: ${entry.treatmentDate} ${durationHtml}</div>
-              <button class="history-copy-btn" data-entry-index="${index}" data-entry-type="single">📋 Copy Data</button>
+              <div class="history-item-details">
+                <div class="history-detail-row">
+                  <span class="history-detail-label">Treatment:</span>
+                  <span class="history-treatment-date">${entry.treatmentDate}${durationText}</span>
+                </div>
+                <div class="history-detail-row">
+                  <span class="history-detail-label">Video ID:</span>
+                  <span class="history-video-id">${entry.videoId}</span>
+                </div>
+                ${dateRangesHtml}
+              </div>
             </div>
           `;
         } else {
@@ -195,25 +230,90 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Format extraction time and time saved
           const duration = formatDuration(entry.durationMs);
           const timeSaved = formatDuration(entry.timeSavedMs);
-          let timingHtml = '';
+          let durationText = '';
           if (duration) {
-            timingHtml = `<span class="history-duration">⏱ ${duration}`;
+            durationText = ` • ${duration}`;
             if (timeSaved) {
-              timingHtml += ` • Saved ${timeSaved}`;
+              durationText += ` (Saved ${timeSaved})`;
             }
-            timingHtml += `</span>`;
+          }
+
+          // Create batch title preview with first 2 words from first 3 videos
+          let batchTitlePreview = `Batch Extraction (${videoCount} videos)`;
+          if (entry.results && entry.results.length > 0) {
+            const previews = entry.results.slice(0, 3).map(result => {
+              if (result.videoTitle) {
+                const words = result.videoTitle.split(' ').slice(0, 2).join(' ');
+                return words + '...';
+              }
+              return 'Unknown...';
+            });
+            batchTitlePreview = previews.join(', ');
+          }
+
+          // Format date ranges if available
+          let dateRangesHtml = '';
+          if (entry.dateRanges && entry.dateRanges.pre && entry.dateRanges.post) {
+            const preRange = `${formatDateForExport(entry.dateRanges.pre.start)}-${formatDateForExport(entry.dateRanges.pre.end)}`;
+            const postRange = `${formatDateForExport(entry.dateRanges.post.start)}-${formatDateForExport(entry.dateRanges.post.end)}`;
+            dateRangesHtml = `
+              <div class="history-detail-row">
+                <span class="history-detail-label">Pre Period:</span>
+                <span>${preRange}</span>
+              </div>
+              <div class="history-detail-row">
+                <span class="history-detail-label">Post Period:</span>
+                <span>${postRange}</span>
+              </div>
+            `;
+          }
+
+          // Build list of all video titles for accordion
+          let videoTitlesHtml = '';
+          if (entry.results && entry.results.length > 0) {
+            const titlesList = entry.results.map(result => {
+              return `<div class="batch-video-item">${result.videoTitle || 'Unknown Video'}</div>`;
+            }).join('');
+            videoTitlesHtml = `
+              <div class="history-detail-row">
+                <span class="history-detail-label">All Videos:</span>
+              </div>
+              <div class="batch-video-list">
+                ${titlesList}
+              </div>
+            `;
           }
 
           html += `
-            <div class="history-item">
+            <div class="history-item" data-entry-index="${index}">
               <div class="history-item-header">
-                <span class="history-item-date">${date}<span class="history-type-badge badge-batch">Batch</span></span>
-                <span class="history-item-mode">${modeLabel}</span>
+                <div class="history-header-clickable">
+                  <span class="history-chevron">▶</span>
+                  <div class="history-header-content">
+                    <div class="history-type-label">Batch Extraction</div>
+                    <div class="history-video-title">${batchTitlePreview}</div>
+                    <div class="history-header-meta">
+                      <span class="history-item-date">${date}</span>
+                      <span class="history-meta-separator">•</span>
+                      <span class="history-item-mode">${modeLabel}</span>
+                      <span class="history-click-hint">Click to see all titles</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="history-header-copy-btn" data-entry-index="${index}" data-entry-type="batch">📋 Copy</button>
               </div>
-              <div class="history-video-title">Batch Extraction</div>
-              <div class="batch-video-count">${videoCount} video(s) extracted</div>
-              <div class="history-treatment-date">Treatment: ${entry.treatmentDate} ${timingHtml}</div>
-              <button class="history-copy-btn" data-entry-index="${index}" data-entry-type="batch">📋 Copy All Data</button>
+              <div class="history-item-details">
+                <div class="history-detail-row">
+                  <span class="history-detail-label">Treatment:</span>
+                  <span class="history-treatment-date">${entry.treatmentDate}${durationText}</span>
+                </div>
+                <div class="history-detail-row">
+                  <span class="history-detail-label">Videos:</span>
+                  <span>${videoCount} extracted</span>
+                </div>
+                ${dateRangesHtml}
+                ${videoTitlesHtml}
+              </div>
             </div>
           `;
         }
@@ -221,10 +321,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       historyList.innerHTML = html;
 
-      // Add copy button event listeners
-      const copyButtons = historyList.querySelectorAll('.history-copy-btn');
+      // Add accordion toggle event listeners to the clickable area only
+      const historyItems = historyList.querySelectorAll('.history-item');
+      historyItems.forEach(item => {
+        const clickableArea = item.querySelector('.history-header-clickable');
+        clickableArea.addEventListener('click', () => {
+          // Toggle expanded class
+          item.classList.toggle('expanded');
+        });
+      });
+
+      // Add copy button event listeners (now in header)
+      const copyButtons = historyList.querySelectorAll('.history-header-copy-btn');
       copyButtons.forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', async (e) => {
+          // Prevent accordion toggle when clicking copy button
+          e.stopPropagation();
+
           const entryIndex = parseInt(btn.dataset.entryIndex);
           const entryType = btn.dataset.entryType;
           const entry = allHistory[entryIndex];
@@ -253,9 +366,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!metrics || !metrics.pre || !metrics.post) {
         console.error('Invalid metrics structure:', metrics);
-        button.textContent = '✗ No Data';
+        button.textContent = '✗ Empty';
+        button.classList.add('error');
         setTimeout(() => {
-          button.textContent = '📋 Copy Data';
+          button.textContent = '📋 Copy';
+          button.classList.remove('error');
         }, 2000);
         return;
       }
@@ -300,14 +415,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       button.classList.add('copied');
 
       setTimeout(() => {
-        button.textContent = '📋 Copy Data';
+        button.textContent = '📋 Copy';
         button.classList.remove('copied');
       }, 2000);
     } catch (error) {
       console.error('Error copying data:', error);
       button.textContent = '✗ Error';
+      button.classList.add('error');
       setTimeout(() => {
-        button.textContent = '📋 Copy Data';
+        button.textContent = '📋 Copy';
+        button.classList.remove('error');
       }, 2000);
     }
   }
@@ -319,9 +436,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!entry.results || entry.results.length === 0) {
         console.error('No batch results found');
-        button.textContent = '✗ No Data';
+        button.textContent = '✗ Empty';
+        button.classList.add('error');
         setTimeout(() => {
-          button.textContent = '📋 Copy All Data';
+          button.textContent = '📋 Copy';
+          button.classList.remove('error');
         }, 2000);
         return;
       }
@@ -376,9 +495,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (allRows.length === 0) {
-        button.textContent = '✗ No Valid Data';
+        button.textContent = '✗ Empty';
+        button.classList.add('error');
         setTimeout(() => {
-          button.textContent = '📋 Copy All Data';
+          button.textContent = '📋 Copy';
+          button.classList.remove('error');
         }, 2000);
         return;
       }
@@ -392,18 +513,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       await navigator.clipboard.writeText(exportData);
 
       // Show success feedback
-      button.textContent = `✓ Copied ${allRows.length} videos!`;
+      button.textContent = `✓ Copied!`;
       button.classList.add('copied');
 
       setTimeout(() => {
-        button.textContent = '📋 Copy All Data';
+        button.textContent = '📋 Copy';
         button.classList.remove('copied');
       }, 2000);
     } catch (error) {
       console.error('Error copying batch data:', error);
       button.textContent = '✗ Error';
+      button.classList.add('error');
       setTimeout(() => {
-        button.textContent = '📋 Copy All Data';
+        button.textContent = '📋 Copy';
+        button.classList.remove('error');
       }, 2000);
     }
   }
