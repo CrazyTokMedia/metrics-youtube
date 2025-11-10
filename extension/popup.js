@@ -238,15 +238,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           }
 
-          // Create batch title preview with first 2 words from first 3 videos
+          // Helper: Truncate title to ~15 chars at word boundary
+          const truncateTitle = (title, maxLength = 15) => {
+            if (!title || title.length <= maxLength) return title;
+            const truncated = title.substring(0, maxLength);
+            const lastSpace = truncated.lastIndexOf(' ');
+            return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '...';
+          };
+
+          // Create batch title preview with character-limited titles from first 3 videos
           let batchTitlePreview = `Batch Extraction (${videoCount} videos)`;
           if (entry.results && entry.results.length > 0) {
             const previews = entry.results.slice(0, 3).map(result => {
-              if (result.videoTitle) {
-                const words = result.videoTitle.split(' ').slice(0, 2).join(' ');
-                return words + '...';
-              }
-              return 'Unknown...';
+              return truncateTitle(result.videoTitle || 'Unknown', 15);
             });
             batchTitlePreview = previews.join(', ');
           }
@@ -268,11 +272,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
           }
 
-          // Build list of all video titles for accordion
+          // Build list of all video titles for accordion with copy buttons
           let videoTitlesHtml = '';
           if (entry.results && entry.results.length > 0) {
-            const titlesList = entry.results.map(result => {
-              return `<div class="batch-video-item">${result.videoTitle || 'Unknown Video'}</div>`;
+            const titlesList = entry.results.map((result, videoIndex) => {
+              const videoTitle = result.videoTitle || 'Unknown Video';
+              return `
+                <div class="batch-video-item">
+                  <span class="batch-video-title">${videoTitle}</span>
+                  <button class="batch-video-copy-btn"
+                          data-entry-index="${index}"
+                          data-video-index="${videoIndex}"
+                          title="Copy this video's data">📋</button>
+                </div>`;
             }).join('');
             videoTitlesHtml = `
               <div class="history-detail-row">
@@ -282,6 +294,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${titlesList}
               </div>
             `;
+          }
+
+          // Format metadata line (treatment date + duration)
+          let metadataLine = entry.treatmentDate;
+          if (duration) {
+            metadataLine += ` • ${duration}`;
+            if (timeSaved) {
+              metadataLine += ` (Saved ${timeSaved})`;
+            }
           }
 
           html += `
@@ -296,8 +317,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                       <span class="history-item-date">${date}</span>
                       <span class="history-meta-separator">•</span>
                       <span class="history-item-mode">${modeLabel}</span>
-                      <span class="history-click-hint">Click to see all titles</span>
                     </div>
+                    <div class="history-metadata-line">${metadataLine}</div>
+                    <div class="history-click-hint">Click to see all titles</div>
                   </div>
                 </div>
                 <button class="history-header-copy-btn" data-entry-index="${index}" data-entry-type="batch">📋 Copy</button>
@@ -346,6 +368,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             await copyBatchHistoryEntry(entry, btn);
           } else {
             await copyHistoryEntry(entry, btn);
+          }
+        });
+      });
+
+      // Add event listeners for individual video copy buttons in batch accordion
+      const videoCopyButtons = historyList.querySelectorAll('.batch-video-copy-btn');
+      videoCopyButtons.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation(); // Prevent accordion toggle
+
+          const entryIndex = parseInt(btn.dataset.entryIndex);
+          const videoIndex = parseInt(btn.dataset.videoIndex);
+          const entry = allHistory[entryIndex];
+
+          if (entry && entry.results && entry.results[videoIndex]) {
+            await copySingleVideoFromBatch(entry.results[videoIndex], btn);
           }
         });
       });
@@ -526,6 +564,76 @@ document.addEventListener('DOMContentLoaded', async () => {
       button.classList.add('error');
       setTimeout(() => {
         button.textContent = '📋 Copy';
+        button.classList.remove('error');
+      }, 2000);
+    }
+  }
+
+  // Copy single video data from batch entry
+  async function copySingleVideoFromBatch(result, button) {
+    try {
+      console.log('Copy single video from batch:', result);
+
+      const metrics = result.metrics;
+      if (!metrics || !metrics.pre || !metrics.post) {
+        button.textContent = '✗';
+        button.classList.add('error');
+        setTimeout(() => {
+          button.textContent = '📋';
+          button.classList.remove('error');
+        }, 2000);
+        return;
+      }
+
+      // Format treatment date
+      const treatmentDate = result.treatmentDate || '';
+      const preRange = metrics.periods?.pre ?
+        `${formatDateForExport(metrics.periods.pre.start)}-${formatDateForExport(metrics.periods.pre.end)}` : '';
+      const postRange = metrics.periods?.post ?
+        `${formatDateForExport(metrics.periods.post.start)}-${formatDateForExport(metrics.periods.post.end)}` : '';
+      const treatmentLabel = `Pre - ${preRange} Post- ${postRange}`;
+
+      // Build export data (same format as single extraction)
+      const row = [
+        treatmentLabel,
+        metrics.pre.impressions || '',
+        metrics.post.impressions || '',
+        '', // Empty for Change column
+        metrics.pre.ctr || '',
+        metrics.post.ctr || '',
+        '', // Empty for Change column
+        metrics.pre.views || '',
+        metrics.post.views || '',
+        '', // Empty for Change column
+        metrics.pre.awt || '',
+        metrics.post.awt || '',
+        '', // Empty for Change column
+        metrics.pre.retention || '',
+        metrics.post.retention || '',
+        '', // Empty for Change column
+        metrics.pre.stayedToWatch || '',
+        metrics.post.stayedToWatch || ''
+      ].join('\t');
+
+      console.log('Single video export data:', row);
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(row);
+
+      // Show success feedback
+      button.textContent = '✓';
+      button.classList.add('copied');
+
+      setTimeout(() => {
+        button.textContent = '📋';
+        button.classList.remove('copied');
+      }, 2000);
+    } catch (error) {
+      console.error('Error copying single video data:', error);
+      button.textContent = '✗';
+      button.classList.add('error');
+      setTimeout(() => {
+        button.textContent = '📋';
         button.classList.remove('error');
       }, 2000);
     }
