@@ -4,7 +4,7 @@ A Chrome extension that automates PRE vs POST treatment period comparison in You
 
 ## 📥 Download
 
-[Download v2.0.1](https://github.com/CrazyTokMedia/metrics-youtube/releases/download/v2.0.1/youtube-treatment-helper-v2.0.1.zip)
+[Download v2.0.2](https://github.com/CrazyTokMedia/metrics-youtube/releases/download/v2.0.2/youtube-treatment-helper-v2.0.2.zip)
 
 ## ✨ Features
 
