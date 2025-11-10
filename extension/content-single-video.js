@@ -1189,7 +1189,7 @@ YTTreatmentHelper.SingleVideo = {
       const progressPercent = document.getElementById('progress-percent');
 
       let currentStep = '';
-      let totalSteps = 14; // Total sub-steps tracked by updateStatus text-mapping
+      let totalSteps = 18; // Total sub-steps in extraction WITH retention (11 main messages + 7 retention)
       let currentStepNum = 0;
 
       const updateProgress = (step, stepNum) => {
@@ -1247,23 +1247,30 @@ YTTreatmentHelper.SingleVideo = {
         const updateStatus = (message) => {
           if (extractionCancelled) throw new Error('Cancelled by user');
 
-          // Map status messages to progress steps (fallback system)
-          // This ensures progress bar updates even if progressCallback has issues
+          // Map status messages to progress steps - matches extractPrePostMetrics flow exactly
           if (message.includes('Navigating to Advanced Mode')) updateProgress(message, 1);
           else if (message.includes('Opening metrics picker')) updateProgress(message, 2);
           else if (message.includes('Selecting required metrics')) updateProgress(message, 3);
-          else if (message.includes('Setting PRE period dates') || message.includes('Setting PRE dates')) updateProgress(message, 4);
-          else if (message.includes('Waiting for PRE data')) updateProgress(message, 5);
-          else if (message.includes('Reading PRE metrics') || message.includes('Extracting PRE metrics')) updateProgress(message, 6);
-          else if (message.includes('Setting POST period dates') || message.includes('Setting POST dates')) updateProgress(message, 7);
-          else if (message.includes('Waiting for POST data')) updateProgress(message, 8);
-          else if (message.includes('Reading POST metrics') || message.includes('Extracting POST metrics')) updateProgress(message, 9);
-          else if (message.includes('Switching to Audience Retention')) updateProgress(message, 10);
-          else if (message.includes('Setting PRE dates for retention') || message.includes('Setting PRE retention dates')) updateProgress(message, 11);
-          else if (message.includes('Extracting PRE retention')) updateProgress(message, 12);
-          else if (message.includes('Setting POST dates for retention') || message.includes('Setting POST retention dates')) updateProgress(message, 13);
-          else if (message.includes('Extracting POST retention')) updateProgress(message, 14);
-          else statusEl.textContent = message; // For messages that don't match
+          else if (message.includes('Opening date picker for PRE')) updateProgress(message, 4);
+          else if (message.includes('Setting PRE period dates') || message.includes('Setting PRE dates')) updateProgress(message, 5);
+          else if (message.includes('Waiting for PRE data')) updateProgress(message, 6);
+          else if (message.includes('Reading PRE metrics')) updateProgress(message, 7);
+          else if (message.includes('Opening date picker for POST')) updateProgress(message, 8);
+          else if (message.includes('Setting POST period dates') || message.includes('Setting POST dates')) updateProgress(message, 9);
+          else if (message.includes('Waiting for POST data')) updateProgress(message, 10);
+          else if (message.includes('Reading POST metrics')) updateProgress(message, 11);
+          else if (message.includes('Opening report menu')) updateProgress(message, 12);
+          else if (message.includes('Switching to Audience Retention')) updateProgress(message, 13);
+          else if (message.includes('Waiting for retention chart')) updateProgress(message, 14);
+          else if (message.includes('Setting PRE dates for retention')) updateProgress(message, 15);
+          else if (message.includes('Reading PRE retention')) updateProgress(message, 16);
+          else if (message.includes('Setting POST dates for retention')) updateProgress(message, 17);
+          else if (message.includes('Reading POST retention')) updateProgress(message, 18);
+          else if (message.includes('All data extracted')) updateProgress(message, 18); // Final step
+          else {
+            // For messages that don't match any pattern, just update status text
+            statusEl.textContent = message;
+          }
         };
 
         // Run extraction (always include retention)
