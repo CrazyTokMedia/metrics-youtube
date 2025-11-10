@@ -277,8 +277,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (entry.results && entry.results.length > 0) {
             const titlesList = entry.results.map((result, videoIndex) => {
               const videoTitle = result.videoTitle || 'Unknown Video';
+              // Determine if extraction was successful
+              const hasMetrics = result.metrics && result.metrics.pre && result.metrics.post;
+              const statusClass = hasMetrics ? 'success' : 'error';
               return `
-                <div class="batch-video-item">
+                <div class="batch-video-item ${statusClass}">
                   <span class="batch-video-title">${videoTitle}</span>
                   <button class="batch-video-copy-btn"
                           data-entry-index="${index}"
@@ -287,9 +290,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>`;
             }).join('');
             videoTitlesHtml = `
-              <div class="history-detail-row">
-                <span class="history-detail-label">All Videos:</span>
-              </div>
               <div class="batch-video-list">
                 ${titlesList}
               </div>
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
 
           // Format metadata line (treatment date + duration)
-          let metadataLine = entry.treatmentDate;
+          let metadataLine = `Treatment: ${entry.treatmentDate}`;
           if (duration) {
             metadataLine += ` • ${duration}`;
             if (timeSaved) {
@@ -325,15 +325,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <button class="history-header-copy-btn" data-entry-index="${index}" data-entry-type="batch">📋 Copy</button>
               </div>
               <div class="history-item-details">
-                <div class="history-detail-row">
-                  <span class="history-detail-label">Treatment:</span>
-                  <span class="history-treatment-date">${entry.treatmentDate}${durationText}</span>
-                </div>
-                <div class="history-detail-row">
-                  <span class="history-detail-label">Videos:</span>
-                  <span>${videoCount} extracted</span>
-                </div>
-                ${dateRangesHtml}
                 ${videoTitlesHtml}
               </div>
             </div>
