@@ -2,6 +2,27 @@
 
 All notable changes to the YouTube Treatment Comparison Helper will be documented here.
 
+## [2.0.2] - 2025-11-10
+
+### Changed
+- **Popup History UX Polish**: Multiple improvements to the extraction history display
+  - Moved total time saved banner to popup page level (no longer inside history list)
+  - Added distinct colors for type labels (blue for Single, orange for Batch)
+  - Improved hint text: "Click to see all video titles"
+  - Character-based truncation (~15 chars) for batch title preview with word boundary logic
+  - Simplified batch accordion to show only video titles (removed duplicate metadata)
+  - Added treatment date prefix to metadata line for clarity
+  - Added green/red visual indicators for success/error states in batch video items
+  - Per-video copy buttons in batch accordion for individual video data export
+  - Removed time saved from individual batch metadata lines (consolidated to banner)
+
+### Fixed
+- **Single Extraction Progress Bar**: Restored fully functional progress tracking
+  - Fixed progress bar visibility in single extraction mode
+  - Corrected progress increments (18 steps total with retention)
+  - Restored text-mapping system for accurate progress updates
+  - Progress now smoothly advances from 0% to 100% without drops or jumps
+
 ## [2.0.1] - 2025-11-08
 
 ### Added
