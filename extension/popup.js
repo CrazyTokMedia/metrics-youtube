@@ -168,19 +168,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
 
-      // Build history HTML with accordion structure
-      let html = '';
-
-      // Add total time saved header if there's any time saved
+      // Update the time saved banner (separate element on page)
+      const timeSavedBanner = document.getElementById('time-saved-banner');
+      const timeSavedValue = document.getElementById('time-saved-value');
       if (totalTimeSavedMs > 0) {
         const totalTimeSaved = formatDuration(totalTimeSavedMs);
-        html += `
-          <div class="history-stats">
-            <span class="history-stats-icon">⚡</span>
-            <span class="history-stats-text">Total time saved with batch: <strong>${totalTimeSaved}</strong></span>
-          </div>
-        `;
+        timeSavedValue.textContent = totalTimeSaved;
+        timeSavedBanner.style.display = 'flex';
+      } else {
+        timeSavedBanner.style.display = 'none';
       }
+
+      // Build history HTML with accordion structure
+      let html = '';
 
       allHistory.forEach((entry, index) => {
         const date = formatExtractionDate(entry.extractionDate);
