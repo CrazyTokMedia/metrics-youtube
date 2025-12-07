@@ -9,6 +9,118 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Repository**: CrazyTokMedia/metrics-youtube
 **Internal tool**: For CrazyTok Media use
 
+## Recent Discussion Context (Nov 12, 2025 - Amit Meeting)
+
+### Strategic Direction: Extension as Growth Service Core
+
+The plugin is **central to the growth service** and should be the primary interface for YouTube optimization work (similar to VidIQ, TubeBuddy). Key strategic shifts:
+
+1. **24-Hour Focus Window**: Most video performance is determined in first 24 hours
+   - Monitor videos immediately after publishing
+   - Check stats after 24 hours
+   - Try changes 2-3 times in first 72 hours
+   - Give up if no improvement after initial period
+
+2. **Automated Monitoring System**:
+   - Extension should monitor published videos
+   - Automatically check stats after 24 hours
+   - Push data to AirTable for analysis
+   - AirTable formulas handle thresholds and alerts
+   - Slack notifications for critical videos
+
+3. **Change Tracking & Audit Trail**:
+   - Track ALL changes to title, description, tags, thumbnail
+   - Automatic snapshot on "submit" button press
+   - Store pre/post values in Google Sheets or AirTable
+   - No manual copy-paste needed (reduce Ipsita's workload)
+   - Formula-based comparison to identify what changed
+
+4. **YouTube API Exploration** (Research Needed):
+   - Current extension uses DOM manipulation (breaks when YouTube UI changes)
+   - YouTube API would be more stable
+   - **RESEARCH NEEDED**: Can owner-level access enable OAuth once for all channels?
+   - Question: If CrazyTok Ops is owner on client channels, do we still need per-client OAuth?
+   - Check if personal access tokens needed (would be too complicated)
+
+### Implementation Priorities (Post-December)
+
+**December Goal**: Get current version to next incremental level, then STOP
+- Don't go down rabbit holes
+- Release usable version
+- Feature freeze until January
+
+**January 2026+**: Pick up one of these threads
+- Automated 24-hour monitoring
+- Change tracking with snapshot system
+- YouTube API migration (if research shows it's feasible)
+
+### Future Feature Designs (From Amit Discussion)
+
+#### Feature 1: Snapshot-Based Change Tracking
+
+**User Flow**:
+1. User navigates to YouTube Studio video page
+2. Before making changes, click "Snapshot" button in extension
+3. Extension captures: title, description, tags, thumbnail URL
+4. Pushes "PRE" snapshot to Google Sheet with timestamp
+5. User makes changes in YouTube Studio
+6. After changes, click "Snapshot" button again
+7. Extension captures same fields, pushes "POST" snapshot
+8. Google Sheet formula identifies what changed
+
+**Benefits**:
+- No manual copy-paste by Ipsita
+- Complete audit trail of all changes
+- Can see change history over time
+- Formulas determine what actually changed
+
+**Alternative Design** (More Automated):
+- Trap YouTube's "Save" or "Submit" button click
+- Automatically capture pre/post state on that trigger
+- Push to Google Sheet without user clicking anything
+- Even better UX, but more complex implementation
+
+#### Feature 2: Automated 24-Hour Monitoring
+
+**Workflow**:
+1. Video is published on YouTube
+2. Extension detects new video (or user clicks "Monitor this video")
+3. After 24 hours, extension automatically:
+   - Extracts key metrics (views, CTR, retention, etc.)
+   - Pushes to AirTable with video ID
+4. AirTable formulas evaluate performance:
+   - Is CTR > 5%? (good/bad threshold)
+   - Are views > expected baseline?
+   - Is retention > 40%?
+5. If below threshold, Slack alert sent to team
+6. Team reviews and decides on changes
+7. Changes tracked via snapshot system
+8. Check again after another 24 hours
+
+**Benefits**:
+- No manual monitoring needed
+- Catch problems early (in 24-hour window)
+- Data-driven optimization decisions
+- Automated workflow reduces busywork
+
+#### Feature 3: Batch Mode & Audit Tracking
+
+**Current Implementation**:
+- Batch mode extracts multiple videos at once
+- Audit tracking saves last extraction (in case of browser crash)
+
+**Amit's Request**: Historical Change Tracking
+- Show when thumbnail was changed (date + time)
+- Show when title was changed
+- Show when description was changed
+- Complete history timeline for each video
+
+**Design Consideration**:
+- Could become separate web app (not just extension)
+- Select date ranges, view all changes
+- Filter by video, by change type
+- Export reports
+
 ## Development Commands
 
 ### Creating a Release

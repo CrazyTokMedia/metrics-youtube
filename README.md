@@ -176,7 +176,7 @@ Internal tool for CrazyTok Media. All rights reserved.
 
 ## 🙏 Credits
 
-**Lead Developer**: Siddharth ([@dorddisct](https://github.com/dorddisct))
+**Lead Developer**: Siddharth ([@dorddis](https://github.com/dorddis))
 
 Developed for CrazyTok Media with AI assistance from Claude Code.
 
